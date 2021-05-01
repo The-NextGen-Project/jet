@@ -2,10 +2,11 @@
 
 👍 Thanks for considering to contribute to the project, we appreciate it. 👍
 
-Code of Conduct
+Before you Start ...
 ----------------
-Before starting the rest of the process, please take time read and understand the 
-[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects).
+Before starting the rest of the process, please take time read and understand the contributing
+[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects). and the the accompanying
+[Style Guidelines](https://github.com/ziglang/zig/wiki/Community-Projects).
 
 Style Guidelines
 ----------------
