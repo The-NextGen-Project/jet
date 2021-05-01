@@ -5,7 +5,7 @@
 Before you Start ...
 ----------------
 Before starting the rest of the process, please take time read and understand the contributing
-[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects). and the the accompanying
+[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects) and the the accompanying
 [Style Guidelines](https://github.com/ziglang/zig/wiki/Community-Projects).
 
 Style Guidelines
@@ -21,4 +21,3 @@ Spread the Word
 Another way to contribute is to write about Jet and the NextGen Project, or speak about Jet on
 some online forums to encourage a friendly discussion. The language is at its early stages, so 
 we want as much exposure as possible.
-
