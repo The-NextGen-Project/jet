@@ -2,17 +2,21 @@
 
 👍 Thanks for considering to contribute to the project, we appreciate it. 👍
 
-Before you Start ...
+Code of Conduct.
 ----------------
 Before starting the rest of the process, please take time read and understand the contributing
-[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects) and the the accompanying
-[Style Guidelines](https://github.com/ziglang/zig/wiki/Community-Projects).
+[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects).
 
 Style Guidelines
 ----------------
-The code format for C++ follows a style guide to be adhered to.
-> **Note:** There are a few exceptions to this, but overrall, if you don't know the format follow the general
-> style guidelines.
+All programs under the NextGen Project follow the following C++ Style Guidlines.
+> **Note:** Please note that refactoring large amounts of incosistant code is tedious so please try and
+> stick to the guildlines listed below.
+
+* Getter and Setter functions are to be named using camelCase.
+* 
+
+
 
 
 Spread the Word
