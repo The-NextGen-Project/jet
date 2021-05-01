@@ -15,7 +15,9 @@ All programs under the NextGen Project follow the following C++ Style Guidlines.
 
 * Getter and Setter functions are to be named using `camelCase`.
 * Static Functions (including in namespaces and in classes) should be denoted with `MyFunction` notation
-* Class and Struct member functions should be denoted with`snake_case`
+* Class and Struct member **functions** should be denoted with`snake_case`
+* Class and Struct member **variables** should be deonoted with `snake_case`
+* When accessing private member variables, they should be accessed with `c++ this` notation
 
 
 
