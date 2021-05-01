@@ -13,8 +13,9 @@ All programs under the NextGen Project follow the following C++ Style Guidlines.
 > **Note:** Please note that refactoring large amounts of incosistant code is tedious so please try and
 > stick to the guildlines listed below.
 
-* Getter and Setter functions are to be named using camelCase.
-* 
+* Getter and Setter functions are to be named using `camelCase`.
+* Static Functions (including in namespaces and in classes) should be denoted with `MyFunction` notation
+* Class and Struct member functions should be denoted with`snake_case`
 
 
 
