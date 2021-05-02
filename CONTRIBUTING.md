@@ -16,7 +16,7 @@ some online forums to encourage a friendly discussion. The language is at its ea
 we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/ziglang/zig/wiki/Community-Projects)
 where we discuss new changes and possible integrations with new technologies.
 
-Add your on Features!
+Add your own Features!
 ---------------------
 Want to add amazing language features yourself? Submit your 
 own language syntax ideas [here](https://forms.gle/9nSVzipF8MYr8Q456) and if 
