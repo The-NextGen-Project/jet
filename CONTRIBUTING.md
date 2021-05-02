@@ -14,7 +14,7 @@ Spread the Word
 Another way to contribute is to write about Jet and the NextGen Project, or speak about Jet on
 some online forums to encourage a friendly discussion. The language is at its early stages, so 
 we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/ziglang/zig/wiki/Community-Projects)
-where we discuss new changes and possible integrations with new technoliges
+where we discuss new changes and possible integrations with new technologies.
 
 Add your on Features!
 ---------------------
