@@ -48,10 +48,18 @@ Committing Guidelines
 ---------------------
 All commits to the project's repository are follow the following Guidelines.
 
-* All commit **overview** (not the description) messages should be no longer than **12 words**
-* Editing Markdown Files (.md) or documentation related files are to be denoted by: 📄
-* When fixing a bug or a consistant issue in files is denoted by: 🐞
-* Adding a lot of features and custom tooling to the project is denoted as: 🔧
+* Please limit your commit messages to no more than **10** words
+* Start all of your commit messages with a capital letter after the designated icon (see below)
+* **Don't** end your commiting messages with `.`
+* Please use the following icons before your commit message to indicate changes made:
+    * :art:               `:art:`               when improving the format/structure of the code
+    * :zap:               `:zap:`               when improving performance
+    * :book:              `:book:`              when writing docs
+    * :penguin:           `:penguin:`           when updating portability
+    * :bug:               `:bug:`               when fixing a bug
+    * :fire:              `:fire:`              when source files are moved, changed, or deleted
+    * :wrench:            `:wrench:`            when fixing build system (CMake, CI)
+    * :white_check_mark:  `:white_check_mark:`  when working on tests
 
 Licensing
 ----------
