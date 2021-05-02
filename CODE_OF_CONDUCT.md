@@ -1,4 +1,4 @@
-# Contributor Covenant Code of Conduct
+# Jet Code of Conduct (Adapted Directly from Contributor Covenant Code of Conduct)
 
 ## Our Pledge
 
