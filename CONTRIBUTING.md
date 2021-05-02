@@ -43,3 +43,8 @@ All programs under the NextGen Project follow the following C++ Style Guidlines.
 > **Note:** There are a few exceptions to the rules above: If we create an STL-like object, keep styling
 > based on STL styling, and just make sure to use common sense. If something has a very long typename and 
 > has better readibility using trailing return type, use it, **prioritize readibility** over anything else.
+> 
+
+Licensing
+----------
+As a contributor, any changes you contribute are to be done under the terms of the project's license, unless otherwise specified.
