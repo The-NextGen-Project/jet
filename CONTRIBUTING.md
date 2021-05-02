@@ -43,7 +43,15 @@ All programs under the NextGen Project follow the following C++ Style Guidlines.
 > **Note:** There are a few exceptions to the rules above: If we create an STL-like object, keep styling
 > based on STL styling, and just make sure to use common sense. If something has a very long typename and 
 > has better readibility using trailing return type, use it, **prioritize readibility** over anything else.
-> 
+
+Committing Guidelines
+---------------------
+All commits to the project's repository are follow the following Guidelines.
+
+* All commit **overview** (not the description) messages should be no longer than **12 words**
+* Editing Markdown Files (.md) or documentation related files are to be denoted by: 📄
+* When fixing a bug or a consistant issue in files is denoted by: 🐞
+* Adding a lot of features and custom tooling to the project is denoted as: 🔧
 
 Licensing
 ----------
