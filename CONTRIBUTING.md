@@ -9,7 +9,7 @@ Outline
 * [Spread the Word About Us](#spread-the-word)
 * [Add your own Feature](#add-your-own-features)
 * [Code Style Guidelines](#style-guidelines)
-* [Commit Style Guidelines](#commiting-guidelines)
+* [Commit Style Guidelines](#committing-guidelines)
 * [Licensing](#licensing)
 
 Code of Conduct.
