@@ -2,6 +2,16 @@
 
 👍 Thanks for considering to contribute to the project, we appreciate it. 👍
 
+Outline
+-----------------
+
+* [Code of Conduct](https://github.com/The-NextGen-Project/jet/blob/main/CODE_OF_CONDUCT.md)
+* [Spread the Word About Us](#spread-the-word)
+* [Add your own Feature](#add-your-own-features)
+* [Code Style Guidelines](#style-guidelines)
+* [Commit Style Guidelines](#commiting-guidelines)
+* [Licensing](#licensing)
+
 Code of Conduct.
 ----------------
 Before starting the rest of the process, please take time read and understand the contributing
@@ -16,7 +26,7 @@ some online forums to encourage a friendly discussion. The language is at its ea
 we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/ziglang/zig/wiki/Community-Projects)
 where we discuss new changes and possible integrations with new technologies.
 
-Add your own Features!
+Add your own Features
 ---------------------
 Want to add amazing language features yourself? Submit your 
 own language syntax ideas [here](https://forms.gle/9nSVzipF8MYr8Q456) and if 
