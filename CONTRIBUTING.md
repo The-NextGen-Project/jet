@@ -5,7 +5,7 @@
 Code of Conduct.
 ----------------
 Before starting the rest of the process, please take time read and understand the contributing
-[Code of Conduct](https://github.com/ziglang/zig/wiki/Community-Projects).
+[Code of Conduct](https://github.com/The-NextGen-Project/jet/blob/main/CODE_OF_CONDUCT.md).
 
 
 Spread the Word
