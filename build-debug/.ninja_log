@@ -1,6 +1,0 @@
-# ninja log v5
-1	882	1619905242760956903	CMakeFiles/nextgen.dir/main.cpp.o	16be42bb3385d0d
-910	1306	1619905243184956912	nextgen	d435835fc2342af7
-1	644	1619905242520956898	CMakeFiles/nextgen.dir/lib/support/io.cpp.o	4d8c169460202bce
-1	909	1619905242788956904	CMakeFiles/nextgen.dir/lib/support/str.cpp.o	55a347cb646c2a69
-1	735	1619905242612956900	CMakeFiles/nextgen.dir/lib/support/allocator.cpp.o	430b3d160bf97005
