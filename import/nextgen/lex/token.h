@@ -1,5 +1,5 @@
-# ifndef NEXTGEN_LEXER_H
-# define NEXTGEN_LEXER_H
+# ifndef NEXTGEN_TOKEN_H
+# define NEXTGEN_TOKEN_H
 # include <nextgen/support/core.h>
 # include <nextgen/support/str.h>
 # include <nextgen/support/allocator.h>
@@ -94,4 +94,4 @@ namespace nextgen { namespace jet {
 
 
 
-# endif //NEXTGEN_LEXER_H
+# endif //NEXTGEN_TOKEN_H

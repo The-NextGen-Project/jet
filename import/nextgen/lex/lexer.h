@@ -5,6 +5,9 @@
 namespace nextgen { namespace jet {
 
 
+  class Lexer {
+
+  };
 
 
   } // namespace nextgen::jet
