@@ -63,6 +63,7 @@ All commits to the project's repository are follow the following Guidelines.
 * **Don't** end your commiting messages with `.`
 * Please use the following icons before your commit message to indicate changes made:
     * :art:               `:art:`               when improving the format/structure of the code
+    * :heavy_plus_sign:   `:heavy_plus_sign:`   when adding new features to existing code
     * :zap:               `:zap:`               when improving performance
     * :book:              `:book:`              when writing docs
     * :penguin:           `:penguin:`           when updating portability
