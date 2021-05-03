@@ -40,11 +40,6 @@ namespace nextgen { namespace jet {
   // contains constructs useful for error reporting like `SourceLocation`.
   // The pointer to its value `const TokenKind *` is allocated by the Lexer's
   // allocator which handles its cleanup.
-  //
-  // Private Variables:
-  // `SourceLocation` - Error reporting for invalid token or token sequence
-  // `TokenClassification` - Contains flags regarding on key branch decisions
-  // in parsing
   class Token {
   public:
     using Allocator = nextgen::mem::ArenaSegment;
@@ -84,7 +79,7 @@ namespace nextgen { namespace jet {
     nextgen::str        id;      // Token String representation
     TokenClassification flags{}; // Token Flags (Parsing Info)
     SourceLocation      location;// Location in SourceText
-    const TokenKind *kind; // Type and Value (if primitive) of Token
+    const TokenKind *kind{}; // Type and Value (if primitive) of Token
   };
 
 

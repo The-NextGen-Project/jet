@@ -17,8 +17,8 @@ using namespace core;
     Range() = default;
 
     [[nodiscard]]
-    NG_INLINE unsigned long range() const {
-      return (unsigned long) (end - begin);
+    NG_INLINE size_t range() const {
+      return (size_t) (end - begin);
     }
   };
 
@@ -47,8 +47,11 @@ using namespace core;
     [[nodiscard]]
     unsigned long size() const { return len; }
 
+    // Standard FNV Hash algorithm on the contents of the internal buffer.
+    // NOTE: decltype is done on the offset only to have a type that matches
+    // the system that we are on.
     [[nodiscard]]
-    decltype(FNV_PRIME) hash() const { /* FNV Hash Algorithm */
+    decltype(FNV_OFF) hash() const {
       decltype(FNV_OFF) val = FNV_OFF;
       for (auto i = 0; i < len; ++i) {
         val ^= *_ + i;
@@ -68,7 +71,7 @@ using namespace core;
       return None;
     }*/
 
-    char operator[](size_t index) {
+    char operator[](size_t index) const {
       return (static_cast<const char *>(_))[index];
     }
 
@@ -80,8 +83,8 @@ using namespace core;
       return static_cast<const char *>(_);
     }
 
-    unsigned long operator -(const str RHS) const {
-      return (unsigned long)(_ - RHS._);
+    size_t operator -(const str RHS) const {
+      return (size_t)(_ - RHS._);
     }
 
     NG_INLINE str operator +(int offset) const {
