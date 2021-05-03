@@ -23,17 +23,16 @@ using namespace core;
   };
 
 
-
   class str  {
   public:
     str() = default;
 
     template <unsigned long N>
-    constexpr str(const char(&data)[N]) : len(N), _(data)
+    /*implicit*/ constexpr str(const char(&data)[N]) : len(N), _(data)
     {}
 
-    str(const char *data) : len(strlen(data)), _(data) {}
-    str(std::string &data) {
+    /*implicit*/ str(const char *data) : len(strlen(data)), _(data) {}
+    /*implicit*/ str(std::string &data) {
       len = data.length();
       _   = data.c_str();
     }
@@ -41,7 +40,7 @@ using namespace core;
     // It is important to understand the the string type created here does
     // not own the pointer. The caller owns this pointer and nextgen::str is
     // not responsible for the cleanup of the passed pointer.
-    str(Range<const char *> range) : len(range.range()) {
+    explicit str(Range<const char *> range) : len(range.range()) {
       _ = (const char *) range.begin;
     }
 
@@ -49,8 +48,8 @@ using namespace core;
     unsigned long size() const { return len; }
 
     [[nodiscard]]
-    unsigned long hash() const { /* FNV Hash Algorithm */
-      unsigned long val = FNV_OFF;
+    decltype(FNV_PRIME) hash() const { /* FNV Hash Algorithm */
+      decltype(FNV_OFF) val = FNV_OFF;
       for (auto i = 0; i < len; ++i) {
         val ^= *_ + i;
         val *= FNV_PRIME;
@@ -73,20 +72,16 @@ using namespace core;
       return (static_cast<const char *>(_))[index];
     }
 
-    operator std::string() {
-      return std::string(static_cast<const char *>(_));
+    explicit operator std::string() const {
+      return std::string((const char *) *this);
     }
 
-    operator const char *() const {
+    /*implicit*/ operator const char *() const {
       return static_cast<const char *>(_);
     }
 
-    operator unsigned long() const {
-      return (unsigned long)(const char *)_;
-    }
-
     unsigned long operator -(const str RHS) const {
-      return (unsigned long)(*this) - (unsigned long)(RHS);
+      return (unsigned long)(_ - RHS._);
     }
 
     NG_INLINE str operator +(int offset) const {

@@ -25,29 +25,35 @@ namespace nextgen {
   // the Windows Terminal. Windows uses these modes to render text as a
   // specific color.
   enum Colors {
-        WHITE  = COLOR_WHITE,
-        RED    = COLOR_RED,
-        GREEN  = COLOR_GREEN,
-        YELLOW = COLOR_YELLOW,
-        BLUE   = COLOR_BLUE,
-        CYAN   = COLOR_CYAN,
-        RESET  = COLOR_RESET
-    };
+    WHITE  = COLOR_WHITE,
+    RED    = COLOR_RED,
+    GREEN  = COLOR_GREEN,
+    YELLOW = COLOR_YELLOW,
+    BLUE   = COLOR_BLUE,
+    CYAN   = COLOR_CYAN,
+    RESET  = COLOR_RESET
+  };
 
 # endif
 
   struct console {
 
 # if defined(NG_OS_WINDOWS)
-    static HANDLE GenericConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    template <typename Arg>
-    static auto Write(Arg value) {
-        if (std::is_enum<Arg>::value == std::is_enum<Colors>::value) {
-            SetConsoleTextAttribute(GenericConsole, value);
-        } else {
-            std::cout << value;
-        }
+
+    // A little windows trick, that has the compiler infer which function gets
+    // called. It chooses default template unless we use a color.
+    static void Write(Colors color) {
+      static HANDLE GenericConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+      SetConsoleTextAttribute(GenericConsole, color);
     }
+
+    // Wrapper around std::cout to mask terminal color settings
+    // in the other `Write` function.
+    template <typename Arg>
+    static void Write(Arg value) {
+      std::cout << value;
+    }
+
 # endif
 
     template<typename ... Args>
