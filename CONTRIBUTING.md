@@ -23,7 +23,7 @@ Spread the Word
 
 Another way to contribute is to write about Jet and the NextGen Project, or speak about Jet on
 some online forums to encourage a friendly discussion. The language is at its early stages, so 
-we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/ziglang/zig/wiki/Community-Projects)
+we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
 where we discuss new changes and possible integrations with new technologies.
 
 Add your own Features
@@ -34,7 +34,7 @@ selected, the syntax/feature will be named after you! (or an appropriate name of
 
 > **Note:** Existing Language Features/Syntax suggested will not be named after you. We love suggestions
 > of new features of the language, but please be mindful to see if your suggestion has been already been
-> accepted or an existing or planned language [feature](https://github.com/ziglang/zig/wiki/Community-Projects).
+> accepted or an existing or planned language [feature](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md).
 
 Style Guidelines
 ----------------
