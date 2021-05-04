@@ -4,10 +4,20 @@
 Table of Contents
 -----------------
 
-* [Download](https://github.com/The-NextGen-Project/jet/blob/main/CONTRIBUTING.md)
+* [Download](#download)
 * [Documentation](https://github.com/The-NextGen-Project/jet/blob/main/CONTRIBUTING.md)
 * [Contributing](#contributing)
 * [License](#license)
+
+Download 
+---------
+```
+git clone https://github.com/The-NextGen-Project/jet.git
+cd jet
+cmake -DCMAKE_BUILD_TYPE=Release -GYourBuildGenerator
+make
+```
+> **Note:** For building the project on windows, it can be done by simply building with MSVC or, if you have MinGW installed it will work with that C compiler as well. For setting up a build system that is fast, I reccommend using [Ninja](https://ninja-build.org/) which works on Windows, Linux, and Mac as a CMake generator.
 
 
 Contributing
