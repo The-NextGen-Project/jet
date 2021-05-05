@@ -5,7 +5,7 @@ Table of Contents
 -----------------
 
 * [Download](#download)
-* [Documentation](https://github.com/The-NextGen-Project/jet/blob/main/CONTRIBUTING.md)
+* [Documentation](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
 * [Contributing](#contributing)
 * [License](#license)
 
