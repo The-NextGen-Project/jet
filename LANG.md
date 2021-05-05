@@ -23,6 +23,8 @@ Current Status: **WIP**
 | ------------- | ------------- |
 | `int`         | By default, all integer types are designated to 32 bits unless specified differently.  |
 | `int64`       | 64 bit integer is separate and is using for longer integer values.  |
+| `uint`        | Unsigned 32 bit integer.  |
+| `uint64`      | Unsigned 64 bit integer. |
 | `float`       | 32 bit decimal value. |
 | `float64`     | 64 bit decimal value. |
 | `bool`        | Boolean Value: true or false.  |
@@ -35,8 +37,33 @@ Current Status: **WIP**
 | Annotation     | Description |
 | -------------  | ------------- |
 | `^`            | Designates a type as a smart pointer (a little more into that later).  |
-| `*`            | Type is a pointer. 
+| `*`            | Type is a pointer. |
 | `?`            | Optional type. Either None or the value. |
 | `&`            | Memory reference to the location of an object (or a pass by reference). |
+
+Operators
+-----------
+Current Status: **WIP**
+| Operator       | Description |
+| -------------  | ------------- |
+| `+`            | Addition, Concatenation, etc.  |
+| `-`            | Subtraction. |
+| `/`            | Division. |
+| `*`            | Multiplication. |
+| `%`            | Modulus. |
+| `^`            | XOR. |
+| `&`            | Bitwise AND. |
+| `|`            | Bitwise XOR. |
+| `<<`           | Shift Left. |
+| `>>`           | Shift Right. |
+| `**`           | Exponential Power. |
+| `!`            | Logical Not. |
+> **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
+> in the future, but the list is not likely to change much at all.
+
+
+### Operator Overloading
+Current Status: **Planned**
+> **Note:** Outline is not available yet, but will be soon.
 
 
