@@ -46,16 +46,16 @@ Operators
 Current Status: **WIP**
 | Operator       | Description |
 | -------------  | ------------- |
-| `+`            | Addition, Concatenation, etc.  |
+| `+`            | Addition.  |
 | `-`            | Subtraction. |
 | `/`            | Division. |
 | `*`            | Multiplication. |
 | `%`            | Modulus. |
 | `^`            | XOR. |
 | `&`            | Bitwise AND. |
-| `|`            | Bitwise XOR. |
 | `<<`           | Shift Left. |
 | `>>`           | Shift Right. |
+| `~`            | Bitwise Not and Concat. |
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
 > **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
