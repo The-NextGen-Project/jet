@@ -11,7 +11,6 @@ Outline
 * [Operators](#operators)
 * [Keywords](#keywords)
 * [Arrays](#documentation)
-* [Allocations](#allocations)
 * [Functions](#subdirectory-configuration)
 * [Type System](#type-system)
 
