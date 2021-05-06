@@ -1,4 +1,4 @@
-# include <nextgen/lex/lexer.h>
+# include <nextgen/jet/lex/lexer.h>
 
 using namespace nextgen::jet;
 
