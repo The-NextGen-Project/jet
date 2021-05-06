@@ -11,7 +11,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)
 
 add_subdirectory(tests)
 add_subdirectory(third_party/googletest)
@@ -34,4 +33,4 @@ add_executable(nextgen main.cpp
         lib/support/str.cpp
         lib/support/io.cpp
         lib/support/allocator.cpp
-        lib/lex/lexer.cpp tests/lex/LexTest.cpp)
+        lib/lex/lexer.cpp)
