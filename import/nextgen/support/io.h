@@ -26,6 +26,10 @@ namespace nextgen { namespace io {
       return id;
     }
 
+
+    // Compile a file buffer to a format specified by FileID.
+    void compile();
+
     // Given a list of files, output the type of file given. For example,
     // given a list of source code for Jet, and set it to output a binary
     // ELF, it will output an ELF binary for the given source input.

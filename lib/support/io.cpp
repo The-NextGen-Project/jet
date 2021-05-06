@@ -26,3 +26,7 @@ FileBuf get_file_buf(const char *FILE, FileID id) {
 void FileBuf::Output(FileBuf *files, FileID output) {
 
 }
+
+void FileBuf::compile() {
+
+}

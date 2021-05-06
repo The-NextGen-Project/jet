@@ -15,3 +15,16 @@ _deps
 /cmake-build-debug
 /cmake-build-release
 .ninja
+Makefile
+CMakeFiles/
+CMakeCache.txt
+build/
+.o
+.so
+.exe
+.iso
+.dmg
+.jar
+.dll
+.class
+.com
