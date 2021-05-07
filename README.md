@@ -1,5 +1,5 @@
 # Jet ✈️
-#### Turbo boost your code on any platform.
+#### Turbo boost your code on any platform with the highest performance.
 
 Table of Contents
 -----------------
