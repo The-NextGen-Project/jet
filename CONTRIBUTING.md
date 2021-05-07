@@ -45,10 +45,19 @@ All programs under the NextGen Project follow the following C++ Style Guidlines.
 * Class and Struct member **functions** should be denoted with`snake_case`
 * Class and Struct member **variables** should be deonoted with `snake_case`
 * When accessing private member variables, they should be accessed with `this` notation
-* Don't be *too* generous with your comments. Use them appropriately, especially when describing a complicated task.
-* Preprocessors have a `\t` between the '#'. For example: `#  include <iostream>`. This is done to be consistant with config.
-* Lines should be no longer than **80 characters**. We like to limit this line length for readibility.
+* Don't be *too* generous with your comments. Use them appropriately, especially when describing a complicated task
+* Preprocessors have a `\t` between the '#'. For example: `#  include <iostream>`. This is done to be consistant with config
+* Lines should be no longer than **80 characters**. We like to limit this line length for readibility
 * Mark implicit constructors with `/*implicit*/` indication
+* Class and Struct names in-general should be denoted with `MyClass` notation unless we follow specific format guidlines with a library
+
+When writing nested namespace use the following setup to be consistent with other files:
+```c++
+namespace A { namespace B { namespace C
+{
+    // ...
+}}}
+```
 
 > **Note:** There are a few exceptions to the rules above: If we create an STL-like object, keep styling
 > based on STL styling, and just make sure to use common sense. If something has a very long typename and 
