@@ -78,13 +78,12 @@ namespace nextgen { namespace jet {
   private:
     nextgen::str        id;      // Token String representation
     TokenClassification flags{}; // Token Flags (Parsing Info)
-    SourceLocation      location;// Location in SourceText
+    SourceLocation      location{0, 0};// Location in SourceText
     const TokenKind *kind{}; // Type and Value (if primitive) of Token
   };
 
 
-  } // namespace nextgen::jet
-} // namespace nextgen
+}} // namespace nextgen::jet
 
 
 

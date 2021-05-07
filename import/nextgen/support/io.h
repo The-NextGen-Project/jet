@@ -47,8 +47,8 @@ namespace nextgen { namespace io {
   FileBuf get_file_buf(const char *FILE, FileID id);
 
 
-  } // namespace nextgen::io
-} // namespace nextgen
+}} // namespace nextgen::io
+
 
 
 

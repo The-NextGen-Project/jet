@@ -10,8 +10,7 @@ namespace nextgen { namespace jet {
   };
 
 
-  } // namespace nextgen::jet
-} // namespace nextgen
+}} // namespace nextgen::jet
 
 
 

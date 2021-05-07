@@ -179,7 +179,7 @@ namespace nextgen { namespace core {
     return value;
   }
 
-} // namespace nextgen::core
-} // namespace nextgen
+}} // namespace nextgen::core
+
 
 #endif //NEXTGEN_CORE_H

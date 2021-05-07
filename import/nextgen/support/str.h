@@ -1,6 +1,5 @@
 # ifndef NEXTGEN_STR_H
 # define NEXTGEN_STR_H
-
 # include "core.h"
 
 namespace nextgen {
