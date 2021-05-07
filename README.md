@@ -14,6 +14,8 @@ Download
 ```
 git clone https://github.com/The-NextGen-Project/jet.git
 cd jet
+git submodule init
+git submodule update
 cmake -DCMAKE_BUILD_TYPE=Release -GYourBuildGenerator
 make
 ```
