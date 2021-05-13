@@ -11,7 +11,7 @@ Outline
 * [Operators](#operators)
 * [Modules](#modules)
 * [Arrays](#arrays)
-* [Types](#types)
+* [Variables](#variables)
 * [Functions](#functions)
 
 
@@ -30,7 +30,8 @@ Current Status: **WIP**
 | `fn(Arg Types...) -> Ret`       | Function Lambda.   |
 | `utf8`        | A valid utf8 character. |
 | `char`        | A 1 byte character. |
-| `str`         | Alias for `^utf8` |
+| `str`         | Alias for `[utf8]` |
+| `None`        | Optional value for `None` |
 
 ### Type Annotations
 | Annotation     | Description |
@@ -65,6 +66,28 @@ Current Status: **WIP**
 Current Status: **Planned**
 
 > **Note:** Outline is not available yet, but will be soon.
+
+
+Variables
+---------
+Current Status: **WIP**
+
+Static typing is optional in this programming language. Variables may be declared in two different ways:
+```zig
+var my_variable = 23;
+var another_variable: bool = false;
+```
+All variables are immutable by default (except for lists), and require the `mut` keyword in order to change the way you
+interact with that variable.
+```zig
+var cant_change_me = 2324;
+cant_change_me = 24354; // Compiler error!
+mut var change_me = 3342;
+change_me = 23424; // Ok
+```
+Custom initialization is specified in with different primitive datatypes (ie: lists and tuples). Other than these two, the
+specification is standard for all data types.
+
 
 Arrays
 --------
@@ -167,6 +190,7 @@ fn func(lambda fn(int) -> int) {
 You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended.
 
 
+
 Modules
 --------
 Current Status: **WIP**
@@ -215,3 +239,6 @@ export var MyGlobalVariable = 32;
 Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
 of the `export` before the declaration.
 
+End
+-------
+You made it to the end? Wow, thank you for the interest in reading the language. Before you lose your attention, please consider [contributing](https://github.com/The-NextGen-Project/jet/blob/main/CONTRIBUTING.md).
