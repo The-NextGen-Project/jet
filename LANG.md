@@ -67,7 +67,7 @@ Current Status: **Planned**
 
 Arrays
 --------
-
+Current Status: **WIP**
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
 ```js
@@ -76,6 +76,7 @@ var fixed: [5,int] = [1, 2, 3, 4, 5];
 ```
 
 ### Designated Initializers
+Current Status: **Planned**
 Lists are mutable by default (unlike most of the other data types) because they are most 
 commonly dynamic and require mutability. Since we like to acknowledge the strengths of some
 languages and weaknesses of others, one may consider a similar example of initalizing an array
@@ -91,30 +92,34 @@ the programmer. This feature is currently not available in Rust or in C++, while
 We feel that this as a design principle is good for dealing with code that relies on jump comparisons. 
 
 ### Length
+Current Status: **Planned**
 ```python
 len(list);
 ```
 Length is checked in a similar global length function that can find the length of various types, including lists.
 
 ### Variable initialization
+Current Status: **Planned**
 ```python
 var (a, b, c) = [1, 2, 3];
 ```
 Similar to Python, this tuple like initialization is valid in Jet for convience and pretty clean and readable syntax.
 
 ### Slices
+Current Status: **Planned**
 ```
 list[ Initial : End : IndexJump ]
 ```
 List slicing works just as expected in Python and has the same exact effect. For example, `list[::-1]` reverses the list.
 
-
 Modules
 --------
+Current Status: **WIP**
 The way a module system of a programming language dictates its entire package functionality structure. In order to be able to give
 the programmer a lot of control we have decided to make it explicit as to functions / types are exported out in the file's module.
 
 ### Imports
+Current Status: **WIP**
 ```python
 import SomeModuleName
 ```
@@ -123,6 +128,7 @@ This is how most modules will be imported directly.
 > changes.
 
 ### Github Imports
+Current Status: **Planned**
 ```python
 import 'https://github.com/The-NextGen-Project/jet.git' as SomeModule
 ```
@@ -131,7 +137,7 @@ will need to be Jet projects that can be recognizable and imported directly into
 ensure that you have the latest stable version of the git repository imported into your programming language. 
 
 ### Exporting Values
-
+Current Status: **Planned**
 Functions:
 ```zig
 export fn my_func(...) { ... } 
