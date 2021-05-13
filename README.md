@@ -53,5 +53,4 @@ and we would love to have many of you who are willing to help. Before your start
 License
 ----------
 We want the project to be able to integrate with other with a lot of other open source software and determined that
-this clause of the GPL will allow us to do so. 
-The license of this project, unless specifically specified, is under the **GPLv2 or (at your option), any later version**.
+we will be using the **MIT License**.
