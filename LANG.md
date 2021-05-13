@@ -65,48 +65,6 @@ Current Status: **WIP**
 Current Status: **Planned**
 > **Note:** Outline is not available yet, but will be soon.
 
-
-Modules
---------
-The way a module system of a programming language dictates its entire package functionality structure. In order to be able to give
-the programmer a lot of control we have decided to make it explicit as to functions / types are exported out in the file's module.
-
-### Imports
-```python
-import SomeModuleName
-```
-This is how most modules will be imported directly.
-> **Note:** Sub module structure like `std.func` are still in debate as of now, and this will be updated in the future to reflect language
-> changes.
-
-### Github Imports
-```python
-import 'https://github.com/The-NextGen-Project/jet.git' as SomeModule
-```
-This is especially a very interesting part of the programming language. We will have support for open source imports. These projects
-will need to be Jet projects that can be recognizable and imported directly into your project. This may be a good way to consistantly 
-ensure that you have the latest stable version of the git repository imported into your programming language. 
-
-### Exporting Values
-
-Functions:
-```js
-export fn my_func(...) { ... } 
-```
-Types:
-```zig
-export MyStruct : struct {
-  ...
-}
-```
-Variables:
-```js
-export var MyGlobalVariable = 32;
-```
-
-Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
-of the `export` before the declration.
-
 Arrays
 --------
 
@@ -150,4 +108,45 @@ list[ Initial : End : IndexJump ]
 ```
 List slicing works just as expected in Python and has the same exact effect. For example, `list[::-1]` reverses the list.
 
+
+Modules
+--------
+The way a module system of a programming language dictates its entire package functionality structure. In order to be able to give
+the programmer a lot of control we have decided to make it explicit as to functions / types are exported out in the file's module.
+
+### Imports
+```python
+import SomeModuleName
+```
+This is how most modules will be imported directly.
+> **Note:** Sub module structure like `std.func` are still in debate as of now, and this will be updated in the future to reflect language
+> changes.
+
+### Github Imports
+```python
+import 'https://github.com/The-NextGen-Project/jet.git' as SomeModule
+```
+This is especially a very interesting part of the programming language. We will have support for open source imports. These projects
+will need to be Jet projects that can be recognizable and imported directly into your project. This may be a good way to consistantly 
+ensure that you have the latest stable version of the git repository imported into your programming language. 
+
+### Exporting Values
+
+Functions:
+```zig
+export fn my_func(...) { ... } 
+```
+Types:
+```zig
+export MyStruct : struct {
+  ...
+}
+```
+Variables:
+```js
+export var MyGlobalVariable = 32;
+```
+
+Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
+of the `export` before the declration.
 
