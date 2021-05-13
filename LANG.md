@@ -9,10 +9,9 @@ Outline
 
 * [Primitives](#primitives)
 * [Operators](#operators)
-* [Keywords](#keywords)
-* [Arrays](#documentation)
-* [Functions](#subdirectory-configuration)
-* [Type System](#type-system)
+* [Arrays](#arrays)
+* [Types](#types)
+* [Functions](#functions)
 
 
 Primitives
@@ -64,5 +63,48 @@ Current Status: **WIP**
 ### Operator Overloading
 Current Status: **Planned**
 > **Note:** Outline is not available yet, but will be soon.
+
+Arrays
+--------
+
+## Initialization
+We wanted arrays to be simple and easy to initalize like in Python.
+```js
+var list = [1, 2, 3, 4, 5]; // This by default is a dynamic array unless specefied like below
+var fixed: [5,int] = [1, 2, 3, 4, 5];
+```
+
+## Designated Initializers
+Lists are mutable by default (unlike most of the other data types) because they are most 
+commonly dynamic and require mutability. Since we like to acknowledge the strengths of some
+languages and weaknesses of others, one may consider a similar example of initalizing an array
+using designated initalizers in Jet.
+```c
+var list: [256,int] = [
+  ['>'] = 2323, ['3'] = 343,
+  ...
+]
+```
+The advantages of such a method reduce excess array initalization code, and allow for better readability to 
+the programmer. This feature is currently not available in Rust or in C++, while only existing as a C99 extension.
+We feel that this as a design principle is good for dealing with code that relies on jump comparisons. 
+
+## Length
+```python
+len(list);
+```
+Length is checked in a similar global length function that can find the length of various types, including lists.
+
+## Variable initialization
+```python
+var (a, b, c) = [1, 2, 3];
+```
+Similar to Python, this tuple like initialization is valid in Jet for convience and pretty clean and readable syntax.
+
+## Slices
+```
+list[ Initial : End : IndexJump ]
+```
+List slicing works just as expected in Python and has the same exact effect. For example, `list[::-1]` reverses the list.
 
 
