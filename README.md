@@ -1,4 +1,5 @@
-# Jet ✈️
+# [Jet ✈️]() 
+[![GitHub license](https://img.shields.io/github/license/The-NextGen-Project/jet?color=%2320ba37&label=License&logo=%2320ba37&logoColor=%2320ba37&style=for-the-badge)](https://github.com/The-NextGen-Project/jet/blob/main/LICENSE) 
 #### Turbo boost your code on any platform with the highest performance.
 
 Table of Contents
