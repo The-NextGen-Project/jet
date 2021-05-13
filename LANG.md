@@ -116,6 +116,57 @@ list[ Initial : End : IndexJump ]
 ```
 List slicing works just as expected in Python and has the same exact effect. For example, `list[::-1]` reverses the list.
 
+Functions
+------------
+Current Status: **WIP**
+
+Functions like anything else are declared explicitly in structs or are declared
+in the global module scope. If functions are not exported, they are only viewable to the members in
+the module that it was declared in. The `export` keyword is equivalent to the `public` keyword in other
+languages.
+
+### Function Declaration
+Current Status: **WIP**
+```zig
+fn my_func(a int, b int, c str) {
+...
+}
+```
+Parameters are ordered in the format of VariableName -> Typename. A variable of type `str` with a name of `name` would be 
+written as `name str`. For those familiar with Golang, it follows a similar naming convention. Generic functions are also 
+supported:
+```zig
+fn generics(a?, b?, c int) {
+ ...
+}
+```
+The `?` after an identifier that is not a type declares that the value has an anonymous type (generic type / value). One thing
+you may consider is how are functions type-checked or function checked. An example of a scenario in which a custom struct value is
+passed into a generic parameter and calls the function `foo`:
+```zig
+fn test(a?) {
+  a.foo(); // A is guranteed to have the function foo with no parameters. 
+  var x = a.bar(23); // This DOES NOT result in a compile time error because the rest of the function may guarantee that this value is legit.
+}
+```
+Generic function parameters have anonymous traits bounded to them which means that their functions and generated code is guarnteed to be valid
+otherwise a compile-time error will be thrown otherwise. This allows for a mix of static and dynamic typing flexibility for types that can be
+generalized for similar actions. To make it easier for anonymous trait building, it is best for the programmer to statically define their variables
+to make it easier for the compiler.
+
+### Lambdas
+Current Status: **Planned**
+
+Lambdas are small anonymous functions that can be passed in as callbacks into functions to be called. They are generally declared as a parameters
+by the following method:
+```zig
+fn func(lambda fn(int) -> int) {
+  lambda(23); // Calling the function
+}
+```
+You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended.
+
+
 Modules
 --------
 Current Status: **WIP**
