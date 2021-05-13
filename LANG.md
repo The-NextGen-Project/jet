@@ -59,6 +59,7 @@ Current Status: **WIP**
 | `~`            | Bitwise Not and Concat. |
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
+| `??`           | Value / Operation action. |
 > **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
 > in the future, but the list is not likely to change much at all.
 
