@@ -13,6 +13,7 @@ Outline
 * [Arrays](#arrays)
 * [Variables](#variables)
 * [Functions](#functions)
+* [Structs](#structs)
 
 
 Primitives
@@ -189,8 +190,6 @@ fn func(lambda fn(int) -> int) {
 ```
 You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended.
 
-
-
 Modules
 --------
 Current Status: **WIP**
@@ -241,4 +240,4 @@ of the `export` before the declaration.
 
 End
 -------
-You made it to the end? Wow, thank you for the interest in reading the language. Before you lose your attention, please consider [contributing](https://github.com/The-NextGen-Project/jet/blob/main/CONTRIBUTING.md).
+You made it to the end? Wow, thank you for the interest in reading the language. Before we you lose your attention, please consider [contributing](https://github.com/The-NextGen-Project/jet/blob/main/CONTRIBUTING.md).
