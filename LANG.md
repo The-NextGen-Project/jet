@@ -148,5 +148,5 @@ export var MyGlobalVariable = 32;
 ```
 
 Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
-of the `export` before the declration.
+of the `export` before the declaration.
 
