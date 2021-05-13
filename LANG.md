@@ -63,11 +63,13 @@ Current Status: **WIP**
 
 ### Operator Overloading
 Current Status: **Planned**
+
 > **Note:** Outline is not available yet, but will be soon.
 
 Arrays
 --------
 Current Status: **WIP**
+
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
 ```js
@@ -77,6 +79,7 @@ var fixed: [5,int] = [1, 2, 3, 4, 5];
 
 ### Designated Initializers
 Current Status: **Planned**
+
 Lists are mutable by default (unlike most of the other data types) because they are most 
 commonly dynamic and require mutability. Since we like to acknowledge the strengths of some
 languages and weaknesses of others, one may consider a similar example of initalizing an array
@@ -93,6 +96,7 @@ We feel that this as a design principle is good for dealing with code that relie
 
 ### Length
 Current Status: **Planned**
+
 ```python
 len(list);
 ```
@@ -115,11 +119,13 @@ List slicing works just as expected in Python and has the same exact effect. For
 Modules
 --------
 Current Status: **WIP**
+
 The way a module system of a programming language dictates its entire package functionality structure. In order to be able to give
 the programmer a lot of control we have decided to make it explicit as to functions / types are exported out in the file's module.
 
 ### Imports
 Current Status: **WIP**
+
 ```python
 import SomeModuleName
 ```
@@ -129,6 +135,7 @@ This is how most modules will be imported directly.
 
 ### Github Imports
 Current Status: **Planned**
+
 ```python
 import 'https://github.com/The-NextGen-Project/jet.git' as SomeModule
 ```
@@ -138,6 +145,7 @@ ensure that you have the latest stable version of the git repository imported in
 
 ### Exporting Values
 Current Status: **Planned**
+
 Functions:
 ```zig
 export fn my_func(...) { ... } 
