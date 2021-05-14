@@ -1,5 +1,5 @@
 # [Jet ✈️]() 
-[![GitHub license](https://img.shields.io/github/license/The-NextGen-Project/jet?color=%2320ba37&label=License&logo=%2320ba37&logoColor=%2320ba37&style=for-the-badge)](https://github.com/The-NextGen-Project/jet/blob/main/LICENSE)      [![Build Status](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Jet-Build?style=for-the-badge)]()
+[![GitHub license](https://img.shields.io/github/license/The-NextGen-Project/jet?color=%2320ba37&label=License&logo=%2320ba37&logoColor=%2320ba37&style=for-the-badge)](https://github.com/The-NextGen-Project/jet/blob/main/LICENSE)      [![Build Status](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Jet-Build?style=for-the-badge)](https://github.com/The-NextGen-Project/jet/actions/workflows/build.yml)
 #### Turbo boost your code on any platform with the highest performance.
 
 Table of Contents
