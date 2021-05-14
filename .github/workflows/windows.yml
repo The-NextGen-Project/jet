@@ -25,5 +25,5 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: cd tests && dir
+      run: cd tests && cd Release && ./tests
       
