@@ -10,6 +10,8 @@ Outline
 * [Add your own Feature](#add-your-own-features)
 * [Code Style Guidelines](#style-guidelines)
 * [Commit Style Guidelines](#committing-guidelines)
+* [Bug Reports](https://github.com/The-NextGen-Project/jet/blob/main/.github/ISSUE_TEMPLATE/jet----bug-report.md)
+* [Pull Requests]()
 * [Licensing](#licensing)
 
 Code of Conduct.
