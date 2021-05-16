@@ -21,10 +21,10 @@ namespace nextgen { namespace mem {
 
     NG_INLINE void *realloc(void *buf, size_t size) {
       if (buf == nullptr && size == 0) return nullptr;
-      auto *p = ::realloc(buf, size);
-      if (p == nullptr)
+      buf = ::realloc(buf, size);
+      if (buf == nullptr)
         PANIC("realloc failed");
-      return p;
+      return buf;
     }
 
     NG_INLINE void free(void *p) {

@@ -180,11 +180,14 @@ namespace nextgen { namespace core {
     {
       list = (T*) mem::os::malloc(sizeof(T) * reserve);
     }
+    ~List() {
+      mem::os::free(list);
+    }
 
     void add(T element) {
-      if (len + 1 > cap) {
+      if (len + 1 >= cap) {
         cap *= 3;
-        list = (T*) mem::os::realloc(list, cap);
+        list = (T*) mem::os::realloc(list, sizeof(T) * cap);
       }
       list[len++] = element;
     }
@@ -201,7 +204,7 @@ namespace nextgen { namespace core {
   private:
     T *list;
     size_t len{0};
-    size_t cap{1};
+    size_t cap{2};
   };
 
   template<typename T, typename E>

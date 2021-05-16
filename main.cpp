@@ -19,8 +19,7 @@ int main(
   //std::ios::sync_with_stdio(false);
 
   try {
-
-    std::vector<int> myvec { 1, 2, 3, 43, 34, 2};
+    
 
   } catch (std::exception &) {
     return EXIT_FAILURE;
