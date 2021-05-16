@@ -19,11 +19,14 @@ namespace nextgen { namespace io {
   public:
     using Files = FileBuf[];
 
-
     FileBuf(char *buffer, FileID id) : buffer(buffer), id(id) {}
 
     FileID getFileID() const {
       return id;
+    }
+
+    char *getFileBuffer() const {
+      return buffer;
     }
 
 
@@ -37,6 +40,9 @@ namespace nextgen { namespace io {
     // Example:
     // FileBuf files[] = ...
     // FileBuf::Output(files, FiledID::LLVM_IR);
+    //
+    // NOTE: The types of files need to be able to be linked together to form
+    // the resulting FileID file type.
     static void Output(Files files, FileID output);
   private:
     char *buffer; // Buffer pointer to the source text of a file

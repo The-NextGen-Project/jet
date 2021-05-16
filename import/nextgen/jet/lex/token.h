@@ -51,7 +51,7 @@ namespace nextgen { namespace jet {
     };
 
     Token() = default;
-    Token(SourceSpan span, SourceLocation loc, const TokenKind *kind,
+    Token(nextgen::str span, SourceLocation loc, const TokenKind *kind,
           TokenClassification flags)
     : id(span), kind(kind), flags(flags), location(loc) {}
 

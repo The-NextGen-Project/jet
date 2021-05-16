@@ -5,7 +5,6 @@
 namespace nextgen {
 using namespace core;
 
-
   template <typename T>
   struct Range {
 
@@ -58,17 +57,6 @@ using namespace core;
       }
       return val;
     }
-
-
-    // Finds the specified pattern (not regex) but a consistent sequence of
-    // values. For example, calling find for "aa" will send the index to that
-    // first 'a' point and if not found returns a NoneValue.
-    /*Option<size_t> find(const char *pattern) {
-      size_t index = strcspn(_, pattern);
-      if (index < len)
-        return Some(index);
-      return None;
-    }*/
 
     char operator[](size_t index) const {
       return (static_cast<const char *>(_))[index];

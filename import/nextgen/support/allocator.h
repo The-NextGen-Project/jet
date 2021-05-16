@@ -1,13 +1,12 @@
 # ifndef NEXTGEN_ALLOCATOR_H
 # define NEXTGEN_ALLOCATOR_H
 
-# include "core.h"
+
 # include "panic.h"
 
 
 namespace nextgen { namespace mem {
 
-  using namespace nextgen::core;
 
   namespace os { // System allocators/libc
 
@@ -16,7 +15,7 @@ namespace nextgen { namespace mem {
       if (size == 0) return nullptr;
       auto *p = ::malloc(size);
       if (p == nullptr)
-        panic("malloc failed");
+        PANIC("malloc failed");
       return p;
     }
 
@@ -24,7 +23,7 @@ namespace nextgen { namespace mem {
       if (buf == nullptr && size == 0) return nullptr;
       auto *p = ::realloc(buf, size);
       if (p == nullptr)
-        panic("realloc failed");
+        PANIC("realloc failed");
       return p;
     }
 
@@ -67,6 +66,7 @@ namespace nextgen { namespace mem {
       pool = (char*) os::malloc(SIZE);
     }
 
+
     void *next(size_t allocation_size) override {
       if (allocation_size == 0)
         return nullptr;
@@ -76,8 +76,10 @@ namespace nextgen { namespace mem {
       }
 
       offset += allocation_size;
-      return pool + allocation_size;
+      pool += allocation_size;
+      return pool;
     }
+
 
     NG_AINLINE void free() override {
       os::free(pool);

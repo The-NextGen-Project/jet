@@ -5,7 +5,7 @@ using namespace nextgen::io;
 
 // Read a file using the standard library and outputs a FileBuf
 // with the contents. TODO: Can this be more portable??
-FileBuf get_file_buf(const char *FILE, FileID id) {
+FileBuf get_file_buf(const char *FILE, FileID ID) {
   auto read = std::ifstream(FILE, std::ios::binary);
   auto buf  = read.rdbuf();
   auto size = read.tellg();
@@ -13,7 +13,7 @@ FileBuf get_file_buf(const char *FILE, FileID id) {
   auto block = static_cast<char*>(nextgen::mem::os::malloc(size));
   buf->sgetn(block, size);
 
-  return { block, id };
+  return { block, ID };
 }
 
 // Given a list of files, output the type of file given. For example,

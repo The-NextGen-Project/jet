@@ -71,8 +71,10 @@ namespace nextgen {
     }
   };
 
-# define panic(msg) nextgen::panic_at<sizeof(msg), sizeof(__FILE__), sizeof("panic("#msg");"), __LINE__, false>(msg, __FILE__, "panic("#msg");")
-# define assert(cond, msg) if (!(cond)) nextgen::panic_at<sizeof(msg), sizeof(__FILE__), sizeof("assert("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, "assert("#cond", "#msg");")
+# define PANIC(msg) nextgen::panic_at<sizeof(msg), sizeof(__FILE__), sizeof \
+("panic("#msg");"), __LINE__, false>(msg, __FILE__, "panic("#msg");")
+# define ASSERT(cond, msg) if (!(cond)) nextgen::panic_at<sizeof(msg), sizeof \
+(__FILE__), sizeof("assert("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, "assert("#cond", "#msg");")
 
   // Panic at a specific point in the code. This is simulated as an exception throw caught by
   // main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,

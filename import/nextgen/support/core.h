@@ -2,7 +2,7 @@
 # define NEXTGEN_CORE_H
 
 # include "none.h"
-# include "panic.h"
+# include "allocator.h"
 
 namespace nextgen { namespace core {
 
@@ -73,7 +73,7 @@ namespace nextgen { namespace core {
     }
 
     T unwrap() {
-      assert(is, "Unwrapped on None Value");
+      ASSERT(is, "Unwrapped on None Value");
       return Some;
     }
 
@@ -154,7 +154,7 @@ namespace nextgen { namespace core {
     }
 
     T unwrap()  {
-      assert(is, "Unwrapped Error Result!");
+      ASSERT(is, "Unwrapped Error Result!");
       return Ok;
     }
 
@@ -162,6 +162,46 @@ namespace nextgen { namespace core {
     T Ok;
     E Err;
     bool is;
+  };
+
+
+
+  // Bare-bones List structure for holding large amounts of elements. This is
+  // meant to hold items in places where limits are tested, for example, a
+  // program may have hundreds of thousands of tokens that need to be parsed
+  // and so the size of the list increases quite a lot to reflect that need.
+  template <typename T>
+  class List {
+  public:
+    List() {
+      list = (T*) mem::os::malloc(sizeof(T) * 2);
+    }
+    explicit List(size_t reserve) : cap(reserve)
+    {
+      list = (T*) mem::os::malloc(sizeof(T) * reserve);
+    }
+
+    void add(T element) {
+      if (len + 1 > cap) {
+        cap *= 3;
+        list = (T*) mem::os::realloc(list, cap);
+      }
+      list[len++] = element;
+    }
+
+    T pop() {
+      ASSERT(len >= 1, "Invalid List Pop.");
+      return list[--len];
+    }
+
+    NG_AINLINE T operator[](size_t index) const {
+      return list[index];
+    }
+
+  private:
+    T *list;
+    size_t len{0};
+    size_t cap{2};
   };
 
   template<typename T, typename E>

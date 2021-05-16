@@ -20,6 +20,7 @@ int main(
 
   try {
 
+    std::vector<int> myvec { 1, 2, 3, 43, 34, 2};
 
   } catch (std::exception &) {
     return EXIT_FAILURE;

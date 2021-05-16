@@ -1,10 +1,8 @@
 #ifndef NEXTGEN_NONE_H
 #define NEXTGEN_NONE_H
 
-namespace nextgen {
-  enum class NoneValue {
-    None = 1
-  };
+namespace nextgen { // Putting this in the global namespace
+  enum class NoneValue { None = 1 };
   static constexpr NoneValue None = NoneValue::None;
 }
 
