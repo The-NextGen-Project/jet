@@ -10,5 +10,5 @@ std::ostream &operator<<(std::ostream &s, const nextgen::str &str) {
   s.write(str, str.size());
   return s;
 }
-
+  
 
