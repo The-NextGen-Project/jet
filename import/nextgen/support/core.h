@@ -201,7 +201,7 @@ namespace nextgen { namespace core {
   private:
     T *list;
     size_t len{0};
-    size_t cap{2};
+    size_t cap{1};
   };
 
   template<typename T, typename E>
