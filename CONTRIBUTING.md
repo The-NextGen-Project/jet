@@ -11,7 +11,7 @@ Outline
 * [Code Style Guidelines](#style-guidelines)
 * [Commit Style Guidelines](#committing-guidelines)
 * [Bug Reports](https://github.com/The-NextGen-Project/jet/blob/main/.github/ISSUE_TEMPLATE/jet----bug-report.md)
-* [Pull Requests]()
+* [Pull Requests](#pull-requests)
 * [Licensing](#licensing)
 
 Code of Conduct.
@@ -83,6 +83,13 @@ All commits to the project's repository are follow the following Guidelines.
     * :fire:              `:fire:`              when source files are moved, changed, or deleted
     * :wrench:            `:wrench:`            when fixing build system (CMake, CI)
     * :white_check_mark:  `:white_check_mark:`  when working on tests
+
+Pull Requests
+---------------
+Pull Requests are pretty straightforward. You have a change to the existing source code, great :), now you want create
+a pull request directly. If workflow succeeds and code is checked by the team, then you are ready to 
+merge into the branch you requested for. 
+
 
 Licensing
 ----------
