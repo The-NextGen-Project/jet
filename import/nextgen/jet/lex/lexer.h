@@ -4,22 +4,21 @@
 # include "token.h"
 # include "nextgen/support/io.h"
 
-namespace nextgen { namespace jet {
-using namespace nextgen::core;
+namespace nextgen { namespace jet { using namespace nextgen::core;
 
-    enum ErrorType {
-      MalformedUTF8,
-      InvalidChar,
-      UnexpectedEOF,
-      Unreachable,
-      IntegerOverflow,
-      FloatingPointOverflow
-    };
+  enum ErrorType {
+    MalformedUTF8,
+    InvalidChar,
+    UnexpectedEOF,
+    Unreachable,
+    IntegerOverflow,
+    FloatingPointOverflow
+  };
 
-    struct LexError {
-      ErrorType type;
-      Token::SourceLocation loc;
-    };
+  struct LexError {
+    ErrorType type;
+    Token::SourceLocation loc;
+  };
 
   class Lexer {
   public:
@@ -38,32 +37,32 @@ using namespace nextgen::core;
     };
 
 
-    static constexpr CharacterClass Class[256]{
+    static constexpr TokenKind Class[256] {
 
       // Error code
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
 
 
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Str,  // '"'
-      CharacterClass::Error, CharacterClass::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
+      TokenKind::String,  // '"'
+      TokenKind::Error, TokenKind::Error,
       CharacterClass::Char2, // '%'
       CharacterClass::Char2, // '&'
       CharacterClass::Str, // '\''
-      CharacterClass::Error, CharacterClass::Error,
+      TokenKind::Error, TokenKind::Error,
       CharacterClass::Char3, // '*'
       CharacterClass::Char2, // '+'
-      CharacterClass::Error,
+      TokenKind::Error,
 
       CharacterClass::Char2, // '-'
 
@@ -74,123 +73,123 @@ using namespace nextgen::core;
 
 
       // Digits
-      CharacterClass::Number, CharacterClass::Number, CharacterClass::Number,
-      CharacterClass::Number, CharacterClass::Number,
-      CharacterClass::Number, CharacterClass::Number, CharacterClass::Number,
-      CharacterClass::Number, CharacterClass::Number,
+      TokenKind::Integer, TokenKind::Integer, TokenKind::Integer,
+      TokenKind::Integer, TokenKind::Integer,
+      TokenKind::Integer, TokenKind::Integer, TokenKind::Integer,
+      TokenKind::Integer, TokenKind::Integer,
 
 
       CharacterClass::Char2, // ':'
 
       // Error Code
-      CharacterClass::Error,
+      TokenKind::Error,
       CharacterClass::Char3, // '<'
       CharacterClass::Char2, // '='
       CharacterClass::Char3, // '>'
       CharacterClass::Char2, // '?'
-      CharacterClass::Error,
+      TokenKind::Error,
 
       // Uppercase letters
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier,
 
 
-      CharacterClass::Single, // '['
+      TokenKind::LBracket, // '['
 
-      CharacterClass::Error,
+      TokenKind::Error,
 
-      CharacterClass::Single, // ']'
+      TokenKind::RBracket, // ']'
 
-      CharacterClass::Char2, // '^'
+      TokenKind::XOR, // '^'
 
-      CharacterClass::ID,     // '_'
+      TokenKind::Identifier,     // '_'
 
-      CharacterClass::Error,
+      TokenKind::Error,
 
       // Lowercase letters
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID, CharacterClass::ID,
-      CharacterClass::ID, CharacterClass::ID,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier, TokenKind::Identifier,
+      TokenKind::Identifier, TokenKind::Identifier,
 
 
-      CharacterClass::Single, // '{'
-      CharacterClass::Char2, // '|'
-      CharacterClass::Single, // '}'
-      CharacterClass::Char2, // '~'
+      TokenKind::LCurlyBrace, // '{'
+      TokenKind::Pipe, // '|'
+      TokenKind::RCurlyBrace, // '}'
+      TokenKind::NOT, // '~'
 
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error, CharacterClass::Error,
-      CharacterClass::Error, CharacterClass::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error, TokenKind::Error,
+      TokenKind::Error, TokenKind::Error,
     };
 
 
-    Lexer(Allocator *allocator, File *buf) : allocator(allocator),
-                                             file(buf) {}
+    Lexer(Allocator *allocator, File *buf) :
+    allocator(allocator), file(buf) {}
 
     // Peek `n` number of characters in the file buffer.
-    NG_INLINE void peek(size_t n);
+    NG_INLINE void Peek(size_t n);
 
     // Get current character that the lexer is at.
-    NG_AINLINE char curr() const;
+    NG_AINLINE char Curr() const;
 
 
     // Lex the given File and output a token stream

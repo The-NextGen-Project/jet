@@ -10,36 +10,22 @@ namespace nextgen { namespace core {
 
     // PartialEq Equivalent in C++.
     template<typename T, typename K, typename = K>
-    struct PartialEq : std::false_type {
-    };
+    struct PartialEq : std::false_type {};
 
     template<typename T, typename K>
     struct PartialEq<T, K,
       decltype(
-      // In Rust, a PartialEq value must have the '==' operator and the '!='
-      // operator overloaded.
+      // In Rust, a PartialEq value must have the '==' operator
+      // and the '!='operator overloaded.
       std::declval<T>() == std::declval<T>() &&
       std::declval<T>() != std::declval<T>()
       )>
       : std::true_type {
     };
 
-    // HasRange Concept Equivalent in C++11.
-    template<typename T, typename K, typename = K>
-    struct HasRange : std::false_type {};
-
-    template<typename T, typename K>
-    struct HasRange<T, K,
-      decltype ((size_t) (std::declval<T>() - std::declval<T>()))>
-      : std::true_type {};
-
   }
   template<typename T, typename K = bool>
   struct PartialEq : detail::PartialEq<T, K> {};
-
-  template<typename T, typename K = bool>
-  struct HasRange : detail::HasRange<T, K> {};
-
 
   template<typename T>
   class Option {
@@ -66,7 +52,8 @@ namespace nextgen { namespace core {
       return !is;
     }
 
-    template<typename U, typename = std::enable_if<PartialEq<T>::value>>
+    template<typename U,
+      typename = std::enable_if<PartialEq<T>::value>>
     bool contains(U x) {
       if (is) return x == Some;
       return false;
@@ -78,9 +65,8 @@ namespace nextgen { namespace core {
     }
 
     template<typename Lambda, typename
-    = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
-      void)
-    >>::value>::type>
+    = typename std::enable_if<std::is_convertible<Lambda,
+      std::function<T(void)>>::value>::type>
     T unwrap_or_else(Lambda f) {
       if (is) return Some;
       return f();
@@ -146,14 +132,15 @@ namespace nextgen { namespace core {
     }
 
     template<typename Lambda,
-      typename = typename std::enable_if<std::is_convertible<Lambda, std::function<T(Result<T, E>)
-    >>::value>::type>
+      typename =
+      typename std::enable_if<std::is_convertible<Lambda,
+        std::function<T(Result<T, E>)>>::value>::type>
     Result<T, E> and_then(Lambda op) {
       if (is) return op(Ok);
       return Result(Err);
     }
 
-    T unwrap()  {
+    T unwrap() {
       ASSERT(is, "Unwrapped Error Result!");
       return Ok;
     }
@@ -165,21 +152,21 @@ namespace nextgen { namespace core {
   };
 
 
-
   // Bare-bones List structure for holding large amounts of elements. This is
   // meant to hold items in places where limits are tested, for example, a
   // program may have hundreds of thousands of tokens that need to be parsed
   // and so the size of the list increases quite a lot to reflect that need.
-  template <typename T>
+  template<typename T>
   class List {
   public:
     List() {
-      list = (T*) mem::os::malloc(sizeof(T) * 2);
+      list = (T *) mem::os::malloc(sizeof(T) * 2);
     }
-    explicit List(size_t reserve) : cap(reserve)
-    {
-      list = (T*) mem::os::malloc(sizeof(T) * reserve);
+
+    explicit List(size_t reserve) : cap(reserve) {
+      list = (T *) mem::os::malloc(sizeof(T) * reserve);
     }
+
     ~List() {
       mem::os::free(list);
     }
@@ -187,7 +174,7 @@ namespace nextgen { namespace core {
     void add(T element) {
       if (len + 1 >= cap) {
         cap *= 3;
-        list = (T*) mem::os::realloc(list, sizeof(T) * cap);
+        list = (T *) mem::os::realloc(list, sizeof(T) * cap);
       }
       list[len++] = element;
     }
@@ -208,7 +195,7 @@ namespace nextgen { namespace core {
   };
 
   template<typename T, typename E>
-  static Result<T, E> Ok(T value)  {
+  static Result<T, E> Ok(T value) {
     return Result<T, E>(detail::OkResult::Ok, value);
   }
 

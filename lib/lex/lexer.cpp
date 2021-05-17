@@ -3,21 +3,21 @@
 using namespace nextgen::jet;
 
 // Peek `n` number of characters in the file buffer.
-void Lexer::peek(size_t n) {
+void Lexer::Peek(size_t n) {
   this->pos += n;
   this->c = *(this->pos);
 }
 
 // Get current character that the lexer is at.
-char Lexer::curr() const {
+char Lexer::Curr() const {
   return this->c;
 }
 
 auto Lexer::lex() -> Result<List<Token>, LexError> {
   auto tokens = List<Token> {};
   do {
-
-  } while (this->clz != CharacterClass::Error);
+    auto kind = Lexer::Class[this->c];
+  } while (this->c);
 
   return Ok<List<Token>, LexError>(tokens);
 }
