@@ -57,7 +57,7 @@ namespace nextgen { namespace mem {
   //
   // Example:
   //
-  template <size_t SHIFT>
+  template <size_t SHIFT> // TODO: Probably just delete this you don't need it
   class PoolAllocator final : public BlockAllocator {
   public:
     static constexpr auto SIZE = 65536 << SHIFT;
@@ -72,7 +72,7 @@ namespace nextgen { namespace mem {
         return nullptr;
 
       if (allocation_size + offset >= size) {
-        os::realloc(pool, size * 2);
+        return os::malloc(allocation_size);
       }
 
       offset += allocation_size;
