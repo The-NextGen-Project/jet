@@ -25,7 +25,7 @@ Spread the Word
 
 Another way to contribute is to write about Jet and the NextGen Project, or speak about Jet on
 some online forums to encourage a friendly discussion. The language is at its early stages, so 
-we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
+we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://discord.gg/tft9Nw5jm6)
 where we discuss new changes and possible integrations with new technologies.
 
 Add your own Features
