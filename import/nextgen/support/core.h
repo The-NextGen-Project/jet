@@ -2,7 +2,7 @@
 # define NEXTGEN_CORE_H
 
 # include "none.h"
-# include "allocator.h"
+# include "panic.h"
 
 namespace nextgen { namespace core {
 
@@ -15,8 +15,8 @@ namespace nextgen { namespace core {
     template<typename T, typename K>
     struct PartialEq<T, K,
       decltype(
-      // In Rust, a PartialEq value must have the '==' operator
-      // and the '!='operator overloaded.
+      // In Rust, a PartialEq value must have the '==' operator and the '!='
+      // operator overloaded.
       std::declval<T>() == std::declval<T>() &&
       std::declval<T>() != std::declval<T>()
       )>
@@ -27,13 +27,10 @@ namespace nextgen { namespace core {
   template<typename T, typename K = bool>
   struct PartialEq : detail::PartialEq<T, K> {};
 
+
   template<typename T>
   class Option {
   public:
-    template<typename X>
-    static Option<X> from(X value) {
-      return Option(value);
-    }
 
     /*implicit*/ Option(T &value) :
       Some(std::move(value)), is(true) {}
@@ -44,30 +41,30 @@ namespace nextgen { namespace core {
     /*implicit*/ Option(NoneValue) :
       is(false) {}
 
-    NG_AINLINE bool is_some() {
+    NG_AINLINE bool IsSome() {
       return is;
     }
 
-    NG_AINLINE bool is_none() {
+    NG_AINLINE bool IsNone() {
       return !is;
     }
 
-    template<typename U,
-      typename = std::enable_if<PartialEq<T>::value>>
-    bool contains(U x) {
+    template<typename U, typename = std::enable_if<PartialEq<T>::value>>
+    bool Contains(U x) {
       if (is) return x == Some;
       return false;
     }
 
-    T unwrap() {
+    T Unwrap() {
       ASSERT(is, "Unwrapped on None Value");
       return Some;
     }
 
     template<typename Lambda, typename
-    = typename std::enable_if<std::is_convertible<Lambda,
-      std::function<T(void)>>::value>::type>
-    T unwrap_or_else(Lambda f) {
+    = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
+      void)
+    >>::value>::type>
+    T UnwrapOrElse(Lambda f) {
       if (is) return Some;
       return f();
     }
@@ -90,11 +87,6 @@ namespace nextgen { namespace core {
   class Result {
   public:
 
-    template<typename X, typename Y>
-    static Result<X, Y> make(X value) {
-      return Result<X, Y>(value);
-    }
-
     /*implicit*/ Result(detail::OkResult, T ok)
       : Ok(ok), is(true) {}
 
@@ -102,45 +94,35 @@ namespace nextgen { namespace core {
     /*implicit*/ Result(detail::ErrResult, E err)
       : Err(err), is(false) {}
 
-    bool is_ok() {
+    bool IsOk() {
       return is;
     }
 
-    bool is_err() {
+    bool IsErr() {
       return !is;
     }
 
     template<typename U, typename = std::enable_if<PartialEq<U>::value>>
-    bool contains(U x) {
+    bool Contains(U x) {
       if (is) return x == Ok;
       return false;
     }
 
-    Option<T> ok() {
-      if (is) return Option<T>(Ok);
-      return None;
-    }
-
-    Option<E> err() {
-      if (is) return None;
-      return Option<E>(Err);
-    }
-
-    Result<T &, E &> as_ref() {
+    Result<T &, E &> AsRef() {
       if (is) return Result(&Ok);
       return Result(&Err);
     }
 
     template<typename Lambda,
-      typename =
-      typename std::enable_if<std::is_convertible<Lambda,
-        std::function<T(Result<T, E>)>>::value>::type>
-    Result<T, E> and_then(Lambda op) {
+      typename = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
+        Result<T, E>)
+      >>::value>::type>
+    Result<T, E> AndThen(Lambda op) {
       if (is) return op(Ok);
       return Result(Err);
     }
 
-    T unwrap() {
+    T Unwrap() {
       ASSERT(is, "Unwrapped Error Result!");
       return Ok;
     }
@@ -151,48 +133,6 @@ namespace nextgen { namespace core {
     bool is;
   };
 
-
-  // Bare-bones List structure for holding large amounts of elements. This is
-  // meant to hold items in places where limits are tested, for example, a
-  // program may have hundreds of thousands of tokens that need to be parsed
-  // and so the size of the list increases quite a lot to reflect that need.
-  template<typename T>
-  class List {
-  public:
-    List() {
-      list = (T *) mem::os::malloc(sizeof(T) * 2);
-    }
-
-    explicit List(size_t reserve) : cap(reserve) {
-      list = (T *) mem::os::malloc(sizeof(T) * reserve);
-    }
-
-    ~List() {
-      mem::os::free(list);
-    }
-
-    void add(T element) {
-      if (len + 1 >= cap) {
-        cap *= 3;
-        list = (T *) mem::os::realloc(list, sizeof(T) * cap);
-      }
-      list[len++] = element;
-    }
-
-    T pop() {
-      ASSERT(len >= 1, "Invalid List Pop.");
-      return list[--len];
-    }
-
-    NG_AINLINE T operator[](size_t index) const {
-      return list[index];
-    }
-
-  private:
-    T *list;
-    size_t len{0};
-    size_t cap{2};
-  };
 
   template<typename T, typename E>
   static Result<T, E> Ok(T value) {

@@ -25,18 +25,6 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     using Allocator = nextgen::mem::ArenaSegment;
     using File      = char;
 
-    enum CharacterClass {
-      ID = 0,
-      Number = 1,
-      Single = 2,
-      Char2 = 3,
-      Char3 = 4,
-      Str = 5,
-      Real = 6,
-      Error = 777,
-    };
-
-
     static constexpr TokenKind Class[256] {
 
       // Error code
@@ -56,20 +44,20 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       TokenKind::Error, TokenKind::Error,
       TokenKind::String,  // '"'
       TokenKind::Error, TokenKind::Error,
-      CharacterClass::Char2, // '%'
-      CharacterClass::Char2, // '&'
-      CharacterClass::Str, // '\''
+      TokenKind::Percent, // '%'
+      TokenKind::AND, // '&'
+      TokenKind::Char, // '\''
       TokenKind::Error, TokenKind::Error,
-      CharacterClass::Char3, // '*'
-      CharacterClass::Char2, // '+'
+      TokenKind::Star, // '*'
+      TokenKind::Plus, // '+'
       TokenKind::Error,
 
-      CharacterClass::Char2, // '-'
+      TokenKind::Minus, // '-'
 
 
-      CharacterClass::Real, // '.'
+      TokenKind::Dot, // '.'
 
-      CharacterClass::Char2, // '/'
+      TokenKind::Slash, // '/'
 
 
       // Digits
@@ -79,14 +67,14 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       TokenKind::Integer, TokenKind::Integer,
 
 
-      CharacterClass::Char2, // ':'
+      TokenKind::Colon, // ':'
 
       // Error Code
       TokenKind::Error,
-      CharacterClass::Char3, // '<'
-      CharacterClass::Char2, // '='
-      CharacterClass::Char3, // '>'
-      CharacterClass::Char2, // '?'
+      TokenKind::LessThan, // '<'
+      TokenKind::Equals, // '='
+      TokenKind::GreaterThan, // '>'
+      TokenKind::QuestionMark, // '?'
       TokenKind::Error,
 
       // Uppercase letters
@@ -193,7 +181,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
 
     // Lex the given File and output a token stream
-    Result<List<Token>, LexError> lex();
+    Result<nextgen::mem::list<Token>, LexError> Lex();
 
   private:
     Allocator *allocator;
@@ -201,7 +189,6 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
     char *pos{file};
     char c{};
-    CharacterClass clz;
   };
 
 

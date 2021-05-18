@@ -13,13 +13,8 @@ char Lexer::Curr() const {
   return this->c;
 }
 
-auto Lexer::lex() -> Result<List<Token>, LexError> {
-  auto tokens = List<Token> {};
-  do {
-    auto kind = Lexer::Class[this->c];
-  } while (this->c);
-
-  return Ok<List<Token>, LexError>(tokens);
+Result<nextgen::mem::list<Token>, LexError> Lexer::Lex() {
+  return Ok<nextgen::mem::list<Token>, LexError>(mem::list<Token>{});
 }
 
 

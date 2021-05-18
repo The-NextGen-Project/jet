@@ -2,37 +2,39 @@
 # define NEXTGEN_STR_H
 # include "core.h"
 
-namespace nextgen {
-using namespace core;
+namespace nextgen { using namespace core;
 
-  template <typename T>
+  template<typename T>
   struct Range {
 
     const T begin;
     const T end;
 
     Range(T begin, T end) : begin(begin), end(end) {}
+
     Range() = default;
 
     [[nodiscard]]
-    NG_INLINE size_t range() const {
+    NG_INLINE size_t range() const { // STD NAMING
       return (size_t) (end - begin);
     }
   };
 
 
-  class str  {
+  class str { // STD NAMING
   public:
     str() = default;
 
-    template <unsigned long N>
-    /*implicit*/ constexpr str(const char(&data)[N]) : len(N), _(data)
-    {}
+    template<unsigned long N>
+    /*implicit*/ constexpr
+    str(const char(&data)[N]) : len(N), _(data) {}
 
-    /*implicit*/ str(const char *data) : len(strlen(data)), _(data) {}
+    /*implicit*/ str(const char *data) : len(strlen(data)),
+                                         _(data) {}
+
     /*implicit*/ str(std::string &data) {
       len = data.length();
-      _   = data.c_str();
+      _ = data.c_str();
     }
 
     // It is important to understand the the string type created here does
@@ -70,11 +72,11 @@ using namespace core;
       return static_cast<const char *>(_);
     }
 
-    size_t operator -(const str RHS) const {
-      return (size_t)(_ - RHS._);
+    size_t operator-(const str RHS) const {
+      return (size_t) (_ - RHS._);
     }
 
-    NG_INLINE str operator +(int offset) const {
+    NG_INLINE str operator+(int offset) const {
       return {
         _ + offset
       };
@@ -82,7 +84,7 @@ using namespace core;
 
     // Mutation.
 
-    NG_INLINE str operator ++() {
+    NG_INLINE str operator++() {
       _++;
       return *this;
     }
@@ -93,17 +95,18 @@ using namespace core;
     }
 
     NG_INLINE str operator+=(int offset) {
-      _ += (size_t)(offset);
+      _ += (size_t) (offset);
       return *this;
     }
 
-    NG_INLINE str operator -=(int offset) {
-      _ -= (size_t)(offset);
+    NG_INLINE str operator-=(int offset) {
+      _ -= (size_t) (offset);
       return *this;
     }
 
 
-    friend std::ostream &operator<<(std::ostream &s, const str &str);
+    friend std::ostream &
+    operator<<(std::ostream &s, const str &str);
 
   private:
     const char *_{};     // char* data

@@ -15,7 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_subdirectory(tests)
 
 
-add_executable(nextgen main.cpp
+add_executable(jet main.cpp
 
         # Import Support Libraries. These are the only headers with value definitions.
         import/nextgen/support/core.h
