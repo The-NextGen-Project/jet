@@ -74,7 +74,8 @@ Variables
 ---------
 Current Status: **WIP**
 
-Static typing is optional in this programming language. Variables may be declared in two different ways:
+The programming language is gradually typed. Static typing is only required when the compiler cannot infer the type.
+Variables may be declared in two different ways:
 ```zig
 var my_variable = 23;
 var another_variable: bool = false;
