@@ -5,7 +5,8 @@ project(tests)
 
 # Setup Google Test Compilation Cases
 add_executable(tests
-        support/ListTest.cpp)
+        support/ListTest.cpp
+        lex/LexTest.cpp)
 
 set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)
 

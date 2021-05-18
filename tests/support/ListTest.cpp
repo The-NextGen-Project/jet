@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include "nextgen/support/core.h"
+#include "nextgen/support/allocator.h"
 
 TEST(Lists, ListTest) {
   using namespace nextgen;
-  using namespace nextgen::mem;
   using namespace nextgen::core;
 
-  auto list = List<int> { };
+  auto list = mem::list<int> { };
   list.add(23);
   list.add(24);
   list.add(53554);
