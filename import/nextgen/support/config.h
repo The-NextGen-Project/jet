@@ -74,7 +74,6 @@ typedef __int8 int8_t;
 #   include <ios>
 #   include <exception>
 #   include <cstring>
-#   include <cfloat>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32
@@ -107,7 +106,7 @@ typedef __int8 int8_t;
 #       define FNV_OFF   14695981039346656037u
 #   endif
 // I want a shortcut for unreachable code here ...
-# define unreachable panic("unreachable")
+# define unreachable PANIC("unreachable")
 /* Class definitions */
 
 

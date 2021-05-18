@@ -11,13 +11,13 @@ namespace nextgen {
   // pre-defined to be White, Red, Green, Yellow, Blue, and Cyan and nothing
   // more that is needed to highlight something in the terminal.
   struct Colors {
-    static constexpr auto WHITE = COLOR_WHITE;
-    static constexpr auto RED = COLOR_RED;
-    static constexpr auto GREEN = COLOR_GREEN;
-    static constexpr auto YELLOW = COLOR_YELLOW;
-    static constexpr auto BLUE = COLOR_BLUE;
-    static constexpr auto CYAN = COLOR_CYAN;
-    static constexpr auto RESET = COLOR_RESET;
+    static constexpr auto WHITE   = COLOR_WHITE;
+    static constexpr auto RED     = COLOR_RED;
+    static constexpr auto GREEN   = COLOR_GREEN;
+    static constexpr auto YELLOW  = COLOR_YELLOW;
+    static constexpr auto BLUE    = COLOR_BLUE;
+    static constexpr auto CYAN    = COLOR_CYAN;
+    static constexpr auto RESET   = COLOR_RESET;
   };
 # elif defined(NG_OS_WINDOWS)
 
@@ -36,11 +36,11 @@ namespace nextgen {
 
 # endif
 
-  struct console {
+  struct Console {
 
 # if defined(NG_OS_WINDOWS)
 
-    // A little windows trick, that has the compiler infer which function gets
+    // A little guessing trick that has the compiler infer which function gets
     // called. It chooses default template unless we use a color.
     static void Write(Colors color) {
       static HANDLE GenericConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -57,10 +57,10 @@ namespace nextgen {
 # endif
 
     template<typename ... Args>
-    NG_INLINE static void log(Args ... args) {
+    NG_INLINE static void Log(Args ... args) {
       using fold = int[];
 # if defined(NG_OS_LINUX) || defined(NG_OS_APPLE)
-      fold {
+      fold{
         (std::cout << args, 0)...
       };
 # elif defined(NG_OS_WINDOWS)
@@ -71,36 +71,43 @@ namespace nextgen {
     }
   };
 
-# define panic(msg) nextgen::panic_at<sizeof(msg), sizeof(__FILE__), sizeof("panic("#msg");"), __LINE__, false>(msg, __FILE__, "panic("#msg");")
-# define assert(cond, msg) if (!(cond)) nextgen::panic_at<sizeof(msg), sizeof(__FILE__), sizeof("assert("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, "assert("#cond", "#msg");")
+# define PANIC(msg) nextgen::PanicAt<sizeof(msg), sizeof(__FILE__), sizeof \
+("panic("#msg");"), __LINE__, false>(msg, __FILE__, "panic("#msg");")
+# define ASSERT(cond, msg) if (!(cond)) nextgen::PanicAt<sizeof(msg), sizeof \
+(__FILE__), sizeof("assert("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, "assert("#cond", "#msg");")
 
   // Panic at a specific point in the code. This is simulated as an exception throw caught by
   // main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,
   // and text of the panic message to have the user locate the failed point in the code.
-  template<std::size_t N1, std::size_t N2, std::size_t N3, int LINE, bool Assert>
-  void panic_at(
+  template<
+    std::size_t N1, std::size_t N2, std::size_t N3,
+    int LINE, bool Assert>
+  void PanicAt(
     const char (&msg)[N1],  /* Panic Message */
     const char (&FILE)[N2], /* File Name of Error */
     const char (&dup)[N3]) { /* Line text of Panic */
 
-    console::log(FILE, ":", LINE, " ", Colors::RED, "error: ", Colors::WHITE,
+    Console::Log(FILE, ":", LINE, " ", Colors::RED, "error: ",
+                 Colors::WHITE,
                  msg);
-    console::log('\n', Colors::RESET);
+    Console::Log('\n', Colors::RESET);
 
     auto whitespace = (std::to_string(LINE) + " | ").length();
     if (Assert) {
-      console::log(Colors::RED, LINE, " | ", dup, Colors::WHITE, " <-- ",
+      Console::Log(Colors::RED, LINE, " | ", dup, Colors::WHITE,
+                   " <-- ",
                    Colors::RED, "Assert Failed:", Colors::YELLOW,
                    " Thread panicked here", "\n", Colors::BLUE);
     } else {
-      console::log(Colors::RED, LINE, " | ", dup, Colors::YELLOW,
-                   " <-- Thread panicked here", "\n", Colors::BLUE);
+      Console::Log(Colors::RED, LINE, " | ", dup, Colors::YELLOW,
+                   " <-- Thread panicked here", "\n",
+                   Colors::BLUE);
     }
     /* Leading Whitespace */
-    for (auto i = 0; i < whitespace; ++i) console::log(" ");
+    for (auto i = 0; i < whitespace; ++i) Console::Log(" ");
     /* Highlighting region */
-    for (auto i = 0; i < N3 - 1; ++i) console::log('~');
-    console::log(Colors::RESET, '\n');
+    for (auto i = 0; i < N3 - 1; ++i) Console::Log('~');
+    Console::Log(Colors::RESET, '\n');
     throw std::exception();
   }
 }

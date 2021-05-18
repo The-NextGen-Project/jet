@@ -1,6 +1,5 @@
 name: Windows
 
-
 on: [push, pull_request]
 
 env:

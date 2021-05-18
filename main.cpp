@@ -19,7 +19,7 @@ int main(
   //std::ios::sync_with_stdio(false);
 
   try {
-
+    
 
   } catch (std::exception &) {
     return EXIT_FAILURE;

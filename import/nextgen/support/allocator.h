@@ -1,14 +1,14 @@
 # ifndef NEXTGEN_ALLOCATOR_H
 # define NEXTGEN_ALLOCATOR_H
-
 # include "core.h"
-# include "panic.h"
 
 
-namespace nextgen { namespace mem {
+namespace nextgen { namespace mem { using namespace nextgen::core;
 
-  using namespace nextgen::core;
 
+
+
+  // STD NAMING
   namespace os { // System allocators/libc
 
 
@@ -16,7 +16,7 @@ namespace nextgen { namespace mem {
       if (size == 0) return nullptr;
       auto *p = ::malloc(size);
       if (p == nullptr)
-        panic("malloc failed");
+        PANIC("malloc failed");
       return p;
     }
 
@@ -24,7 +24,7 @@ namespace nextgen { namespace mem {
       if (buf == nullptr && size == 0) return nullptr;
       auto *p = ::realloc(buf, size);
       if (p == nullptr)
-        panic("realloc failed");
+        PANIC("realloc failed");
       return p;
     }
 
@@ -37,86 +37,38 @@ namespace nextgen { namespace mem {
 
 
 
-  class BlockAllocator  {
+  class ArenaSegment final  {
   public:
+    explicit ArenaSegment(ArenaSegment *next)
+      : next_segment (next) {}
 
-    // Free the allocated block.
-    virtual void free() = 0;
-
-    // Get the pointer to the next block. It may be None depending on the
-    // size of the segment that is left.
-    virtual void *next(size_t) = 0;
-  };
-
-
-  // A pool allocator is a block-based allocator. This means that each
-  // Arena contains multiple allocators, each of which is passed on to
-  // the object that does allocation, and is all freed at the end. This
-  // allows for minimal program allocation. Good thing about this is that
-  // if multiple similar parts of a program are in the same memory region
-  // its easier to manage and access.
-  //
-  // Example:
-  //
-  template <size_t SHIFT>
-  class PoolAllocator final : public BlockAllocator {
-  public:
-    static constexpr auto SIZE = 65536 << SHIFT;
-
-    PoolAllocator() {
-      pool = (char*) os::malloc(SIZE);
-    }
-
-    void *next(size_t allocation_size) override {
-      if (allocation_size == 0)
-        return nullptr;
-
-      if (allocation_size + offset >= size) {
-        os::realloc(pool, size * 2);
-      }
-
-      offset += allocation_size;
-      return pool + allocation_size;
-    }
-
-    NG_AINLINE void free() override {
-      os::free(pool);
-    }
-
-  private:
-    char *pool;
-    size_t offset = 0;
-    size_t size = SIZE;
-  };
-
-
-  class ArenaSegment final : public BlockAllocator {
-  public:
-    explicit ArenaSegment(BlockAllocator &backing)
-      : backing_allocator (backing) {}
-
-    void *next(size_t allocation_size) override {
+    template<typename T>
+    Option<T*> next(size_t allocation_size)  { // STD NAMING
 
       if (allocation_size == 0)
         return nullptr;
 
       if (allocation_size + offset >= size) {
-        return backing_allocator.next(allocation_size);
+        if (next_segment == nullptr) {
+          next_segment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+          *next_segment = ArenaSegment { (ArenaSegment*) os::malloc(sizeof
+                                                                      (ArenaSegment))};
+        }
+        return None;
       }
 
       offset += allocation_size;
       return block + allocation_size;
     }
 
-    NG_AINLINE void free() override {
-      // do nothing ...
+    ArenaSegment *getNext() {
+      return this->next_segment;
     }
-
   private:
     static constexpr size_t size = 65536 << 2;
     int    block[size]{};
     size_t offset = 0;
-    BlockAllocator &backing_allocator;
+    ArenaSegment *next_segment;
   };
 
 
@@ -124,22 +76,62 @@ namespace nextgen { namespace mem {
   class Arena {
   public:
     Arena() {
-
+      begin = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
       for (auto i = 0; i < N; ++i) {
-        auto backing = PoolAllocator<2> {};
-        segments[i]  = ArenaSegment { backing };
+        *begin = ArenaSegment { (ArenaSegment*) os::malloc(sizeof
+                                                             (ArenaSegment))};
+        begin = begin->getNext();
       }
     }
 
     ~Arena() {
-      auto i = 0;
-      for (; i < this->size; ++i)
-        segments[i].free();
+      auto start = begin;
+      while (start->getNext()) {
+        auto temp = start->getNext();
+        os::free(start);
+        start = temp;
+      }
+    }
+  private:
+    ArenaSegment *begin;
+  };
+
+  // Bare-bones List structure for holding large amounts of elements. This is
+  // meant to hold items in places where limits are tested, for example, a
+  // program may have hundreds of thousands of tokens that need to be parsed
+  // and so the size of the list increases quite a lot to reflect that need.
+  template<typename T>
+  class list { // STD NAMING
+  public:
+    list() {
+      arr = (T *) mem::os::malloc(sizeof(T) * 2);
     }
 
+    explicit list(size_t reserve) : cap(reserve) {
+      arr = (T *) mem::os::malloc(sizeof(T) * reserve);
+    }
+
+    void add(T element) {
+      if (len + 1 > cap) {
+        cap *= 3;
+        arr = (T *) mem::os::realloc(arr, sizeof(T) * cap);
+      }
+      arr[len++] = element;
+    }
+
+    T pop() {
+      ASSERT(len >= 1, "Invalid List Pop.");
+      return arr[--len];
+    }
+
+    NG_AINLINE T operator[](size_t index) const {
+      return arr[index];
+    }
 
   private:
-    std::array<ArenaSegment, N> segments{};
+    T *arr;
+    size_t len{0};
+    size_t cap{2};
   };
 
 }} // namespace nextgen::mem

@@ -10,8 +10,7 @@ namespace nextgen { namespace core {
 
     // PartialEq Equivalent in C++.
     template<typename T, typename K, typename = K>
-    struct PartialEq : std::false_type {
-    };
+    struct PartialEq : std::false_type {};
 
     template<typename T, typename K>
     struct PartialEq<T, K,
@@ -24,30 +23,14 @@ namespace nextgen { namespace core {
       : std::true_type {
     };
 
-    // HasRange Concept Equivalent in C++11.
-    template<typename T, typename K, typename = K>
-    struct HasRange : std::false_type {};
-
-    template<typename T, typename K>
-    struct HasRange<T, K,
-      decltype ((size_t) (std::declval<T>() - std::declval<T>()))>
-      : std::true_type {};
-
   }
   template<typename T, typename K = bool>
   struct PartialEq : detail::PartialEq<T, K> {};
-
-  template<typename T, typename K = bool>
-  struct HasRange : detail::HasRange<T, K> {};
 
 
   template<typename T>
   class Option {
   public:
-    template<typename X>
-    static Option<X> from(X value) {
-      return Option(value);
-    }
 
     /*implicit*/ Option(T &value) :
       Some(std::move(value)), is(true) {}
@@ -58,22 +41,22 @@ namespace nextgen { namespace core {
     /*implicit*/ Option(NoneValue) :
       is(false) {}
 
-    NG_AINLINE bool is_some() {
+    NG_AINLINE bool IsSome() {
       return is;
     }
 
-    NG_AINLINE bool is_none() {
+    NG_AINLINE bool IsNone() {
       return !is;
     }
 
     template<typename U, typename = std::enable_if<PartialEq<T>::value>>
-    bool contains(U x) {
+    bool Contains(U x) {
       if (is) return x == Some;
       return false;
     }
 
-    T unwrap() {
-      assert(is, "Unwrapped on None Value");
+    T Unwrap() {
+      ASSERT(is, "Unwrapped on None Value");
       return Some;
     }
 
@@ -81,7 +64,7 @@ namespace nextgen { namespace core {
     = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
       void)
     >>::value>::type>
-    T unwrap_or_else(Lambda f) {
+    T UnwrapOrElse(Lambda f) {
       if (is) return Some;
       return f();
     }
@@ -104,11 +87,6 @@ namespace nextgen { namespace core {
   class Result {
   public:
 
-    template<typename X, typename Y>
-    static Result<X, Y> make(X value) {
-      return Result<X, Y>(value);
-    }
-
     /*implicit*/ Result(detail::OkResult, T ok)
       : Ok(ok), is(true) {}
 
@@ -116,45 +94,36 @@ namespace nextgen { namespace core {
     /*implicit*/ Result(detail::ErrResult, E err)
       : Err(err), is(false) {}
 
-    bool is_ok() {
+    bool IsOk() {
       return is;
     }
 
-    bool is_err() {
+    bool IsErr() {
       return !is;
     }
 
     template<typename U, typename = std::enable_if<PartialEq<U>::value>>
-    bool contains(U x) {
+    bool Contains(U x) {
       if (is) return x == Ok;
       return false;
     }
 
-    Option<T> ok() {
-      if (is) return Option<T>(Ok);
-      return None;
-    }
-
-    Option<E> err() {
-      if (is) return None;
-      return Option<E>(Err);
-    }
-
-    Result<T &, E &> as_ref() {
+    Result<T &, E &> AsRef() {
       if (is) return Result(&Ok);
       return Result(&Err);
     }
 
     template<typename Lambda,
-      typename = typename std::enable_if<std::is_convertible<Lambda, std::function<T(Result<T, E>)
-    >>::value>::type>
-    Result<T, E> and_then(Lambda op) {
+      typename = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
+        Result<T, E>)
+      >>::value>::type>
+    Result<T, E> AndThen(Lambda op) {
       if (is) return op(Ok);
       return Result(Err);
     }
 
-    T unwrap()  {
-      assert(is, "Unwrapped Error Result!");
+    T Unwrap() {
+      ASSERT(is, "Unwrapped Error Result!");
       return Ok;
     }
 
@@ -164,8 +133,9 @@ namespace nextgen { namespace core {
     bool is;
   };
 
+
   template<typename T, typename E>
-  static Result<T, E> Ok(T value)  {
+  static Result<T, E> Ok(T value) {
     return Result<T, E>(detail::OkResult::Ok, value);
   }
 

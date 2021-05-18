@@ -13,16 +13,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 add_subdirectory(tests)
-add_subdirectory(third_party/googletest)
-
-target_compile_definitions(gtest
-        PUBLIC
-        GTEST_LANG_CXX11
-        GTEST_HASH_TR1_TUPLE=0
-        )
 
 
-add_executable(nextgen main.cpp
+add_executable(jet main.cpp
 
         # Import Support Libraries. These are the only headers with value definitions.
         import/nextgen/support/core.h
@@ -32,5 +25,4 @@ add_executable(nextgen main.cpp
         # Link the executables with all resolved symbols in the C++ files.
         lib/support/str.cpp
         lib/support/io.cpp
-        lib/support/allocator.cpp
         lib/lex/lexer.cpp)
