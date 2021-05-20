@@ -25,7 +25,7 @@ Spread the Word
 
 Another way to contribute is to write about Jet and the NextGen Project, or speak about Jet on
 some online forums to encourage a friendly discussion. The language is at its early stages, so 
-we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
+we want as much exposure as possible. We have currently have a channel on the [Programming Language Discord Server](https://discord.gg/tft9Nw5jm6)
 where we discuss new changes and possible integrations with new technologies.
 
 Add your own Features
@@ -43,8 +43,7 @@ Style Guidelines
 All programs under the NextGen Project follow the following C++ Style Guidlines.
 
 * Getter and Setter functions are to be named using `camelCase`
-* Static Functions (including in namespaces and in classes) should be denoted with `MyFunction` notation
-* Class and Struct member **functions** should be denoted with`snake_case`
+* Functions (including in namespaces and in classes) should be denoted with `MyFunction` notation
 * Class and Struct member **variables** should be deonoted with `snake_case`
 * When accessing private member variables, they should be accessed with `this` notation (unless in a constructor where it
 is optional to so as long as it is explicitly clear)
@@ -53,6 +52,8 @@ is optional to so as long as it is explicitly clear)
 * Lines should be no longer than **80 characters**. We like to limit this line length for readibility
 * Mark implicit constructors with `/*implicit*/` indication
 * Class and Struct names in-general should be denoted with `MyClass` notation unless we follow specific format guidlines with a library
+* Use the `// STD NAMING` convention appropriately. This means that we are to use only `snake_case` when naming items in that scope, for example,
+ a class with that name requires all its methods and variables to be denoted as `snake_case`.
 
 When writing nested namespace use the following setup to be consistent with other files:
 ```c++
