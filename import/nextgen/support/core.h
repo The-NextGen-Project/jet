@@ -28,18 +28,18 @@ namespace nextgen { namespace core {
   struct PartialEq : detail::PartialEq<T, K> {};
 
 
+
+  // Optional Value Type. It owns any value that is given to it and drops it
+  // when the value is unwrapped.
   template<typename T>
   class Option {
   public:
 
-    /*implicit*/ Option(T &value) :
-      Some(std::move(value)), is(true) {}
-
-    /*implicit*/ Option(T value) :
-      Some(value), is(true) {}
+    explicit Option(T &value) :
+    Some(std::move(value)), is(true) {}
 
     /*implicit*/ Option(NoneValue) :
-      is(false) {}
+    is(false) {}
 
     NG_AINLINE bool IsSome() {
       return is;
@@ -57,12 +57,12 @@ namespace nextgen { namespace core {
 
     T Unwrap() {
       ASSERT(is, "Unwrapped on None Value");
-      return Some;
+      return std::move(Some);
     }
 
     template<LAMBDA(T, void)>
     T UnwrapOrElse(Lambda f) {
-      if (is) return Some;
+      if (is) return std::move(Some);
       return f();
     }
 

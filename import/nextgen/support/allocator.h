@@ -45,8 +45,9 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     template<typename T>
     Option<T*> next(size_t allocation_size)  { // STD NAMING
 
-      if (allocation_size == 0)
-        return nullptr;
+      if (allocation_size == 0) {
+        return Some((T*) nullptr);
+      }
 
       if (allocation_size + offset >= size) {
         if (next_segment == nullptr) {
