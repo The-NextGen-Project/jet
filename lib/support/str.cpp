@@ -10,5 +10,9 @@ std::ostream &operator<<(std::ostream &s, const nextgen::str &str) {
   s.write(str, str.size());
   return s;
 }
+
+decltype(FNV_OFF) operator "" _hash(const char *s, size_t len) {
+  return nextgen::str(s, len).hash();
+}
   
 

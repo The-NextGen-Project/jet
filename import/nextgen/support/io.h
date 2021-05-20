@@ -30,9 +30,6 @@ namespace nextgen { namespace io {
     }
 
 
-    // Compile a file buffer to a format specified by FileID.
-    void compile();
-
     // Given a list of files, output the type of file given. For example,
     // given a list of source code for Jet, and set it to output a binary
     // ELF, it will output an ELF binary for the given source input.
@@ -50,7 +47,7 @@ namespace nextgen { namespace io {
   };
 
 
-  FileBuf get_file_buf(const char *FILE, FileID id);
+  FileBuf CreateFileBuffer(const char *FILE, FileID id);
 
 
 }} // namespace nextgen::io

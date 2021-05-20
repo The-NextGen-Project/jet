@@ -58,7 +58,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       }
 
       offset += allocation_size;
-      return block + allocation_size;
+      return Some((T*)(block + allocation_size));
     }
 
     ArenaSegment *getNext() {

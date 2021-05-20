@@ -7,8 +7,8 @@ namespace nextgen { using namespace core;
   template<typename T>
   struct Range {
 
-    const T begin;
-    const T end;
+    T begin;
+    T end;
 
     Range(T begin, T end) : begin(begin), end(end) {}
 
@@ -36,6 +36,13 @@ namespace nextgen { using namespace core;
       len = data.length();
       _ = data.c_str();
     }
+
+    /*implicit*/ str(char c) {
+      len = 1;
+      _ = &c;
+    }
+
+    explicit str(const char *data, size_t len) : len(len), _(data) {}
 
     // It is important to understand the the string type created here does
     // not own the pointer. The caller owns this pointer and nextgen::str is
@@ -82,6 +89,18 @@ namespace nextgen { using namespace core;
       };
     }
 
+    NG_AINLINE char operator*() const {
+      return *_;
+    }
+
+    NG_AINLINE const char *begin() const {
+      return _;
+    }
+
+    NG_AINLINE const char *end() const {
+      return _ + len;
+    }
+
     // Mutation.
 
     NG_INLINE str operator++() {
@@ -112,6 +131,8 @@ namespace nextgen { using namespace core;
     const char *_{};     // char* data
     unsigned long len{}; // String length
   };
+
+  decltype(FNV_OFF) operator "" _hash(const char *s, size_t len);
 
 }
 

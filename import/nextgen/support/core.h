@@ -60,10 +60,7 @@ namespace nextgen { namespace core {
       return Some;
     }
 
-    template<typename Lambda, typename
-    = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
-      void)
-    >>::value>::type>
+    template<LAMBDA(T, void)>
     T UnwrapOrElse(Lambda f) {
       if (is) return Some;
       return f();
@@ -113,10 +110,7 @@ namespace nextgen { namespace core {
       return Result(&Err);
     }
 
-    template<typename Lambda,
-      typename = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
-        Result<T, E>)
-      >>::value>::type>
+    template<LAMBDA(T, Result<T, E>)>
     Result<T, E> AndThen(Lambda op) {
       if (is) return op(Ok);
       return Result(Err);

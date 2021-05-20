@@ -19,7 +19,9 @@ int main(
   //std::ios::sync_with_stdio(false);
 
   try {
-    
+
+    Console::Log(Colors::GREEN, (int)'\\', "\n", Colors::BLUE, (int)'_',
+                 "\n");
 
   } catch (std::exception &) {
     return EXIT_FAILURE;

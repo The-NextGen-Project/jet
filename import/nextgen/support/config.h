@@ -106,8 +106,12 @@ typedef __int8 int8_t;
 #       define FNV_OFF   14695981039346656037u
 #   endif
 // I want a shortcut for unreachable code here ...
-# define unreachable PANIC("unreachable")
-/* Class definitions */
+# define UNREACHABLE PANIC("unreachable")
+// Function Lambdas
+# define LAMBDA(Ret, ...) typename Lambda, typename\
+= typename std::enable_if<std::is_convertible<Lambda, std::function<Ret \
+(__VA_ARGS__)\
+>>::value>::type
 
 
 
