@@ -140,7 +140,7 @@ namespace nextgen { namespace core {
 
   template<typename T>
   static NG_AINLINE Option<T> Some(T value) {
-    return value;
+    return Option<T>(value); // Make explicit
   }
 
 }} // namespace nextgen::core
