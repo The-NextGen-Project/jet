@@ -31,7 +31,7 @@ where we discuss new changes and possible integrations with new technologies.
 Add your own Features
 ---------------------
 Want to add amazing language features yourself? Submit your 
-own language syntax ideas [here](https://forms.gle/9nSVzipF8MYr8Q456) and if 
+own language syntax ideas [here](https://github.com/The-NextGen-Project/jet/issues) and if 
 selected, the syntax/feature will be named after you! (or an appropriate name of your choosing).
 
 > **Note:** Existing Language Features/Syntax suggested will not be named after you. We love suggestions
