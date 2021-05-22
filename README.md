@@ -3,7 +3,7 @@
 [![Linux](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Linux?label=Linux&style=for-the-badge&logo=github)]()
 [![Mac](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/MacOS?label=MacOS&style=for-the-badge&logo=github)]()
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
-#### Turbo boost your code on any platform with the highest performance.
+#### Open Source Programming Language made by Open Source Developers for the Open Source Community. High Performance, Cross-Platform, and easy Integration.
 
 Table of Contents
 -----------------
