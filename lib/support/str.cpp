@@ -1,18 +1,24 @@
 # include <nextgen/support/str.h>
-# include <nextgen/support/allocator.h>
 
-// We use std::ostream::write because we want to write only our specified
-// length. We take in Range<const char *> as a constructor sometimes and
-// cannot be sure whether we are dealing with a pointer to that region or
-// not. Since nextgen::str does not always own its pointer value, we must
-// use the write function.
-std::ostream &operator<<(std::ostream &s, const nextgen::str &str) {
-  s.write(str, str.size());
+// Declare interned strings
+std::unordered_set<nextgen::str, nextgen::str::intern_hash,
+nextgen::str::intern_eq>
+  nextgen::StringInterner::Strings;
+
+// We write using the length because `str` may contain shadowed data
+// to Range<const char*>.
+std::ostream &operator<<(std::ostream &s, nextgen::str &str) {
+  s.write(str.begin(), str.size());
   return s;
 }
 
-decltype(FNV_OFF) operator "" _hash(const char *s, size_t len) {
-  return nextgen::str(s, len).hash();
+// Inline in string intern on constant strings
+nextgen::str nextgen::operator""_intern(const char *s, size_t len) {
+  using nextgen::Range;
+  using nextgen::StringInterner;
+
+  str ss = str { s, len };
+  ss.setHash();
+  return StringInterner::Intern(ss);
 }
-  
 

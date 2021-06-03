@@ -74,6 +74,8 @@ typedef __int8 int8_t;
 #   include <ios>
 #   include <exception>
 #   include <cstring>
+#   include <unordered_set>
+#   include <memory>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32

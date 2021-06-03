@@ -17,12 +17,13 @@ add_subdirectory(tests)
 
 add_executable(jet main.cpp
 
-        # Import Support Libraries. These are the only headers with value definitions.
-        import/nextgen/support/core.h
-        import/nextgen/support/panic.h
 
+    # Import Support Libraries.
+    lib/support/panic.cpp
+    lib/support/allocator.cpp
+    lib/support/str.cpp
+    lib/support/io.cpp
 
-        # Link the executables with all resolved symbols in the C++ files.
-        lib/support/str.cpp
-        lib/support/io.cpp
-        lib/lex/lexer.cpp)
+    # Lexical Analysis
+    lib/lex/lexer.cpp
+)

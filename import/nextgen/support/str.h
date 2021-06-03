@@ -1,8 +1,9 @@
 # ifndef NEXTGEN_STR_H
 # define NEXTGEN_STR_H
 # include "core.h"
+# include "allocator.h"
 
-namespace nextgen { using namespace core;
+namespace nextgen { using namespace core; using namespace nextgen::mem;
 
   template<typename T>
   struct Range {
@@ -25,12 +26,25 @@ namespace nextgen { using namespace core;
   public:
     str() = default;
 
+    struct intern_hash { // std::unordered_map<str, str::intern_hash>
+      size_t operator()(str const &s) const {
+        return s.getHashCache();
+      }
+    };
+
+    struct intern_eq {
+      NG_INLINE bool operator()(str const &LHS, str const &RHS) const {
+        return strcmp(LHS._, RHS._) == 0;
+      }
+    };
+
+
     template<unsigned long N>
     /*implicit*/ constexpr
     str(const char(&data)[N]) : len(N), _(data) {}
 
-    /*implicit*/ str(const char *data) : len(strlen(data)),
-                                         _(data) {}
+    /*implicit*/ str(const char *data)
+    : len(strlen(data)), _(data) {}
 
     /*implicit*/ str(std::string &data) {
       len = data.length();
@@ -42,44 +56,55 @@ namespace nextgen { using namespace core;
       _ = &c;
     }
 
-    explicit str(const char *data, size_t len) : len(len), _(data) {}
+    explicit str(const char *data, size_t len)
+    : len(len), _(data) {}
 
     // It is important to understand the the string type created here does
     // not own the pointer. The caller owns this pointer and nextgen::str is
     // not responsible for the cleanup of the passed pointer.
-    explicit str(Range<const char *> range) : len(range.range()) {
-      _ = (const char *) range.begin;
+    explicit str(Range<const char *> range) : len(range.range())  {
+      _ = (const char *) os::malloc(len);
+      memmove((void*)_, range.begin, len);
+      is_heap_allocated = true;
     }
 
-    [[nodiscard]]
-    unsigned long size() const { return len; }
+    ~str() {
 
-    // Standard FNV Hash algorithm on the contents of the internal buffer.
-    // NOTE: decltype is done on the offset only to have a type that matches
-    // the system that we are on.
+    }
+
+
     [[nodiscard]]
-    decltype(FNV_OFF) hash() const {
-      decltype(FNV_OFF) val = FNV_OFF;
+    NG_INLINE size_t size() const { return len; }
+
+
+    // String FNV-1a Hashing Algorithm (Internal)
+    [[nodiscard]]
+    size_t hash() const {
+      auto val = FNV_OFF;
       for (auto i = 0; i < len; ++i) {
-        val ^= *_ + i;
+        val ^= (_[i]);
         val *= FNV_PRIME;
       }
       return val;
     }
 
-    char operator[](size_t index) const {
+    NG_INLINE bool operator==(str const &other) const {
+      return _ == other._;
+    }
+
+    NG_INLINE char operator[](size_t index) const {
       return (static_cast<const char *>(_))[index];
     }
 
-    explicit operator std::string() const {
+    NG_INLINE /*implicit*/ operator std::string() const {
       return std::string((const char *) *this);
     }
 
-    /*implicit*/ operator const char *() const {
+    /*implicit*/ NG_INLINE operator const char *() const {
       return static_cast<const char *>(_);
     }
 
-    size_t operator-(const str RHS) const {
+    NG_INLINE size_t operator-(const str RHS) const {
       return (size_t) (_ - RHS._);
     }
 
@@ -101,7 +126,22 @@ namespace nextgen { using namespace core;
       return _ + len;
     }
 
+    // Only used in intern_hash. DO NOT call this
+    // function if you have not set your hash value, otherwise your hash
+    // results may be invalid.
+    NG_INLINE size_t getHashCache() const {
+      return hash_cache;
+    }
+
     // Mutation.
+
+    NG_INLINE void setHash() {
+      hash_cache = hash();
+    }
+
+    NG_INLINE void setHash(size_t hash) {
+      hash_cache = hash;
+    }
 
     NG_INLINE str operator++() {
       _++;
@@ -122,18 +162,29 @@ namespace nextgen { using namespace core;
       _ -= (size_t) (offset);
       return *this;
     }
-
-
-    friend std::ostream &
-    operator<<(std::ostream &s, const str &str);
-
-  private:
     const char *_{};     // char* data
+    bool is_heap_allocated = false;
+  private:
     unsigned long len{}; // String length
+    size_t hash_cache = 0;
   };
 
-  decltype(FNV_OFF) operator "" _hash(const char *s, size_t len);
 
+  // Very thin wrapper around std::unordered_set for String interning.
+  // Mostly O(1) Retrieval (FNV-1a is fast and good String hash).
+  // Designed around the symbols retrieved for the token and not the token
+  // values.
+  class StringInterner {
+  public:
+    static std::unordered_set<str, str::intern_hash, str::intern_eq> Strings;
+    static NG_INLINE str Intern(const str &s) {
+      return (*Strings.insert(str(s)).first);
+    }
+
+
+  };
+
+  str operator""_intern(const char *s, size_t len);
 }
 
 #endif //NEXTGEN_STR_H

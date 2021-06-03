@@ -7,34 +7,30 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
 
 
-
   // STD NAMING
   namespace os { // System allocators/libc
 
 
-    NG_INLINE void *malloc(size_t size) {
-      if (size == 0) return nullptr;
-      auto *p = ::malloc(size);
-      if (p == nullptr)
-        PANIC("malloc failed");
-      return p;
-    }
-
-    NG_INLINE void *realloc(void *buf, size_t size) {
-      if (buf == nullptr && size == 0) return nullptr;
-      auto *p = ::realloc(buf, size);
-      if (p == nullptr)
-        PANIC("realloc failed");
-      return p;
-    }
-
-    NG_INLINE void free(void *p) {
-      ::free(p);
-    }
-
+    void *calloc(size_t, size_t);
+    void *malloc(size_t);
+    void *realloc(void *buf, size_t size);
+    void free(void **buf);
 
   } // namespace nextgen::mem::os
 
+  namespace detail {
+    struct c_deleter {
+      void operator()(void *ptr) const {
+        os::free(&ptr);
+      }
+    };
+  }
+
+  template<typename T>
+  using Box = std::unique_ptr<T, detail::c_deleter>;
+
+  template<typename T>
+  using Rc = std::shared_ptr<T>;
 
 
   class ArenaSegment final  {
@@ -42,8 +38,8 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     explicit ArenaSegment(ArenaSegment *next)
       : next_segment (next) {}
 
-    template<typename T>
-    Option<T*> next(size_t allocation_size)  { // STD NAMING
+    template<typename T = void>
+    NG_INLINE Option<T*> next(size_t allocation_size)  { // STD NAMING
 
       if (allocation_size == 0) {
         return Some((T*) nullptr);
@@ -55,6 +51,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
           *next_segment = ArenaSegment { (ArenaSegment*) os::malloc(sizeof
                                                                       (ArenaSegment))};
         }
+        // Switch to next allocator on fail
         return None;
       }
 
@@ -62,9 +59,10 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       return Some((T*)(block + allocation_size));
     }
 
-    ArenaSegment *getNext() {
+    NG_INLINE ArenaSegment *getNext() {
       return this->next_segment;
     }
+
   private:
     static constexpr size_t size = 65536 << 2;
     int    block[size]{};
@@ -74,8 +72,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
 
   template <size_t N = 0>
-  class Arena {
-  public:
+  struct Arena {
     Arena() {
       begin = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
       for (auto i = 0; i < N; ++i) {
@@ -89,51 +86,100 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       auto start = begin;
       while (start->getNext()) {
         auto temp = start->getNext();
-        os::free(start);
+        os::free(reinterpret_cast<void **>(&start));
         start = temp;
       }
     }
-  private:
     ArenaSegment *begin;
   };
 
-  // Bare-bones List structure for holding large amounts of elements. This is
-  // meant to hold items in places where limits are tested, for example, a
-  // program may have hundreds of thousands of tokens that need to be parsed
-  // and so the size of the list increases quite a lot to reflect that need.
+
   template<typename T>
-  class list { // STD NAMING
-  public:
-    list() {
-      arr = (T *) mem::os::malloc(sizeof(T) * 2);
+  struct Vec {
+    using Self = Vec;
+
+    static auto Replace(const Vec<T> &vec) -> Self {
+      auto x = Vec<T> {
+        .len = vec.len,
+        .cap = vec.cap,
+      };
+      x.ptr.swap((Box<T> &) std::move(vec.ptr));
+      return x;
     }
 
-    explicit list(size_t reserve) : cap(reserve) {
-      arr = (T *) mem::os::malloc(sizeof(T) * reserve);
+    static auto Copy(const Vec<T> &vec) -> Self {
+      T *raw = vec.ptr.get();
+      size_t len = vec.Size();
+      return Clone(raw, len);
     }
 
-    void add(T element) {
+    static auto Clone(T *raw, size_t len) -> Vec<T> {
+      auto vec = Vec<T>::WithCapacity(len);
+      for (auto i = 0; i < len; ++i)
+        vec.Add(raw[i]);
+      return vec;
+    }
+
+    static auto New() -> Self {
+      return Vec {
+        .ptr = Box<T>((T*)os::calloc(1, sizeof(T))),
+        .len = 0,
+        .cap = 1
+      };
+    }
+
+    static auto WithCapacity(size_t capacity) -> Self {
+      auto vec = Vec {};
+      vec.ptr = Box<T>((T*)os::calloc(capacity, sizeof(T)));
+      vec.len = 0;
+      vec.cap = capacity;
+      return vec;
+    }
+
+
+    NG_INLINE T *IntoRaw() {
+      return ptr.get();
+    }
+
+    void Add(T elem) {
       if (len + 1 > cap) {
-        cap *= 3;
-        arr = (T *) mem::os::realloc(arr, sizeof(T) * cap);
+        cap *= 2;
+        auto new_ptr = (T *) ::reallocarray(IntoRaw(), cap, sizeof(T));
+        ptr.release();
+        ptr.reset(new_ptr);
       }
-      arr[len++] = element;
+      IntoRaw()[len++] = elem;
     }
 
-    T pop() {
+    void Pop() {
       ASSERT(len >= 1, "Invalid List Pop.");
-      return arr[--len];
+      return IntoRaw()[--len];
     }
 
-    NG_AINLINE T operator[](size_t index) const {
-      return arr[index];
+    NG_INLINE void Clear() {
+      len = 0;
+      ptr.reset();
     }
 
-  private:
-    T *arr;
-    size_t len{0};
-    size_t cap{2};
+    NG_AINLINE auto Size() -> size_t const {
+      return len;
+    }
+
+    NG_AINLINE auto Capacity() -> size_t const {
+      return cap;
+    }
+
+    NG_AINLINE auto operator[](size_t index) -> T {
+      ASSERT(index < UINTPTR_MAX, "Outside Index Range");
+      return IntoRaw()[index];
+    }
+
+    Box<T> ptr;
+
+    size_t len;
+    size_t cap;
   };
+
 
 }} // namespace nextgen::mem
 

@@ -2,7 +2,6 @@
 # define NEXTGEN_CORE_H
 
 # include "none.h"
-# include "panic.h"
 
 namespace nextgen { namespace core {
 
@@ -26,8 +25,6 @@ namespace nextgen { namespace core {
   }
   template<typename T, typename K = bool>
   struct PartialEq : detail::PartialEq<T, K> {};
-
-
 
   // Optional Value Type. It owns any value that is given to it and drops it
   // when the value is unwrapped.
@@ -84,18 +81,18 @@ namespace nextgen { namespace core {
   class Result {
   public:
 
-    /*implicit*/ Result(detail::OkResult, T ok)
+    /*implicit*/ Result(detail::OkResult, T &ok)
       : Ok(ok), is(true) {}
 
 
     /*implicit*/ Result(detail::ErrResult, E err)
       : Err(err), is(false) {}
 
-    bool IsOk() {
+    NG_AINLINE bool IsOk() {
       return is;
     }
 
-    bool IsErr() {
+    NG_AINLINE bool IsErr() {
       return !is;
     }
 
@@ -105,13 +102,18 @@ namespace nextgen { namespace core {
       return false;
     }
 
-    Result<T &, E &> AsRef() {
+    auto Error() -> Option<E> {
+      if (!is) return Option<E>(Err);
+      return None;
+    }
+
+    auto AsRef() -> Result<T &, E &>{
       if (is) return Result(&Ok);
       return Result(&Err);
     }
 
     template<LAMBDA(T, Result<T, E>)>
-    Result<T, E> AndThen(Lambda op) {
+    auto AndThen(Lambda op) -> Result<T, E>  {
       if (is) return op(Ok);
       return Result(Err);
     }
@@ -129,19 +131,20 @@ namespace nextgen { namespace core {
 
 
   template<typename T, typename E>
-  static Result<T, E> Ok(T value) {
+  static auto Ok(T value) -> Result<T, E> {
     return Result<T, E>(detail::OkResult::Ok, value);
   }
 
   template<typename T, typename E>
-  static Result<T, E> Err(E value) {
+  static auto Err(E value) -> Result<T, E> {
     return Result<T, E>(detail::ErrResult::Err, value);
   }
 
   template<typename T>
-  static NG_AINLINE Option<T> Some(T value) {
+  static NG_AINLINE auto Some(T value) -> Option<T> {
     return Option<T>(value); // Make explicit
   }
+
 
 }} // namespace nextgen::core
 

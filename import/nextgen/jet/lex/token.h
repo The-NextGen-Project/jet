@@ -1,6 +1,5 @@
 # ifndef NEXTGEN_TOKEN_H
 # define NEXTGEN_TOKEN_H
-# include <nextgen/support/core.h>
 # include <nextgen/support/str.h>
 # include <nextgen/support/allocator.h>
 
@@ -10,16 +9,16 @@ namespace nextgen { namespace jet {
   using SourceSpan = Range<const char *>;
 
 
-  enum TokenClassification : unsigned {
-    Reserved  = 1 << 2,
-    Function     = 1 << 3,
-    Assignment = 1 << 4,
+  enum TokenClassification {
+    Function     = 1 << 2,
+    Assignment   = 1 << 3,
+    Unsigned     = 1 << 4
   };
 
   enum TokenKind {
 
     // Primitives ---------------------------
-    Integer,  // + sizeof(decltype(UINTPTR_MAX))
+    Integer = 1,  // + sizeof(decltype(UINTPTR_MAX))
     String,   // + sizeof(const char *)
     Decimal,  // + sizeof(double)
     Boolean,  // + sizeof(bool)
@@ -29,6 +28,31 @@ namespace nextgen { namespace jet {
     NewLine,
     Whitespace,
     StringEscapeStart,
+    //---------------------------------------
+
+    // Keywords  ---------------------------
+    KeywordIf,
+    KeywordElse,
+    KeywordElif,
+    KeywordWhile,
+    KeywordFor,
+    KeywordAnd,
+    KeywordOr,
+    KeywordBreak,
+    KeywordContinue,
+    KeywordDefer,
+    KeywordStruct,
+    KeywordEnum,
+    KeywordExport,
+    KeywordExtern,
+    KeywordFunction,
+    KeywordError,
+    KeywordVar,
+    KeywordTrue,
+    KeywordFalse,
+    KeywordNone,
+    KeywordReturn,
+    KeywordUnion,
     //---------------------------------------
 
     Identifier,   // [a-z] && [A-Z] && _
@@ -43,6 +67,7 @@ namespace nextgen { namespace jet {
     GreaterThan,  // >
     Equals,       // =
     QuestionMark, // ?
+    Then,         // ??
 
     Plus,   // +
     Minus,  // -
@@ -61,7 +86,11 @@ namespace nextgen { namespace jet {
     LeftShift,    // <<
     RightShift,   // >>
     Pow,          // **
+    RangeSpan,        // ..
     Ellipsis,     // ...
+
+    PlusPlus,     // ++
+    MinusMinus,   // --
 
     Error
   };
@@ -70,40 +99,124 @@ namespace nextgen { namespace jet {
   class Token {
   public:
     using Allocator = nextgen::mem::ArenaSegment;
+
     struct SourceLocation {
       size_t line;
       size_t col;
     };
 
+    struct TokenValue {
+      TokenKind kind;
+      union {
+        decltype(UINTPTR_MAX) integer;
+        str *string;
+        bool boolean;
+        double floating_point;
+        char single;
+      } value;
+    };
+
     Token() = default;
-    Token(nextgen::str span, const TokenKind *kind, SourceLocation loc,
-          TokenClassification flags, bool assignment = false)
-      : id(span), kind(kind), flags(flags), assignment(assignment),
-      location(loc) {}
 
 
-    // Builds a TokenKind* with the correct type included with the pointer.
-    // This allows for the type be retrieved with the token kind, and so the
-    // whole token is not required.
     template<typename T>
-    static TokenKind *BuildTokenKind(Allocator *allocator, TokenKind kind) {
-      constexpr auto size = sizeof(TokenKind) + sizeof(T) + 1;
-      auto ptr = allocator->next<TokenKind>(size).UnwrapOrElse([&]() {
-        return allocator->getNext()->next<TokenKind>(size).Unwrap();
-      });
-      *ptr = kind;
-      return ptr;
+    Token(const nextgen::str &span, TokenValue value, SourceLocation loc,
+          T literal_value,
+          TokenClassification flags = static_cast<TokenClassification>(0),
+          bool assignment = false)
+      : value(value), flags(flags), assignment(assignment),
+      location(loc) {
+        id = span;
+        setValue(literal_value);
+      }
+
+
+    NG_INLINE size_t len() const {
+      return id.size();
+    }
+
+    NG_INLINE const str name() const {
+      return id;
+    }
+
+    NG_INLINE SourceLocation getSourceLocation() const {
+      return location;
+    }
+
+    template<typename T>
+    NG_INLINE void setValue(T v) {
+      value_set(v);
+    }
+
+    NG_INLINE void setFlag(TokenClassification flag) {
+      this->flags |= flag;
+    }
+
+    template<typename T>
+    NG_INLINE T getValue()  {
+      T v;
+      value_get(v);
+      return v;
     }
 
     NG_INLINE TokenKind getKind() const {
-      return this->kind[0];
+      return this->value.kind;
     }
+
+    NG_INLINE void setKind(TokenKind k) {
+      this->value.kind = k;
+    }
+
     bool assignment = false;
   private:
+
     nextgen::str        id;      // Token String representation
-    TokenClassification flags{}; // Token Flags (Parsing Info)
+    unsigned long flags{}; // Token Flags (Parsing Info)
     SourceLocation      location{0, 0};// Location in SourceText
-    const TokenKind *kind{}; // Type and Value (if primitive) of Token
+    TokenValue value;
+
+    // Generic Type Inference on Inferred Value
+
+    NG_AINLINE void value_get(double &v) const {
+      v = this->value.value.floating_point;
+    }
+
+    NG_AINLINE void value_get(str *&v) const {
+      v = this->value.value.string;
+    }
+    NG_AINLINE void value_get(decltype(UINTPTR_MAX) &v) const {
+      v = this->value.value.integer;
+    }
+
+    NG_AINLINE void value_get(bool &v) const {
+      v = this->value.value.boolean;
+    }
+
+    NG_AINLINE void value_get(char &v) const {
+      v = this->value.value.single;
+    }
+
+
+    NG_AINLINE void value_set(double v) {
+      this->value.value.floating_point = v;
+    }
+
+    NG_AINLINE void value_set(decltype(UINTPTR_MAX) v) {
+      this->value.value.integer = v;
+    }
+
+    NG_AINLINE void value_set(const char *v) {
+
+    }
+
+    NG_AINLINE void value_set(bool v) {
+      this->value.value.boolean = v;
+    }
+
+    NG_AINLINE void value_set(char v) {
+      this->value.value.single = v;
+    }
+
   };
 
 }} // namespace nextgen::jet
