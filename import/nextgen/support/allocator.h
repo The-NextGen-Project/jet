@@ -144,7 +144,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     void Add(T elem) {
       if (len + 1 > cap) {
         cap *= 2;
-        auto new_ptr = (T *) ::reallocarray(IntoRaw(), cap, sizeof(T));
+        auto new_ptr = (T *) os::realloc(IntoRaw(), sizeof(T) * cap);
         ptr.release();
         ptr.reset(new_ptr);
       }
