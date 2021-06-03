@@ -363,7 +363,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
 
         // Create string value
         auto range = std::string(begin, end);
-        auto s = (str) range;
+        auto s = str(range);
         s.setHash(val);
         auto intern = StringInterner::Intern(s);
 
