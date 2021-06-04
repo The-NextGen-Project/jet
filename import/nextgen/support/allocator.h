@@ -123,17 +123,17 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
       static auto New() -> ArenaSegment {
         return ArenaSegment {
-          .offset = 0,
-          .next_segment = nullptr,
-          .block = {}
+          0,
+          nullptr,
+          {}
         };
       }
 
       static auto New(ArenaSegment *seg) -> ArenaSegment {
         return ArenaSegment {
-          .offset = 0,
-          .next_segment = seg,
-          .block = {}
+          0,
+          seg,
+          {}
         };
       }
 
