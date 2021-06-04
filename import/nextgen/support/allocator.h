@@ -124,14 +124,16 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       static auto New() -> ArenaSegment {
         return ArenaSegment {
           .offset = 0,
-          .next_segment = nullptr
+          .next_segment = nullptr,
+          .block = {}
         };
       }
 
       static auto New(ArenaSegment *seg) -> ArenaSegment {
         return ArenaSegment {
           .offset = 0,
-          .next_segment = seg
+          .next_segment = seg,
+          .block = {}
         };
       }
 
@@ -178,11 +180,10 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       NG_INLINE void *BlockPoint() {
         return block + offset;
       }
-
-      static constexpr size_t size = 65536 << 2;
-      int    block[size];
       size_t offset;
       ArenaSegment *next_segment;
+      static constexpr size_t size = 65536 << 2;
+      int    block[size];
     };
 
 
