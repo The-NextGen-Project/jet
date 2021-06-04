@@ -24,10 +24,6 @@ void *nextgen::mem::os::realloc(void *buf, size_t size) {
   return p;
 }
 
-void nextgen::mem::os::free(void **p) {
-
-  if (*p != nullptr)
-    std::free(*p);
-  else
-    *p = nullptr;
+void nextgen::mem::os::free(void *p) {
+  std::free(p);
 }

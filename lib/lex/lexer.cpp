@@ -250,6 +250,15 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
   start:
   {
     switch (kind) {
+
+
+      // Integer Literals
+      //
+      // Number literals may be written through the following means:
+      // 0x123 <-- Hexadecimal
+      // 0b001 <-- Binary
+      // 12345 <-- Base 10 Standard Number
+      // 0#hit <-- Base 36 Literal
       case Integer: {
 
         // Integer Base
@@ -261,8 +270,16 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         // Token Suffix marker
         TokenClassification flags = static_cast<TokenClassification>(0);
 
-        // Token Begin
-        auto begin = this->file;
+        // Integer Allocator (25 chars is max integer length)
+        Allocator *integer_allocator =
+          allocator->GetAllocatorForAvailableSpace(25);
+
+        // Integer Token ID
+        char *id = (char *) integer_allocator->BlockPoint();
+
+        // Token Len
+        size_t len = 0;
+
 
         switch (Curr()) {
           case '0':
@@ -276,6 +293,9 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
                 val ^= 'b';
                 val *= FNV_PRIME;
 
+                id[len++] = '0';
+                id[len++] = 'b';
+
                 Next(1);
                 break;
               case 'x':
@@ -286,6 +306,9 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
                 val *= FNV_PRIME;
                 val ^= 'x';
                 val *= FNV_PRIME;
+
+                id[len++] = '0';
+                id[len++] = 'x';
 
                 Next(1);
                 break;
@@ -298,6 +321,9 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
                 val ^= '#';
                 val *= FNV_PRIME;
 
+                id[len++] = '0';
+                id[len++] = '#';
+
                 Next(1);
                 break;
               case '0': case '1': case '2': case '3': case '4': case '5':
@@ -307,6 +333,8 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
                 // Unroll-Hash For Skip
                 val ^= '0';
                 val *= FNV_PRIME;
+
+                id[len++] = '0';
                 break;
               default: // TODO: Figure what needs to be done here
                 break;
@@ -321,6 +349,8 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         do {
 
           auto curr = Curr();
+
+          id[len++] = curr;
 
           // Calculate Identifier FNV-1a Hash
           val ^= curr;
@@ -358,12 +388,9 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
             break;
         }
 
-        // Token End
-        auto end = this->file;
+        id[len++] = '\0';
 
-        // Create string value
-        auto range = std::string(begin, end);
-        auto s = str(range);
+        auto s = str(id, len);
         s.setHash(val);
         auto intern = StringInterner::Intern(s);
 

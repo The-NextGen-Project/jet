@@ -14,14 +14,14 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     void *calloc(size_t, size_t);
     void *malloc(size_t);
     void *realloc(void *buf, size_t size);
-    void free(void **buf);
+    void free(void *buf);
 
   } // namespace nextgen::mem::os
 
   namespace detail {
     struct c_deleter {
       void operator()(void *ptr) const {
-        os::free(&ptr);
+        os::free(ptr);
       }
     };
   }
@@ -32,41 +32,69 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
   template<typename T>
   using Rc = std::shared_ptr<T>;
 
+  struct ArenaSegment  {
 
-  class ArenaSegment final  {
-  public:
-    explicit ArenaSegment(ArenaSegment *next)
-      : next_segment (next) {}
+    static auto New() -> ArenaSegment {
+      return ArenaSegment {
+        .offset = 0,
+        .next_segment = nullptr
+      };
+    }
+
+    static auto New(ArenaSegment *seg) -> ArenaSegment {
+      return ArenaSegment {
+        .offset = 0,
+        .next_segment = seg
+      };
+    }
 
     template<typename T = void>
-    NG_INLINE Option<T*> next(size_t allocation_size)  { // STD NAMING
+    NG_INLINE auto Next(size_t allocation_size) -> T* { // STD NAMING
 
       if (allocation_size == 0) {
-        return Some((T*) nullptr);
+        return (T*) nullptr;
       }
 
       if (allocation_size + offset >= size) {
         if (next_segment == nullptr) {
           next_segment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
-          *next_segment = ArenaSegment { (ArenaSegment*) os::malloc(sizeof
-                                                                      (ArenaSegment))};
+          *next_segment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
         }
         // Switch to next allocator on fail
-        return None;
+        return getNext()->Next<T>(allocation_size);
       }
 
       offset += allocation_size;
-      return Some((T*)(block + allocation_size));
+      return (T*)(block + allocation_size);
     }
 
-    NG_INLINE ArenaSegment *getNext() {
+    NG_INLINE bool HasSpaceFor(size_t space) {
+      return space + offset <= size;
+    }
+
+    NG_INLINE auto GetAllocatorForAvailableSpace(size_t space) -> ArenaSegment*{
+      if (!HasSpaceFor(space)) {
+        if (next_segment == nullptr) {
+          next_segment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+          *next_segment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
+        }
+        return next_segment->GetAllocatorForAvailableSpace(space);
+      }
+      return this;
+    }
+
+
+    NG_INLINE auto getNext() -> ArenaSegment* {
       return this->next_segment;
     }
 
-  private:
+    NG_INLINE void *BlockPoint() {
+      return block + offset;
+    }
+
     static constexpr size_t size = 65536 << 2;
-    int    block[size]{};
-    size_t offset = 0;
+    int    block[size];
+    size_t offset;
     ArenaSegment *next_segment;
   };
 
@@ -76,8 +104,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     Arena() {
       begin = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
       for (auto i = 0; i < N; ++i) {
-        *begin = ArenaSegment { (ArenaSegment*) os::malloc(sizeof
-                                                             (ArenaSegment))};
+        *begin = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
         begin = begin->getNext();
       }
     }
@@ -86,7 +113,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       auto start = begin;
       while (start->getNext()) {
         auto temp = start->getNext();
-        os::free(reinterpret_cast<void **>(&start));
+        os::free(start);
         start = temp;
       }
     }

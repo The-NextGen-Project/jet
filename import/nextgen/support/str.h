@@ -62,15 +62,17 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     // It is important to understand the the string type created here does
     // not own the pointer. The caller owns this pointer and nextgen::str is
     // not responsible for the cleanup of the passed pointer.
-    explicit str(Range<const char *> range) : len(range.range())  {
-      _ = (const char *) os::malloc(len);
-      memmove((void*)_, range.begin, len);
-      is_heap_allocated = true;
+
+    explicit str(Range<const char *> range, bool ALLOC = false)
+    : len(range.range())  {
+      if (ALLOC) {
+        // Allocate Range
+      } else {
+        // Set empty
+        _ = (const char *) range.begin;
+      }
     }
 
-    ~str() {
-
-    }
 
 
     [[nodiscard]]
@@ -181,6 +183,15 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       return (*Strings.insert(str(s)).first);
     }
 
+    static NG_INLINE str InsertOrGet(Range<const char *> range) {
+      auto find = Strings.find((str) range);
+      if (find != Strings.end()) {
+        return *find;
+      } else {
+        auto insert = str(range, true);
+        return (*Strings.insert(insert).first);
+      }
+    }
 
   };
 
