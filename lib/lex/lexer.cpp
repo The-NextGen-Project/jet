@@ -3,12 +3,12 @@
 using namespace nextgen;
 using namespace nextgen::jet;
 
-# define TOKEN(type, text, k, value) Token { \
+# define TOKEN(type, text, k, value) Token::New ( \
     text, \
     Token::TokenValue { .kind = k }, \
   {this->line, this->col},                      \
   value                                              \
-}
+)
 
 
 
@@ -251,14 +251,6 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
   {
     switch (kind) {
 
-
-      // Integer Literals
-      //
-      // Number literals may be written through the following means:
-      // 0x123 <-- Hexadecimal
-      // 0b001 <-- Binary
-      // 12345 <-- Base 10 Standard Number
-      // 0#hit <-- Base 36 Literal
       case Integer: {
 
         // Integer Base
@@ -402,7 +394,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         break;
       case Decimal:
         break;
-      case Identifier: {
+      case Identifier: { // Maybe : Identifier length no more 256 characters?
 
 
         auto begin = this->file;
@@ -416,16 +408,16 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
           val *= FNV_PRIME;
         } while (TokenKindClass[Next(1)] == TokenKind::Identifier);
 
+
         auto end = this->file;
 
-        auto range = std::string(begin, end);
+        auto range = std::string(begin, end); // TODO: Fix Me ASAP
         auto s = str(range);
         s.setHash(val);
         auto intern = StringInterner::Intern(s);
 
         // Ensure appropriate kind is assigned
         auto type = ReturnValidKeyword(intern,TokenKind::Identifier);
-
         return Ok<Token, LexError>(TOKEN(const char *, intern, type, ""));
       }
       case LessThan: {
@@ -595,7 +587,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         break;
     }
   }
-  Next(token.len());
+  Next(token.Length());
   return Ok<Token, LexError>(token);
 }
 

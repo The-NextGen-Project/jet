@@ -24,20 +24,28 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
   };
 
 
-
   struct LexError {
     ErrorType type;
     Token::SourceLocation location;
   };
 
 
-  class Lexer {
-  public:
+  struct Lexer {
     using Allocator = mem::ArenaSegment;
-    using File      = char;
+    using File = char;
 
-    Lexer(Allocator *allocator, const File *buf, const size_t len)
-    : allocator(allocator), file(buf), size(len) {}
+    static auto NG_INLINE New(Allocator *allocator, const File *buf,
+                              const size_t len)
+    -> Lexer {
+      return Lexer {
+        allocator,
+        buf,
+        len,
+        1,
+        1,
+        0
+      };
+    }
 
     // Get the next valid Token in the File stream
     auto NextToken() -> Result<Token, LexError>;
@@ -61,11 +69,19 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         return *(this->file + (n - 1));
       }
 
-      this->col+=n;
-      this->pos+=n;
-      this->file+=n;
+      this->col += n;
+      this->pos += n;
+      this->file += n;
       return *this->file;
     }
+
+    Allocator  *allocator;
+    const File *file;
+    const size_t size;
+
+    size_t line;
+    size_t col;
+    size_t pos;
 
   private:
 
@@ -73,7 +89,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     NG_INLINE void SkipNewLine() {
       this->line++;
       auto current = Curr();
-      auto next    = Next(1);
+      auto next = Next(1);
       if (next == '\n' || next == '\r' && next != current)
         ++this->line, Next(1);
     }
@@ -81,15 +97,6 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     // Execute an action if the next char is equal to `check`
     template<LAMBDA(void, void)>
     NG_INLINE void CheckNextAndThen(char check, Lambda then);
-
-
-    Allocator  *allocator;  // Token Allocator
-    const File *file; // Source Buffer
-    const size_t size; // Size of File
-
-    size_t line = 1;
-    size_t col  = 1;
-    size_t pos  = 0;
   };
 
 

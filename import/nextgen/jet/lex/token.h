@@ -96,8 +96,7 @@ namespace nextgen { namespace jet {
   };
 
 
-  class Token {
-  public:
+  struct Token {
     using Allocator = nextgen::mem::ArenaSegment;
 
     struct SourceLocation {
@@ -116,26 +115,30 @@ namespace nextgen { namespace jet {
       } value;
     };
 
-    Token() = default;
-
-
     template<typename T>
-    Token(const nextgen::str &span, TokenValue value, SourceLocation loc,
+    static auto New(const nextgen::str &span, TokenValue value, SourceLocation
+          loc,
           T literal_value,
           TokenClassification flags = static_cast<TokenClassification>(0),
-          bool assignment = false)
-      : value(value), flags(flags), assignment(assignment),
-      location(loc) {
-        id = span;
-        setValue(literal_value);
+          bool assignment = false) -> Token {
+
+        auto ret = Token {
+          span,
+          value,
+          loc,
+          flags,
+          assignment
+        };
+        ret.setValue(literal_value);
+        return ret;
       }
 
 
-    NG_INLINE size_t len() const {
+    NG_INLINE size_t Length() const {
       return id.size();
     }
 
-    NG_INLINE const str name() const {
+    NG_INLINE const str Name() const {
       return id;
     }
 
@@ -167,13 +170,13 @@ namespace nextgen { namespace jet {
       this->value.kind = k;
     }
 
-    bool assignment = false;
-  private:
-
-    nextgen::str        id;      // Token String representation
-    unsigned long flags{}; // Token Flags (Parsing Info)
-    SourceLocation      location{0, 0};// Location in SourceText
+    nextgen::str id;
     TokenValue value;
+    SourceLocation location;
+    unsigned long flags;
+    bool assignment;
+
+  private:
 
     // Generic Type Inference on Inferred Value
 
