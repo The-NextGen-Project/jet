@@ -1,6 +1,6 @@
 # ifndef NEXTGEN_NONE_H
 # define NEXTGEN_NONE_H
-# include "panic.h"
+# include "Panic.h"
 
 namespace nextgen { // Putting this in the global namespace
   enum class NoneValue { None = 1 };
@@ -13,7 +13,7 @@ namespace nextgen { // Putting this in the global namespace
   }
 
 # define match(...) switch (pair(__VA_ARGS__))
-# define set(...) case pair(__VA_ARGS__)
+# define group(...) case pair(__VA_ARGS__)
 
   template <typename Enum, typename = std::enable_if<std::is_enum<Enum>::value>>
   constexpr int pair(Enum k1) { // STD NAMING

@@ -1,6 +1,6 @@
 # ifndef NEXTGEN_PANIC_H
 # define NEXTGEN_PANIC_H
-# include "config.h"
+# include "Config.h"
 
 
 namespace nextgen {

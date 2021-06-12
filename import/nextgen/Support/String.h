@@ -1,7 +1,7 @@
 # ifndef NEXTGEN_STR_H
 # define NEXTGEN_STR_H
-# include "core.h"
-# include "allocator.h"
+# include "Core.h"
+# include "Allocator.h"
 
 namespace nextgen { using namespace core; using namespace nextgen::mem;
 
@@ -59,14 +59,11 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     explicit str(const char *data, size_t len)
     : len(len), _(data) {}
 
-    // It is important to understand the the string type created here does
-    // not own the pointer. The caller owns this pointer and nextgen::str is
-    // not responsible for the cleanup of the passed pointer.
 
     explicit str(Range<const char *> range, bool ALLOC = false)
     : len(range.range())  {
       if (ALLOC) {
-        // Allocate Range
+        // TODO: Allocate Range
       } else {
         // Set empty
         _ = (const char *) range.begin;
@@ -106,8 +103,11 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       return static_cast<const char *>(_);
     }
 
-    NG_INLINE size_t operator-(const str RHS) const {
-      return (size_t) (_ - RHS._);
+
+    NG_INLINE str operator-(const size_t size) const {
+      return {
+        _ - size
+      };
     }
 
     NG_INLINE str operator+(int offset) const {
@@ -178,18 +178,26 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
   // values.
   class StringInterner {
   public:
+    using Allocator = mem::ArenaSegment;
+
     static std::unordered_set<str, str::intern_hash, str::intern_eq> Strings;
     static NG_INLINE str Intern(const str &s) {
       return (*Strings.insert(str(s)).first);
     }
 
-    static NG_INLINE str InsertOrGet(Range<const char *> range) {
-      auto find = Strings.find((str) range);
-      if (find != Strings.end()) {
-        return *find;
+    static NG_INLINE str InsertOrGet(Allocator *Mem,
+                                     str &Str) {
+      auto Find = Strings.find(Str);
+      if (Find != Strings.end()) {
+        return *Find;
       } else {
-        auto insert = str(range, true);
-        return (*Strings.insert(insert).first);
+
+        // Ident, no longer than 256 characters
+        auto Size = Str.size();
+        auto Insert = (str)
+          Mem->CopyValues(const_cast<char *>(Str.begin()), Size);
+        Insert.setHash(Str.getHashCache());
+        return (*Strings.insert(Insert).first);
       }
     }
 

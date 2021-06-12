@@ -1,6 +1,6 @@
 # ifndef NEXTGEN_ALLOCATOR_H
 # define NEXTGEN_ALLOCATOR_H
-# include "core.h"
+# include "Core.h"
 
 
 namespace nextgen { namespace mem { using namespace nextgen::core;
@@ -138,50 +138,59 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       }
 
       template<typename T = void>
-      NG_INLINE auto Next(size_t allocation_size) -> T* { // STD NAMING
+      NG_INLINE auto Next(size_t allocation_size) -> T* {
 
         if (allocation_size == 0) {
           return (T*) nullptr;
         }
 
-        if (allocation_size + offset >= size) {
-          if (next_segment == nullptr) {
-            next_segment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
-            *next_segment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
+        if (allocation_size + Offset >= size) {
+          if (NextSegment == nullptr) {
+            NextSegment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+            *NextSegment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
           }
           // Switch to next allocator on fail
           return getNext()->Next<T>(allocation_size);
         }
 
-        offset += allocation_size;
+        Offset += allocation_size;
         return (T*)(block + allocation_size);
       }
 
       NG_INLINE bool HasSpaceFor(size_t space) {
-        return space + offset <= size;
+        return space + Offset <= size;
       }
 
       NG_INLINE auto GetAllocatorForAvailableSpace(size_t space) -> ArenaSegment*{
         if (!HasSpaceFor(space)) {
-          if (next_segment == nullptr) {
-            next_segment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
-            *next_segment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
+          if (NextSegment == nullptr) {
+            NextSegment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+            *NextSegment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
           }
-          return next_segment->GetAllocatorForAvailableSpace(space);
+          return NextSegment->GetAllocatorForAvailableSpace(space);
         }
         return this;
       }
 
+      NG_INLINE char *CopyValues(char *Buf, size_t Length) {
+        auto Alloc = GetAllocatorForAvailableSpace(Length);
+        auto Start = (char *) Alloc->BlockPoint();
+        for (auto i = 0; i < Length; ++i) { // Copy into destination
+          Start[i] = Buf[i];
+        }
+        Alloc->Offset += Length;
+        return Start;
+      }
 
       NG_INLINE auto getNext() -> ArenaSegment* {
-        return this->next_segment;
+        return this->NextSegment;
       }
 
       NG_INLINE void *BlockPoint() {
-        return block + offset;
+        return block + Offset;
       }
-      size_t offset;
-      ArenaSegment *next_segment;
+      size_t Offset;
+      ArenaSegment *NextSegment;
       static constexpr size_t size = 65536 << 2;
       int    block[size];
     };

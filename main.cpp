@@ -1,13 +1,10 @@
-#include <nextgen/jet/lex/lexer.h>
-
+#include <nextgen/jet/Lex/Lexer.h>
+#include <nextgen/jet/Diagnostics.h>
 typedef int integer_type;
 using namespace nextgen;
 using namespace nextgen::core;
 
 
-void doSomething(Vec<int> a) {
-
-}
 
 
 int main(
@@ -21,16 +18,50 @@ int main(
     using namespace nextgen;
     using namespace nextgen::core;
 
-    str val = "Hello";
+/*
+    Console::Log(Colors::RED, "Error "
+                              "---------------------------------------------------------- src/test"
+                              ".jet\n");
+    Console::Log(Colors::RESET, "Reached unexpected end of file when lexing "
+                               "token\n\n");
+    Console::Log(Colors::WHITE, "50 |\t ", Colors::RED, "var", Colors::YELLOW,
+                 " a ",
+                 Colors::RESET, "= ",
+                 Colors::GREEN, "\"Hello, World!\"\n");
+    Console::Log(Colors::WHITE, "51 |\t ", Colors::RED, "var", Colors::YELLOW,
+                 " variable ",
+                 Colors::RESET, "= ",
+                 Colors::BLUE, "0x\n");
+    Console::Log("\t\t\t\t\t\t   ", Colors::RED, "~ <-- Token Ended "
+                                                 "Unexpectedly\n");
+    Console::Log(Colors::BLUE, "   = ", Colors::GREEN, "hint: ",
+                 Colors::RESET, "You have an incomplete token written, check "
+                                "the docs at ", Colors::YELLOW, "jetlang"
+                                                                ".com/docs/tokens",
+                                Colors::RESET,
+                                " for "
+                                "valid tokens.\n");
+*/
 
-    str first = StringInterner::Intern(val);
 
-    auto range = (str) Range<const char *>(val, val + 5);
-    range.setHash(first.getHashCache());
-    str first2 = *StringInterner::Strings.find(range);
 
-    Console::Log("CK ", first, "\nCK2 ", first2, "\n");
-    printf("%p\n%p\n", first.begin(), first2.begin());
+    Arena<2> arena;
+
+    auto buf = "var test = 0xffffffffffffffffffaaaaaaa test";
+    auto len = strlen(buf);
+    auto lexer = jet::Lexer::New (arena.begin,
+                                  buf,
+                                  len);
+    lexer.NextToken();
+    lexer.NextToken();
+    lexer.NextToken();
+    auto Error = lexer.NextToken().Error().Unwrap();
+    jet::Diagnostic diagnostic = jet::Diagnostic(arena.begin, buf, len,
+                                                 "src/test"
+                                                                 ".jet");
+    if (Error.Error == jet::LexErrorType::IntegerOverflow) {
+      diagnostic.Build(Error);
+    }
 
   } catch (std::exception &) {
     return EXIT_FAILURE;

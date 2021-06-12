@@ -7,17 +7,17 @@ project(tests)
 add_executable(tests
 
         # Link Support
-        ../lib/support/panic.cpp
-        ../lib/support/allocator.cpp
-        ../lib/support/str.cpp
-        ../lib/support/io.cpp
+        ../lib/Support/Panic.cpp
+        ../lib/Support/Allocator.cpp
+        ../lib/Support/String.cpp
+        ../lib/Support/IO.cpp
 
         # Lexical Analysis
-        ../lib/lex/lexer.cpp
+        ../lib/Lex/Lexer.cpp
 
 
-        support/ListTest.cpp
-        lex/LexTest.cpp
+        Support/ListTest.cpp
+        Lex/LexTest.cpp
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)

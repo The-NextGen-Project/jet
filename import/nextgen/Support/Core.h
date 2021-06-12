@@ -1,7 +1,7 @@
 # ifndef NEXTGEN_CORE_H
 # define NEXTGEN_CORE_H
 
-# include "none.h"
+# include "None.h"
 
 namespace nextgen { namespace core {
 
@@ -26,8 +26,8 @@ namespace nextgen { namespace core {
   template<typename T, typename K = bool>
   struct PartialEq : detail::PartialEq<T, K> {};
 
-  // Optional Value Type. It owns any value that is given to it and drops it
-  // when the value is unwrapped.
+  /// Optional Type Value - Emulates Rust's style of an optional value in C++11.
+  /// We must ensure that values are owned by the value when passed.
   template<typename T>
   class Option {
   public:
@@ -38,11 +38,11 @@ namespace nextgen { namespace core {
     /*implicit*/ Option(NoneValue) :
     is(false) {}
 
-    NG_AINLINE bool IsSome() {
+    NG_AINLINE bool isSome() {
       return is;
     }
 
-    NG_AINLINE bool IsNone() {
+    NG_AINLINE bool isNone() {
       return !is;
     }
 
@@ -57,7 +57,7 @@ namespace nextgen { namespace core {
       return std::move(Some);
     }
 
-    template<LAMBDA(T, void)>
+    template<typename Lambda, LAMBDA(Lambda, T, void)>
     T UnwrapOrElse(Lambda f) {
       if (is) return std::move(Some);
       return f();
@@ -112,7 +112,7 @@ namespace nextgen { namespace core {
       return Result(&Err);
     }
 
-    template<LAMBDA(T, Result<T, E>)>
+    template<typename Lambda, LAMBDA(Lambda, T, Result<T, E>)>
     auto AndThen(Lambda op) -> Result<T, E>  {
       if (is) return op(Ok);
       return Result(Err);

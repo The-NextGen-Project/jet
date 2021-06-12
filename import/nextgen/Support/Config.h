@@ -110,11 +110,10 @@ typedef __int8 int8_t;
 // I want a shortcut for unreachable code here ...
 # define UNREACHABLE PANIC("unreachable")
 // Function Lambdas
-# define LAMBDA(Ret, ...) typename Lambda, typename\
+# define LAMBDA(Lambda, Ret, ...) typename\
 = typename std::enable_if<std::is_convertible<Lambda, std::function<Ret \
 (__VA_ARGS__)\
 >>::value>::type
-
-
+// Class Init
 
 #endif //NEXTGEN_CONFIG_H

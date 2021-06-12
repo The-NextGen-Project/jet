@@ -1,4 +1,4 @@
-# include <nextgen/support/str.h>
+# include <nextgen/Support/String.h>
 
 // Declare interned strings
 std::unordered_set<nextgen::str, nextgen::str::intern_hash,

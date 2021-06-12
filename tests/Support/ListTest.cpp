@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "nextgen/support/core.h"
-#include "nextgen/support/allocator.h"
+#include "nextgen/Support/Core.h"
+#include "nextgen/Support/Allocator.h"
 
 TEST(Lists, ListTest) {
   using namespace nextgen;

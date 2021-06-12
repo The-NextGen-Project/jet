@@ -19,11 +19,11 @@ add_executable(jet main.cpp
 
 
     # Import Support Libraries.
-    lib/support/panic.cpp
-    lib/support/allocator.cpp
-    lib/support/str.cpp
-    lib/support/io.cpp
+        lib/Support/Panic.cpp
+        lib/Support/Allocator.cpp
+        lib/Support/String.cpp
+        lib/Support/IO.cpp
 
-    # Lexical Analysis
-    lib/lex/lexer.cpp
-)
+        # Lexical Analysis
+        lib/Lex/Lexer.cpp
+        import/nextgen/jet/Diagnostics.h lib/Diagnostics.cpp)
