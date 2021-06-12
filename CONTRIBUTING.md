@@ -44,9 +44,7 @@ All programs under the NextGen Project follow the following C++ Style Guidlines.
 
 * Getter and Setter functions are to be named using `camelCase`
 * Functions (including in namespaces and in classes) should be denoted with `MyFunction` notation
-* Class and Struct member **variables** should be deonoted with `snake_case`
-* When accessing private member variables, they should be accessed with `this` notation (unless in a constructor where it
-is optional to so as long as it is explicitly clear)
+* Class and Struct member **variables** should be deonoted with `MyVariable`
 * Don't be *too* generous with your comments. Use them appropriately, especially when describing a complicated task
 * Preprocessors have a `\t` between the '#'. For example: `#  include <iostream>`. This is done to be consistant with config
 * Lines should be no longer than **80 characters**. We like to limit this line length for readibility
