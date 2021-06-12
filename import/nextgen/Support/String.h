@@ -70,6 +70,9 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       }
     }
 
+    str(const str &RHS) : len(RHS.len), hash_cache(RHS.hash_cache), _(RHS._) {
+    }
+
 
 
     [[nodiscard]]
@@ -180,15 +183,26 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
   public:
     using Allocator = mem::ArenaSegment;
 
-    static std::unordered_set<str, str::intern_hash, str::intern_eq> Strings;
+
+    static NG_INLINE auto Strings() -> std::unordered_set<str, str::intern_hash,
+    str::intern_eq>& {
+      static std::unordered_set<str, str::intern_hash, str::intern_eq>
+          Strings;
+      return Strings;
+    }
+
     static NG_INLINE str Intern(const str &s) {
-      return (*Strings.insert(str(s)).first);
+      return (*Strings().insert(s).first);
+    }
+
+    static NG_INLINE str Get(str &Str) {
+      return *(Strings().find(Str));
     }
 
     static NG_INLINE str InsertOrGet(Allocator *Mem,
                                      str &Str) {
-      auto Find = Strings.find(Str);
-      if (Find != Strings.end()) {
+      auto Find = Strings().find(Str);
+      if (Find != Strings().end()) {
         return *Find;
       } else {
 
@@ -197,7 +211,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
         auto Insert = (str)
           Mem->CopyValues(const_cast<char *>(Str.begin()), Size);
         Insert.setHash(Str.getHashCache());
-        return (*Strings.insert(Insert).first);
+        return (*Strings().insert(Insert).first);
       }
     }
 

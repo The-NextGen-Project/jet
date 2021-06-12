@@ -5,8 +5,6 @@ using namespace nextgen;
 using namespace nextgen::core;
 
 
-
-
 int main(
   [[maybe_unused]] integer_type argc,
   [[maybe_unused]] char **argv,

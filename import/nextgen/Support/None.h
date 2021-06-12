@@ -15,7 +15,7 @@ namespace nextgen { // Putting this in the global namespace
 # define match(...) switch (pair(__VA_ARGS__))
 # define group(...) case pair(__VA_ARGS__)
 
-  template <typename Enum, typename = std::enable_if<std::is_enum<Enum>::value>>
+  template <typename Enum>
   constexpr int pair(Enum k1) { // STD NAMING
     return k1;
   }
@@ -23,10 +23,7 @@ namespace nextgen { // Putting this in the global namespace
   template<typename Enum1, typename Enum2>
   constexpr int pair(Enum1 k1, Enum2 k2) {
 # ifdef BIT32
-    return ((k1 + k2) << 8) | k2;
-# endif
-# ifdef BIT64
-    return ((k1 + k2) << 16) | k2;
+    return (((size_t)k1 + (size_t)k2) << 8) | (size_t)k2;
 # endif
   }
 
