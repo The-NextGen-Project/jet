@@ -38,10 +38,9 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     using Self = Vec;
 
     static auto Replace(const Vec<T> &vec) -> Self {
-      auto x = Vec<T> {
-        .len = vec.len,
-        .cap = vec.cap,
-      };
+      auto x = Vec<T> {};
+      x.len = vec.len;
+      x.cap = vec.cap;
       x.ptr.swap((Box<T> &) std::move(vec.ptr));
       return x;
     }
@@ -61,9 +60,9 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
     static auto New() -> Self {
       return Vec {
-        .ptr = Box<T>((T*)os::calloc(1, sizeof(T))),
-        .len = 0,
-        .cap = 1
+        Box<T>((T*)os::calloc(1, sizeof(T))),
+        0,
+        1
       };
     }
 
