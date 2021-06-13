@@ -74,6 +74,8 @@ typedef __int8 int8_t;
 #   include <ios>
 #   include <exception>
 #   include <cstring>
+#   include <unordered_set>
+#   include <memory>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32
@@ -106,9 +108,12 @@ typedef __int8 int8_t;
 #       define FNV_OFF   14695981039346656037u
 #   endif
 // I want a shortcut for unreachable code here ...
-# define unreachable PANIC("unreachable")
-/* Class definitions */
-
-
+# define UNREACHABLE PANIC("unreachable")
+// Function Lambdas
+# define LAMBDA(Lambda, Ret, ...) typename\
+= typename std::enable_if<std::is_convertible<Lambda, std::function<Ret \
+(__VA_ARGS__)\
+>>::value>::type
+// Class Init
 
 #endif //NEXTGEN_CONFIG_H

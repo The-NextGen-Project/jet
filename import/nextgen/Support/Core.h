@@ -1,8 +1,7 @@
 # ifndef NEXTGEN_CORE_H
 # define NEXTGEN_CORE_H
 
-# include "none.h"
-# include "panic.h"
+# include "None.h"
 
 namespace nextgen { namespace core {
 
@@ -27,25 +26,23 @@ namespace nextgen { namespace core {
   template<typename T, typename K = bool>
   struct PartialEq : detail::PartialEq<T, K> {};
 
-
+  /// Optional Type Value - Emulates Rust's style of an optional value in C++11.
+  /// We must ensure that values are owned by the value when passed.
   template<typename T>
   class Option {
   public:
 
-    /*implicit*/ Option(T &value) :
-      Some(std::move(value)), is(true) {}
-
-    /*implicit*/ Option(T value) :
-      Some(value), is(true) {}
+    explicit Option(T &value) :
+    Some(std::move(value)), is(true) {}
 
     /*implicit*/ Option(NoneValue) :
-      is(false) {}
+    is(false) {}
 
-    NG_AINLINE bool IsSome() {
+    NG_AINLINE bool isSome() {
       return is;
     }
 
-    NG_AINLINE bool IsNone() {
+    NG_AINLINE bool isNone() {
       return !is;
     }
 
@@ -57,15 +54,12 @@ namespace nextgen { namespace core {
 
     T Unwrap() {
       ASSERT(is, "Unwrapped on None Value");
-      return Some;
+      return std::move(Some);
     }
 
-    template<typename Lambda, typename
-    = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
-      void)
-    >>::value>::type>
+    template<typename Lambda, LAMBDA(Lambda, T, void)>
     T UnwrapOrElse(Lambda f) {
-      if (is) return Some;
+      if (is) return std::move(Some);
       return f();
     }
 
@@ -87,18 +81,18 @@ namespace nextgen { namespace core {
   class Result {
   public:
 
-    /*implicit*/ Result(detail::OkResult, T ok)
+    /*implicit*/ Result(detail::OkResult, T &ok)
       : Ok(ok), is(true) {}
 
 
     /*implicit*/ Result(detail::ErrResult, E err)
       : Err(err), is(false) {}
 
-    bool IsOk() {
+    NG_AINLINE bool IsOk() {
       return is;
     }
 
-    bool IsErr() {
+    NG_AINLINE bool IsErr() {
       return !is;
     }
 
@@ -108,16 +102,18 @@ namespace nextgen { namespace core {
       return false;
     }
 
-    Result<T &, E &> AsRef() {
+    auto Error() -> Option<E> {
+      if (!is) return Option<E>(Err);
+      return None;
+    }
+
+    auto AsRef() -> Result<T &, E &>{
       if (is) return Result(&Ok);
       return Result(&Err);
     }
 
-    template<typename Lambda,
-      typename = typename std::enable_if<std::is_convertible<Lambda, std::function<T(
-        Result<T, E>)
-      >>::value>::type>
-    Result<T, E> AndThen(Lambda op) {
+    template<typename Lambda, LAMBDA(Lambda, T, Result<T, E>)>
+    auto AndThen(Lambda op) -> Result<T, E>  {
       if (is) return op(Ok);
       return Result(Err);
     }
@@ -135,19 +131,20 @@ namespace nextgen { namespace core {
 
 
   template<typename T, typename E>
-  static Result<T, E> Ok(T value) {
+  static auto Ok(T value) -> Result<T, E> {
     return Result<T, E>(detail::OkResult::Ok, value);
   }
 
   template<typename T, typename E>
-  static Result<T, E> Err(E value) {
+  static auto Err(E value) -> Result<T, E> {
     return Result<T, E>(detail::ErrResult::Err, value);
   }
 
   template<typename T>
-  static NG_AINLINE Option<T> Some(T value) {
-    return value;
+  static NG_AINLINE auto Some(T value) -> Option<T> {
+    return Option<T>(value); // Make explicit
   }
+
 
 }} // namespace nextgen::core
 

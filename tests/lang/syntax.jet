@@ -61,9 +61,9 @@ restrict(false, 23f);
 
 /* ----- Structs and Enums ----- */
 Dataclass : struct {
-  a int;
-  s str;
-  d float64;
+  a : int;
+  s : str;
+  d : float64;
 }
 
 Map : struct(K, V) {
@@ -88,18 +88,26 @@ Result : enum(T, E) { // Generic Enum
 }
 
 IHaveFunctions : struct {
- v int;
+ v List![int];
+
+}
+
+impl IHaveFunctions {
+
  fn wow(self) {
    self.v = 23;
  }
- fn some_static() {
-   return 232 << 2;
+ fn some_static() IHaveFunctions {
+   IHaveFunctions {
+    v: 23
+   }
  }
 }
 
 // Initialize Structs
 var ihf = IHaveFunctions { v: 0 };
 ihf.wow();
+
 
 // Call Static Functions
 var CONST = IHaveFunctions.some_static();

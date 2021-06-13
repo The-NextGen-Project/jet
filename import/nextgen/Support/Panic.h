@@ -1,6 +1,6 @@
 # ifndef NEXTGEN_PANIC_H
 # define NEXTGEN_PANIC_H
-# include "config.h"
+# include "Config.h"
 
 
 namespace nextgen {
@@ -57,10 +57,10 @@ namespace nextgen {
 # endif
 
     template<typename ... Args>
-    NG_INLINE static void Log(Args ... args) {
+    static void Log(Args ... args) {
       using fold = int[];
 # if defined(NG_OS_LINUX) || defined(NG_OS_APPLE)
-      fold{
+      fold {
         (std::cout << args, 0)...
       };
 # elif defined(NG_OS_WINDOWS)
@@ -72,17 +72,24 @@ namespace nextgen {
   };
 
 # define PANIC(msg) nextgen::PanicAt<sizeof(msg), sizeof(__FILE__), sizeof \
-("panic("#msg");"), __LINE__, false>(msg, __FILE__, "panic("#msg");")
+("panic("#msg");"), __LINE__, false>(msg, __FILE__, "PANIC("#msg");")
 # define ASSERT(cond, msg) if (!(cond)) nextgen::PanicAt<sizeof(msg), sizeof \
-(__FILE__), sizeof("assert("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, "assert("#cond", "#msg");")
+(__FILE__), sizeof("ASSERT("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, \
+"assert("#cond", "#msg");")
 
-  // Panic at a specific point in the code. This is simulated as an exception throw caught by
-  // main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,
-  // and text of the panic message to have the user locate the failed point in the code.
+  // Panic at a specific point in the code. This is simulated as an exception
+// throw caught by
+// main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,
+// and text of the panic message to have the user locate the failed point in the code.
+
+// Panic at a specific point in the code. This is simulated as an exception
+// throw caught by
+// main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,
+// and text of the panic message to have the user locate the failed point in the code.
   template<
     std::size_t N1, std::size_t N2, std::size_t N3,
     int LINE, bool Assert>
-  void PanicAt(
+  static void PanicAt(
     const char (&msg)[N1],  /* Panic Message */
     const char (&FILE)[N2], /* File Name of Error */
     const char (&dup)[N3]) { /* Line text of Panic */

@@ -5,8 +5,20 @@ project(tests)
 
 # Setup Google Test Compilation Cases
 add_executable(tests
-        support/ListTest.cpp
-        lex/LexTest.cpp)
+
+        # Link Support
+        ../lib/Support/Panic.cpp
+        ../lib/Support/Allocator.cpp
+        ../lib/Support/String.cpp
+        ../lib/Support/IO.cpp
+
+        # Lexical Analysis
+        ../lib/Lex/Lexer.cpp
+
+
+        Support/ListTest.cpp
+        Lex/LexTest.cpp
+)
 
 set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)
 
