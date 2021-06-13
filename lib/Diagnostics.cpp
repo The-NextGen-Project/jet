@@ -12,7 +12,8 @@ void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
                             "---------------------------------------------------------- ", FileName, "\n");
   Console::Log(Colors::RESET, "Integer Value Too Large\n\n");
   auto SourceLine = GetNthLineOfBuffer(Error.Location.Line);
-  auto LexPrint = Lexer::New(Memory, SourceLine, SourceLine.size(),
+  auto LexPrint = Lexer::New(Memory, (const char *) SourceLine, SourceLine
+  .size(),
                              LexMode::PrintingMode);
 
   // We get the string version of the line to align hints and notes to error

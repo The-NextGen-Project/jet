@@ -228,9 +228,22 @@ static const struct JetKeyword Keywords[] {
 /// Determine the validity of parsed string being a Keyword. The assumption
 /// made in this function is that `value` is an interned string therefore only
 /// direct pointer comparison is made resulting in O(1) comparison.
+
 static auto ReturnValidKeyword(str &value, TokenKind else_) -> TokenKind {
   for (auto i = 0; i < SizeOfArray(Keywords); ++i) {
     if (value == Keywords[i].key)
+      return Keywords[i].id;
+  }
+  return else_;
+}
+
+/// For Printing, same as above.
+static auto ReturnValidKeyword(std::string &value, TokenKind else_) ->
+TokenKind {
+  for (auto i = 0; i < SizeOfArray(Keywords); ++i) {
+
+    // We don't intern when lex printing
+    if (value == std::string(Keywords[i].key._))
       return Keywords[i].id;
   }
   return else_;
@@ -397,9 +410,9 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
 
         auto End = this->Buffer;
 
-        auto S = (str) Range<const char *>(Begin, End);
+        auto S = str(Begin, End-Begin);
         S.setHash(val);
-        auto Intern = StringInterner::InsertOrGet(Memory, S);
+        auto Intern = StringInterner::InsertOrGet(S);
 
         // Ensure appropriate kind is assigned
         auto Type = ReturnValidKeyword(Intern,TokenKind::Identifier);
@@ -588,6 +601,8 @@ void Lexer::PrintNextToken() {
   goto start;
   start:
   {
+    if (!Buffer)
+      return;
     switch (Kind) {
 
       case Integer: {
@@ -641,7 +656,7 @@ void Lexer::PrintNextToken() {
 
         auto End = Buffer;
 
-        std::string Print = std::string(Begin, End);
+        auto Print = str(Begin, End - Begin);
         Console::Log(Colors::BLUE, Print, Colors::RESET);
 
         break;
@@ -667,17 +682,18 @@ void Lexer::PrintNextToken() {
 
         auto End = this->Buffer;
 
-        auto Val = std::string(Begin, End); // TODO: Fix Me ASAP
-        auto S = str(Val);
+        auto S = str(Begin, End-Begin);
         S.setHash(val);
-        auto Intern = StringInterner::Intern(S);
+        auto Intern = StringInterner::InsertOrGet(S);
 
         // Ensure appropriate kind is assigned
         auto Type = ReturnValidKeyword(Intern,TokenKind::Identifier);
-        if (Type == TokenKind::Identifier) {
-          Console::Log(Colors::YELLOW, Intern, Colors::RESET);
-        } else {
+
+        if (Type != TokenKind::Identifier) {
           Console::Log(Colors::RED, Intern, Colors::RESET);
+        } else {
+
+          Console::Log(Colors::YELLOW, Intern, Colors::RESET);
         }
         break;
       }
@@ -828,7 +844,6 @@ void Lexer::PrintNextToken() {
         break;
     }
   }
-  Next(Instance.Length());
 }
 
 

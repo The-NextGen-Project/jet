@@ -1,0 +1,61 @@
+        -:    0:Source:C:/Users/Owner/3DOBJE~1/jet/import/nextgen/Support/IO.h
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Support\IO.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Support\IO.cpp.gcda
+        -:    0:Runs:1
+        -:    1:# ifndef NEXTGEN_IO_H
+        -:    2:# define NEXTGEN_IO_H
+        -:    3:# include "Allocator.h"
+        -:    4:
+        -:    5:namespace nextgen { namespace io {
+        -:    6:
+        -:    7:  enum FileID {
+        -:    8:    JetSourceCode,
+        -:    9:    CSourceCode,
+        -:   10:    LLVM_IR,
+        -:   11:    LLVM_BC,
+        -:   12:    Mach_O,
+        -:   13:    ELF,
+        -:   14:    PE
+        -:   15:  };
+        -:   16:
+        -:   17:  class FileBuf {
+        -:   18:  public:
+        -:   19:    using Files = FileBuf[];
+        -:   20:
+    #####:   21:    FileBuf(char *buffer, FileID id) : buffer(buffer), id(id) {}
+        -:   22:
+        -:   23:    FileID getFileID() const {
+        -:   24:      return id;
+        -:   25:    }
+        -:   26:
+        -:   27:    char *getFileBuffer() const {
+        -:   28:      return buffer;
+        -:   29:    }
+        -:   30:
+        -:   31:
+        -:   32:    // Given a list of files, output the type of file given. For example,
+        -:   33:    // given a list of source code for Jet, and set it to output a binary
+        -:   34:    // ELF, it will output an ELF binary for the given source input.
+        -:   35:    //
+        -:   36:    // Example:
+        -:   37:    // FileBuf files[] = ...
+        -:   38:    // FileBuf::Output(files, FiledID::LLVM_IR);
+        -:   39:    //
+        -:   40:    // NOTE: The types of files need to be able to be linked together to form
+        -:   41:    // the resulting FileID file type.
+        -:   42:    static void Output(Files files, FileID output);
+        -:   43:  private:
+        -:   44:    char *buffer; // Buffer pointer to the source text of a file
+        -:   45:    FileID id; // File Type to know how file should be read
+        -:   46:  };
+        -:   47:
+        -:   48:
+        -:   49:  FileBuf CreateFileBuffer(const char *FILE, FileID id);
+        -:   50:
+        -:   51:
+        -:   52:}} // namespace nextgen::io
+        -:   53:
+        -:   54:
+        -:   55:
+        -:   56:
+        -:   57:# endif //NEXTGEN_IO_H

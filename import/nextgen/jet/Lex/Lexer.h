@@ -88,7 +88,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     NG_INLINE void LexPrint() noexcept {
       do {
         PrintNextToken();
-      } while (BufferPosition < BufferSize);
+      } while (BufferPosition < BufferSize && Buffer);
     }
 
 

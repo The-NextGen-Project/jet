@@ -120,20 +120,14 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
     struct ArenaSegment  {
 
+      ArenaSegment() = default;
+
       static auto New() -> ArenaSegment {
-        return ArenaSegment {
-          0,
-          nullptr,
-          {}
-        };
+        return {};
       }
 
       static auto New(ArenaSegment *seg) -> ArenaSegment {
-        return ArenaSegment {
-          0,
-          seg,
-          {}
-        };
+        return ArenaSegment(0, seg);
       }
 
       template<typename T = void>
@@ -188,32 +182,41 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       NG_INLINE void *BlockPoint() {
         return block + Offset;
       }
-      size_t Offset;
-      ArenaSegment *NextSegment;
+
+    private:
+
+      ArenaSegment(size_t Offset, ArenaSegment *Next) : Offset(Offset),
+      NextSegment(Next) {}
+
+      size_t Offset  = 0;
+      ArenaSegment *NextSegment = nullptr;
       static constexpr size_t size = 65536 << 2;
-      int    block[size];
+      char    block[size]{};
     };
 
 
-    template <size_t N = 0>
+    template <size_t N>
     struct Arena {
       Arena() {
-        begin = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+        auto node = begin;
         for (auto i = 0; i < N; ++i) {
-          *begin = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
-          begin = begin->getNext();
+          node = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+          *node = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof
+                                                                      (ArenaSegment)));
+          node = node->getNext();
         }
       }
 
+
       ~Arena() {
-        auto start = begin;
+        /*auto start = begin;
         while (start->getNext()) {
           auto temp = start->getNext();
           os::free(start);
           start = temp;
-        }
+        }*/
       }
-      ArenaSegment *begin;
+      ArenaSegment *begin = nullptr;
     };
 
 }} // namespace nextgen::mem

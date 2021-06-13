@@ -1,0 +1,373 @@
+        -:    0:Source:C:/Users/Owner/3DOBJE~1/jet/import/nextgen/jet/Lex/Token.h
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Lex\Lexer.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Lex\Lexer.cpp.gcda
+        -:    0:Runs:1
+        -:    1:# ifndef NEXTGEN_TOKEN_H
+        -:    2:# define NEXTGEN_TOKEN_H
+        -:    3:# include <nextgen/Support/String.h>
+        -:    4:# include <nextgen/Support/Allocator.h>
+        -:    5:
+        -:    6:namespace nextgen { namespace jet {
+        -:    7:
+        -:    8:  // References the range in the actual source text.
+        -:    9:  using SourceSpan = Range<const char *>;
+        -:   10:
+        -:   11:
+        -:   12:  enum TokenClassification {
+        -:   13:    Function     = 1 << 2,
+        -:   14:    Assignment   = 1 << 3,
+        -:   15:    Unsigned     = 1 << 4,
+        -:   16:    Keyword      = 1 << 5,
+        -:   17:  };
+        -:   18:
+        -:   19:  enum TokenKind {
+        -:   20:
+        -:   21:    // Primitives ---------------------------
+        -:   22:    Integer = 1,  // + sizeof(decltype(UINTPTR_MAX))
+        -:   23:    String,   // + sizeof(const char *)
+        -:   24:    Decimal,  // + sizeof(double)
+        -:   25:    Boolean,  // + sizeof(bool)
+        -:   26:    //---------------------------------------
+        -:   27:
+        -:   28:    // File Control ---------------------------
+        -:   29:    NewLine,
+        -:   30:    Whitespace,
+        -:   31:    StringEscapeStart,
+        -:   32:    //---------------------------------------
+        -:   33:
+        -:   34:    // Keywords  ---------------------------
+        -:   35:    KeywordIf,
+        -:   36:    KeywordElse,
+        -:   37:    KeywordElif,
+        -:   38:    KeywordWhile,
+        -:   39:    KeywordFor,
+        -:   40:    KeywordAnd,
+        -:   41:    KeywordOr,
+        -:   42:    KeywordBreak,
+        -:   43:    KeywordContinue,
+        -:   44:    KeywordDefer,
+        -:   45:    KeywordStruct,
+        -:   46:    KeywordEnum,
+        -:   47:    KeywordExport,
+        -:   48:    KeywordExtern,
+        -:   49:    KeywordFunction,
+        -:   50:    KeywordError,
+        -:   51:    KeywordVar,
+        -:   52:    KeywordTrue,
+        -:   53:    KeywordFalse,
+        -:   54:    KeywordNone,
+        -:   55:    KeywordReturn,
+        -:   56:    KeywordUnion,
+        -:   57:    //---------------------------------------
+        -:   58:
+        -:   59:    Identifier,   // [a-z] && [A-Z] && _
+        -:   60:    LParenthesis, // (
+        -:   61:    RParenthesis, // )
+        -:   62:    LCurlyBrace,  // {
+        -:   63:    RCurlyBrace,  // }
+        -:   64:    LBracket,     // [
+        -:   65:    RBracket,     // ]
+        -:   66:    Colon,        // :
+        -:   67:    LessThan,     // <
+        -:   68:    GreaterThan,  // >
+        -:   69:    Equals,       // =
+        -:   70:    QuestionMark, // ?
+        -:   71:    Then,         // ??
+        -:   72:
+        -:   73:    Plus,   // +
+        -:   74:    Minus,  // -
+        -:   75:    Slash,  // /
+        -:   76:    Star,   // *
+        -:   77:    XOR,    // ^
+        -:   78:    AND,    // &
+        -:   79:    NOT,    // ~
+        -:   80:    Pipe,   // |
+        -:   81:    Percent,// %
+        -:   82:    Char,   // \'
+        -:   83:    Dot,    // .
+        -:   84:
+        -:   85:
+        -:   86:    EqualsEquals, // ==
+        -:   87:    LeftShift,    // <<
+        -:   88:    RightShift,   // >>
+        -:   89:    Pow,          // **
+        -:   90:    RangeSpan,        // ..
+        -:   91:    Ellipsis,     // ...
+        -:   92:
+        -:   93:    PlusPlus,     // ++
+        -:   94:    MinusMinus,   // --
+        -:   95:
+        -:   96:    Error
+        -:   97:  };
+        -:   98:
+        -:   99:  struct TokenTraits {
+        -:  100:
+        -:  101:    /// Definitive Source Location of a Token that is lexed, may also
+        -:  102:    /// apply to failed tokens as well.
+        -:  103:    struct SourceLocation {
+        -:  104:      size_t Line;
+        -:  105:      size_t Column;
+        -:  106:      Range<const char *> SourceRange;
+        -:  107:    };
+        -:  108:
+        -:  109:    /// Since std::variant<Args...> does not exist in C++11, we must use a
+        -:  110:    /// controlled union Value type in order to hold values that can be
+        -:  111:    /// represented in C++.
+        -:  112:    struct Value {
+        -:  113:      TokenKind Kind;
+        -:  114:      union {
+        -:  115:        decltype(UINTPTR_MAX) Integer;
+        -:  116:        bool Boolean;
+        -:  117:        double Float64;
+        -:  118:        char SingleByte;
+        -:  119:      };
+        -:  120:    };
+        -:  121:  };
+        -:  122:
+        -:  123:  class Token {
+        -:  124:  private:
+        -:  125:    using TokenValue     = TokenTraits::Value;
+        -:  126:    using SourceLocation = TokenTraits::SourceLocation;
+        -:  127:
+        -:  128:    nextgen::str ID;
+        -:  129:    SourceLocation Location;
+        -:  130:    TokenValue InternalValue;
+        -:  131:    unsigned Flags;
+        -:  132:  public:
+        -:  133:
+        -:  134:    /// Default constructor is used to avoid any single initialization conflicts
+    #####:  135:    Token() = default;
+    %%%%%:  135-block  0
+        -:  136:
+        -:  137:    /// Set literal token value and generate correct Token Instance
+        -:  138:    template<typename T>
+       6*:  139:    static auto New(const nextgen::str &ID, SourceLocation Location, T Value,
+        -:  140:         TokenKind Kind,
+        -:  141:         TokenClassification Flags = static_cast<TokenClassification>(0))
+        -:  142:      -> Token {
+        -:  143:
+       6*:  144:      Token Instance = Token(ID, Location, Flags);
+       6*:  145:      Instance.setValue(Value);
+        -:  146:      Instance.setKind(Kind);
+       6*:  147:      return Instance;
+        -:  148:    }
+------------------
+_ZN7nextgen3jet5Token3NewIcEES1_RKNS_3strENS0_11TokenTraits14SourceLocationET_NS0_9TokenKindENS0_19TokenClassificationE:
+        1:  139:    static auto New(const nextgen::str &ID, SourceLocation Location, T Value,
+        -:  140:         TokenKind Kind,
+        -:  141:         TokenClassification Flags = static_cast<TokenClassification>(0))
+        -:  142:      -> Token {
+        -:  143:
+        1:  144:      Token Instance = Token(ID, Location, Flags);
+        1:  144-block  0
+        1:  145:      Instance.setValue(Value);
+        -:  146:      Instance.setKind(Kind);
+        1:  147:      return Instance;
+        1:  147-block  0
+        -:  148:    }
+------------------
+_ZN7nextgen3jet5Token3NewIPKcEES1_RKNS_3strENS0_11TokenTraits14SourceLocationET_NS0_9TokenKindENS0_19TokenClassificationE:
+        5:  139:    static auto New(const nextgen::str &ID, SourceLocation Location, T Value,
+        -:  140:         TokenKind Kind,
+        -:  141:         TokenClassification Flags = static_cast<TokenClassification>(0))
+        -:  142:      -> Token {
+        -:  143:
+        5:  144:      Token Instance = Token(ID, Location, Flags);
+        5:  144-block  0
+        5:  145:      Instance.setValue(Value);
+        -:  146:      Instance.setKind(Kind);
+        5:  147:      return Instance;
+        5:  147-block  0
+        -:  148:    }
+------------------
+_ZN7nextgen3jet5Token3NewIyEES1_RKNS_3strENS0_11TokenTraits14SourceLocationET_NS0_9TokenKindENS0_19TokenClassificationE:
+    #####:  139:    static auto New(const nextgen::str &ID, SourceLocation Location, T Value,
+        -:  140:         TokenKind Kind,
+        -:  141:         TokenClassification Flags = static_cast<TokenClassification>(0))
+        -:  142:      -> Token {
+        -:  143:
+    #####:  144:      Token Instance = Token(ID, Location, Flags);
+    %%%%%:  144-block  0
+    #####:  145:      Instance.setValue(Value);
+        -:  146:      Instance.setKind(Kind);
+    #####:  147:      return Instance;
+    %%%%%:  147-block  0
+        -:  148:    }
+------------------
+        -:  149:
+        -:  150:    /// Trivial Token creation for Failed Tokens Built during lexing
+        1:  151:    static auto New(nextgen::str ID, SourceLocation Loc, TokenKind Kind) ->
+        -:  152:    Token {
+        1:  153:      Token Instance;
+        1:  153-block  0
+        -:  154:      Instance.setKind(Kind);
+        1:  155:      Instance.ID = ID;
+        1:  156:      Instance.Location = Loc;
+        1:  157:      return Instance;
+        1:  157-block  0
+        -:  158:    }
+        -:  159:
+        -:  160:    /// Get the token's length
+        -:  161:    NG_AINLINE size_t Length() const {
+        5:  162:      return ID.size();
+        4:  162-block  0
+        1:  162-block  1
+        -:  163:    }
+        -:  164:
+        -:  165:    /// Return String instance that represents lexed Token
+        -:  166:    NG_AINLINE const str Name() const {
+        -:  167:      return ID;
+        -:  168:    }
+        -:  169:
+        -:  170:    /// Set the token's value depending on valid construct.
+        -:  171:    template<typename T>
+       6*:  172:    NG_INLINE void setValue(T v) {
+        1:  173:      ValueSet(v);
+       6*:  174:    }
+------------------
+_ZN7nextgen3jet5Token8setValueIcEEvT_:
+        1:  172:    NG_INLINE void setValue(T v) {
+        1:  173:      ValueSet(v);
+        1:  174:    }
+------------------
+_ZN7nextgen3jet5Token8setValueIPKcEEvT_:
+        5:  172:    NG_INLINE void setValue(T v) {
+        -:  173:      ValueSet(v);
+        5:  174:    }
+------------------
+_ZN7nextgen3jet5Token8setValueIyEEvT_:
+    #####:  172:    NG_INLINE void setValue(T v) {
+        -:  173:      ValueSet(v);
+    #####:  174:    }
+------------------
+        -:  175:
+        -:  176:    /// Set the token type (used in cases where type is determined later)
+        -:  177:    NG_AINLINE void setKind(TokenKind Kind) {
+       7*:  178:      InternalValue.Kind = Kind;
+       7*:  179:    }
+        -:  180:
+        -:  181:    /// Get the token type
+        -:  182:    NG_AINLINE auto getKind() -> TokenKind {
+    #####:  183:      return InternalValue.Kind;
+    %%%%%:  183-block  0
+        -:  184:    }
+        -:  185:
+        -:  186:    /// Retrieve Source Location of the Token (Source Range)
+        -:  187:    NG_AINLINE auto getSourceLocation() -> SourceLocation  {
+        -:  188:      return Location;
+        -:  189:    }
+        -:  190:
+        -:  191:    /// Set a flag for extraneous metadeta for the token
+        -:  192:    NG_AINLINE void setFlag(TokenClassification flag) {
+       1*:  193:      Flags |= flag;
+       1*:  194:    }
+    %%%%%:  194-block  0
+        1:  194-block  1
+        -:  195:
+        -:  196:
+        -:  197:    /// @unsafe Get the value of the token. Does not check for correct
+        -:  198:    /// value retrieval, may result in UB if used incorrectly!
+        -:  199:    template<typename T>
+        -:  200:    NG_INLINE T getValue()  {
+        -:  201:      T v;
+        -:  202:      ValueSetAndGet(v);
+        -:  203:      return v;
+        -:  204:    }
+        -:  205:
+        -:  206:    /// Determine whether the token is a given Keyword or Typename
+        -:  207:    NG_AINLINE bool isKeyword() {
+        -:  208:      return Flags & TokenClassification::Keyword;
+        -:  209:    }
+        -:  210:
+        -:  211:    /// Pretty Print Token to the Screen. This usually works nicely for
+        -:  212:    /// Diagnostics, as tokens on the line need to be printed normally.
+        -:  213:/*    void PrettyPrint() {
+        -:  214:      if (isKeyword()) {
+        -:  215:        Console::Log(Colors::RED);
+        -:  216:      }
+        -:  217:      auto Kind = getKind();
+        -:  218:      switch (Kind) {
+        -:  219:        case String:
+        -:  220:          Console::Log(Colors::GREEN, "\"");
+        -:  221:          break;
+        -:  222:        case Integer:
+        -:  223:        case Decimal:
+        -:  224:          Console::Log(Colors::BLUE);
+        -:  225:          break;
+        -:  226:        case Char:
+        -:  227:          Console::Log(Colors::GREEN, "\"");
+        -:  228:          break;
+        -:  229:        case Identifier:
+        -:  230:          Console::Log(Colors::YELLOW);
+        -:  231:          break;
+        -:  232:        case Error:
+        -:  233:          break;
+        -:  234:        default:
+        -:  235:          break;
+        -:  236:      }
+        -:  237:
+        -:  238:      Console::Log(Name());
+        -:  239:      Console::Log(Name().size());
+        -:  240:      if (Kind == TokenKind::String) {
+        -:  241:        Console::Log("\"");
+        -:  242:      }
+        -:  243:      else if (Kind == TokenKind::Char) {
+        -:  244:        Console::Log("'");
+        -:  245:      }
+        -:  246:      Console::Log(Colors::RESET);
+        -:  247:    }*/
+        -:  248:
+        -:  249:    bool assignment = false; // (ie: +=, -=, *=)
+        -:  250:  private:
+        -:  251:
+        -:  252:    /// Private initialization constructor
+        6:  253:    Token(const nextgen::str &ID, SourceLocation Location,
+        -:  254:          TokenClassification Flags)
+        6:  255:      : ID(ID), Flags(Flags), Location(Location) {}
+        -:  256:
+        -:  257:    // Generic Type Inference on Inferred Value
+        -:  258:
+        -:  259:    NG_AINLINE void ValueSetAndGet(double &V) const {
+        -:  260:      V = InternalValue.Float64;
+        -:  261:    }
+        -:  262:
+        -:  263:    NG_AINLINE void ValueSetAndGet(decltype(UINTPTR_MAX) &V) const {
+        -:  264:      V = InternalValue.Integer;
+        -:  265:    }
+        -:  266:
+        -:  267:    NG_AINLINE void ValueSetAndGet(char &V) const {
+        -:  268:      V = InternalValue.SingleByte;
+        -:  269:    }
+        -:  270:
+        -:  271:    NG_AINLINE void ValueSetAndGet(bool &V) const {
+        -:  272:      V = InternalValue.Boolean;
+        -:  273:    }
+        -:  274:
+        -:  275:    NG_AINLINE void ValueSet(double V)  {
+        -:  276:      InternalValue.Float64 = V;
+        -:  277:    }
+        -:  278:
+        -:  279:    NG_AINLINE void ValueSet(bool V)  {
+        -:  280:      InternalValue.Boolean = V;
+        -:  281:    }
+        -:  282:
+        -:  283:    NG_AINLINE void ValueSet(char V)  {
+        1:  284:      InternalValue.SingleByte = V;
+        1:  285:    }
+        1:  285-block  0
+        -:  286:
+        -:  287:    NG_AINLINE void ValueSet(decltype(UINTPTR_MAX) V)  {
+    #####:  288:      InternalValue.Integer = V;
+    #####:  289:    }
+    %%%%%:  289-block  0
+        -:  290:
+        -:  291:    NG_AINLINE void ValueSet(const char *V)  {
+        5:  292:      InternalValue.Integer = (unsigned long long) V;
+        5:  293:    }
+        5:  293-block  0
+        -:  294:
+        -:  295:  };
+        -:  296:
+        -:  297:}} // namespace nextgen::jet
+        -:  298:
+        -:  299:# endif //NEXTGEN_TOKEN_H

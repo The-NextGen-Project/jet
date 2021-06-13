@@ -1,0 +1,86 @@
+        -:    0:Source:C:/Users/Owner/3DOBJE~1/jet/import/nextgen/jet/Diagnostics.h
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\main.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\main.cpp.gcda
+        -:    0:Runs:1
+        -:    1:# ifndef JET_DIAGNOSTICS_H
+        -:    2:# define JET_DIAGNOSTICS_H
+        -:    3:# include "Lex/Lexer.h"
+        -:    4:# include "nextgen/Support/IO.h"
+        -:    5:
+        -:    6:namespace nextgen { namespace jet {
+        -:    7:
+        -:    8:    class Diagnostic {
+        -:    9:    private:
+        -:   10:      const char *FileBuffer;
+        -:   11:      const char *FileName;
+        -:   12:      ArenaSegment *Memory;
+        -:   13:      size_t BufferLength;
+        -:   14:    public:
+        1:   15:      Diagnostic(ArenaSegment *Mem, const char *Buffer, size_t BufLen, const
+        -:   16:      char *FileName)
+        1:   17:      : FileBuffer(Buffer), FileName(FileName), Memory(Mem), BufferLength(BufLen) {}
+        -:   18:
+        1:   19:      void Build(LexError Error) {
+        1:   20:        switch (Error.Error) {
+        1:   20-block  0
+    #####:   21:          case MalformedUTF8:
+    #####:   22:            break;
+    %%%%%:   22-block  0
+    #####:   23:          case InvalidChar:
+    #####:   24:            break;
+    %%%%%:   24-block  0
+    #####:   25:          case UnexpectedEOF:
+    #####:   26:            break;
+    %%%%%:   26-block  0
+    #####:   27:          case OutOfRange:
+    #####:   28:            break;
+    %%%%%:   28-block  0
+    #####:   29:          case Unreachable:
+    #####:   30:            break;
+    %%%%%:   30-block  0
+        1:   31:          case IntegerOverflow:
+        1:   32:            ErrorIntegerOverflow(Error);
+        1:   32-block  0
+        1:   33:            break;
+    #####:   34:          case FloatingPointOverflow:
+    #####:   35:            break;
+    %%%%%:   35-block  0
+    #####:   36:          case DigitOutOfRange:
+    #####:   37:            break;
+    %%%%%:   37-block  0
+    #####:   38:          case DoubleUnderscore:
+    #####:   39:            break;
+    %%%%%:   39-block  0
+    #####:   40:          case MissingClosingForChar:
+    #####:   41:            break;
+    %%%%%:   41-block  0
+    #####:   42:          case MissingClosingForString:
+    #####:   43:            break;
+    %%%%%:   43-block  0
+    #####:   44:          case InvalidDot:
+    #####:   45:            break;
+    %%%%%:   45-block  0
+    #####:   46:          case InvalidNumberValue:
+    #####:   47:            break;
+    %%%%%:   47-block  0
+        -:   48:        }
+        1:   49:      }
+        -:   50:
+        -:   51:    private:
+        -:   52:      // Helpers
+        -:   53:      str GetNthLineOfBuffer(size_t Nth);
+        -:   54:
+        -:   55:
+        -:   56:      // Lex Errors
+        -:   57:      void ErrorIntegerOverflow(LexError &Error);
+        -:   58:      void ErrorInvalidChar(LexError &Error);
+        -:   59:      void ErrorMalformedUTF8(LexError &Error);
+        -:   60:      void ErrorMissingClosingDelim(LexError &Error);
+        -:   61:    };
+        -:   62:
+        -:   63:
+        -:   64:  }}
+        -:   65:
+        -:   66:
+        -:   67:
+        -:   68:# endif //JET_DIAGNOSTICS_H

@@ -1,0 +1,236 @@
+        -:    0:Source:C:/Users/Owner/3DOBJE~1/jet/import/nextgen/Support/Allocator.h
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\main.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\main.cpp.gcda
+        -:    0:Runs:1
+        -:    1:# ifndef NEXTGEN_ALLOCATOR_H
+        -:    2:# define NEXTGEN_ALLOCATOR_H
+        -:    3:# include "Core.h"
+        -:    4:
+        -:    5:
+        -:    6:namespace nextgen { namespace mem { using namespace nextgen::core;
+        -:    7:
+        -:    8:
+        -:    9:
+        -:   10:  // STD NAMING
+        -:   11:  namespace os { // System allocators/libc
+        -:   12:
+        -:   13:
+        -:   14:    void *calloc(size_t, size_t);
+        -:   15:    void *malloc(size_t);
+        -:   16:    void *realloc(void *buf, size_t size);
+        -:   17:    void free(void *buf);
+        -:   18:
+        -:   19:  } // namespace nextgen::mem::os
+        -:   20:
+        -:   21:  namespace detail {
+        -:   22:    struct c_deleter {
+        -:   23:      void operator()(void *ptr) const {
+        -:   24:        os::free(ptr);
+        -:   25:      }
+        -:   26:    };
+        -:   27:  }
+        -:   28:
+        -:   29:  template<typename T>
+        -:   30:  using Box = std::unique_ptr<T, detail::c_deleter>;
+        -:   31:
+        -:   32:  template<typename T>
+        -:   33:  using Rc = std::shared_ptr<T>;
+        -:   34:
+        -:   35:
+        -:   36:  template<typename T>
+        -:   37:  struct Vec {
+        -:   38:    using Self = Vec;
+        -:   39:
+        -:   40:    static auto Replace(const Vec<T> &vec) -> Self {
+        -:   41:      auto x = Vec<T> {};
+        -:   42:      x.len = vec.len;
+        -:   43:      x.cap = vec.cap;
+        -:   44:      x.ptr.swap((Box<T> &) std::move(vec.ptr));
+        -:   45:      return x;
+        -:   46:    }
+        -:   47:
+        -:   48:    static auto Copy(const Vec<T> &vec) -> Self {
+        -:   49:      T *raw = vec.ptr.get();
+        -:   50:      size_t len = vec.Size();
+        -:   51:      return Clone(raw, len);
+        -:   52:    }
+        -:   53:
+        -:   54:    static auto Clone(T *raw, size_t len) -> Vec<T> {
+        -:   55:      auto vec = Vec<T>::WithCapacity(len);
+        -:   56:      for (auto i = 0; i < len; ++i)
+        -:   57:        vec.Add(raw[i]);
+        -:   58:      return vec;
+        -:   59:    }
+        -:   60:
+        -:   61:    static auto New() -> Self {
+        -:   62:      return Vec {
+        -:   63:        Box<T>((T*)os::calloc(1, sizeof(T))),
+        -:   64:        0,
+        -:   65:        1
+        -:   66:      };
+        -:   67:    }
+        -:   68:
+        -:   69:    static auto WithCapacity(size_t capacity) -> Self {
+        -:   70:      auto vec = Vec {};
+        -:   71:      vec.ptr = Box<T>((T*)os::calloc(capacity, sizeof(T)));
+        -:   72:      vec.len = 0;
+        -:   73:      vec.cap = capacity;
+        -:   74:      return vec;
+        -:   75:    }
+        -:   76:
+        -:   77:
+        -:   78:    NG_INLINE T *IntoRaw() {
+        -:   79:      return ptr.get();
+        -:   80:    }
+        -:   81:
+        -:   82:    void Add(T elem) {
+        -:   83:      if (len + 1 > cap) {
+        -:   84:        cap *= 2;
+        -:   85:        auto new_ptr = (T *) os::realloc(IntoRaw(), sizeof(T) * cap);
+        -:   86:        ptr.release();
+        -:   87:        ptr.reset(new_ptr);
+        -:   88:      }
+        -:   89:      IntoRaw()[len++] = elem;
+        -:   90:    }
+        -:   91:
+        -:   92:    void Pop() {
+        -:   93:      ASSERT(len >= 1, "Invalid List Pop.");
+        -:   94:      return IntoRaw()[--len];
+        -:   95:    }
+        -:   96:
+        -:   97:    NG_INLINE void Clear() {
+        -:   98:      len = 0;
+        -:   99:      ptr.reset();
+        -:  100:    }
+        -:  101:
+        -:  102:    NG_AINLINE auto Size() -> size_t const {
+        -:  103:      return len;
+        -:  104:    }
+        -:  105:
+        -:  106:    NG_AINLINE auto Capacity() -> size_t const {
+        -:  107:      return cap;
+        -:  108:    }
+        -:  109:
+        -:  110:    NG_AINLINE auto operator[](size_t index) -> T {
+        -:  111:      ASSERT(index < UINTPTR_MAX, "Outside Index Range");
+        -:  112:      return IntoRaw()[index];
+        -:  113:    }
+        -:  114:
+        -:  115:    Box<T> ptr;
+        -:  116:
+        -:  117:    size_t len;
+        -:  118:    size_t cap;
+        -:  119:  };
+        -:  120:
+        -:  121:    struct ArenaSegment  {
+        -:  122:
+        -:  123:      ArenaSegment() = default;
+        -:  124:
+        -:  125:      static auto New() -> ArenaSegment {
+        -:  126:        return {};
+        -:  127:      }
+        -:  128:
+        2:  129:      static auto New(ArenaSegment *seg) -> ArenaSegment {
+        2:  130:        return ArenaSegment(0, seg);
+        2:  130-block  0
+        -:  131:      }
+        -:  132:
+        -:  133:      template<typename T = void>
+        -:  134:      NG_INLINE auto Next(size_t allocation_size) -> T* {
+        -:  135:
+        -:  136:        if (allocation_size == 0) {
+        -:  137:          return (T*) nullptr;
+        -:  138:        }
+        -:  139:
+        -:  140:        if (allocation_size + Offset >= size) {
+        -:  141:          if (NextSegment == nullptr) {
+        -:  142:            NextSegment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+        -:  143:            *NextSegment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
+        -:  144:          }
+        -:  145:          // Switch to next allocator on fail
+        -:  146:          return getNext()->Next<T>(allocation_size);
+        -:  147:        }
+        -:  148:
+        -:  149:        Offset += allocation_size;
+        -:  150:        return (T*)(block + allocation_size);
+        -:  151:      }
+        -:  152:
+        -:  153:      NG_INLINE bool HasSpaceFor(size_t space) {
+        -:  154:        return space + Offset <= size;
+        -:  155:      }
+        -:  156:
+        -:  157:      NG_INLINE auto GetAllocatorForAvailableSpace(size_t space) -> ArenaSegment*{
+        -:  158:        if (!HasSpaceFor(space)) {
+        -:  159:          if (NextSegment == nullptr) {
+        -:  160:            NextSegment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+        -:  161:            *NextSegment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
+        -:  162:          }
+        -:  163:          return NextSegment->GetAllocatorForAvailableSpace(space);
+        -:  164:        }
+        -:  165:        return this;
+        -:  166:      }
+        -:  167:
+        -:  168:      NG_INLINE char *CopyValues(char *Buf, size_t Length) {
+        -:  169:        auto Alloc = GetAllocatorForAvailableSpace(Length);
+        -:  170:        auto Start = (char *) Alloc->BlockPoint();
+        -:  171:        for (auto i = 0; i < Length; ++i) { // Copy into destination
+        -:  172:          Start[i] = Buf[i];
+        -:  173:        }
+        -:  174:        Alloc->Offset += Length;
+        -:  175:        return Start;
+        -:  176:      }
+        -:  177:
+        2:  178:      NG_INLINE auto getNext() -> ArenaSegment* {
+        2:  179:        return this->NextSegment;
+        2:  179-block  0
+        -:  180:      }
+        -:  181:
+        -:  182:      NG_INLINE void *BlockPoint() {
+        -:  183:        return block + Offset;
+        -:  184:      }
+        -:  185:
+        -:  186:    private:
+        -:  187:
+        2:  188:      ArenaSegment(size_t Offset, ArenaSegment *Next) : Offset(Offset),
+        2:  189:      NextSegment(Next) {}
+        -:  190:
+        -:  191:      size_t Offset  = 0;
+        -:  192:      ArenaSegment *NextSegment = nullptr;
+        -:  193:      static constexpr size_t size = 65536 << 2;
+        -:  194:      char    block[size]{};
+        -:  195:    };
+        -:  196:
+        -:  197:
+        -:  198:    template <size_t N>
+        -:  199:    struct Arena {
+        1:  200:      Arena() {
+        1:  201:        auto node = begin;
+        3:  202:        for (auto i = 0; i < N; ++i) {
+        1:  202-block  0
+        3:  202-block  1
+        2:  203:          node = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
+        2:  203-block  0
+        2:  204:          *node = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof
+        -:  205:                                                                      (ArenaSegment)));
+        2:  206:          node = node->getNext();
+        -:  207:        }
+        1:  208:      }
+        -:  209:
+        -:  210:
+        1:  211:      ~Arena() {
+        -:  212:        /*auto start = begin;
+        -:  213:        while (start->getNext()) {
+        -:  214:          auto temp = start->getNext();
+        -:  215:          os::free(start);
+        -:  216:          start = temp;
+        -:  217:        }*/
+        1:  218:      }
+        -:  219:      ArenaSegment *begin = nullptr;
+        -:  220:    };
+        -:  221:
+        -:  222:}} // namespace nextgen::mem
+        -:  223:
+        -:  224:
+        -:  225:
+        -:  226:
+        -:  227:# endif //NEXTGEN_ALLOCATOR_H

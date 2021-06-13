@@ -1,0 +1,139 @@
+        -:    0:Source:C:/Users/Owner/3D Objects/jet/lib/Diagnostics.cpp
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Diagnostics.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Diagnostics.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include <nextgen/jet/Diagnostics.h>
+        -:    2:
+        -:    3:using namespace nextgen::jet;
+        -:    4:
+    #####:    5:void Diagnostic::ErrorMissingClosingDelim(
+        -:    6:  nextgen::jet::LexError &Error) {
+        -:    7:
+    #####:    8:}
+        -:    9:
+        1:   10:void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
+        1:   11:  Console::Log(Colors::RED, "Error "
+        1:   11-block  0
+        -:   12:                            "---------------------------------------------------------- ", FileName, "\n");
+        1:   13:  Console::Log(Colors::RESET, "Integer Value Too Large\n\n");
+        1:   13-block  0
+        1:   14:  auto SourceLine = GetNthLineOfBuffer(Error.Location.Line);
+        1:   14-block  0
+        -:   15:  auto LexPrint = Lexer::New(Memory, SourceLine, SourceLine.size(),
+        1:   16:                             LexMode::PrintingMode);
+        1:   16-block  0
+        -:   17:
+        -:   18:  // We get the string version of the line to align hints and notes to error
+        -:   19:  // messages.
+        2:   20:  auto Line = std::to_string(Error.Location.Line);
+        1:   20-block  0
+        1:   20-block  1
+    $$$$$:   20-block  2
+        -:   21:
+        -:   22:  // Log Error Line
+        1:   23:  Console::Log(Colors::WHITE, Line, " |\t ");
+        1:   23-block  0
+        1:   23-block  1
+        1:   23-block  2
+    $$$$$:   23-block  3
+    $$$$$:   23-block  4
+        1:   24:  LexPrint.LexPrint(); // Print Failed Token
+        -:   25:
+        1:   26:  Console::Log("\n");
+        -:   27:  // Align space
+        3:   28:  for (int i = 0; i < Line.length() + 1; ++i) {
+        1:   28-block  0
+        3:   28-block  1
+        2:   28-block  2
+        2:   29:    Console::Log(" ");
+        2:   29-block  0
+        -:   30:  }
+        1:   31:  Console::Log("\t", Colors::RED);
+        1:   31-block  0
+       13:   32:  for (auto i = 0; i < SourceLine.size(); ++i) {
+        1:   32-block  0
+       13:   32-block  1
+       12:   32-block  2
+       26:   33:    if (i == Error.FailedToken.getSourceLocation().Column) {
+       13:   33-block  0
+       13:   33-block  1
+       38:   34:      for (int j = 0; j < Error.FailedToken.Name().size(); ++j) {
+        1:   34-block  0
+       19:   34-block  1
+       19:   34-block  2
+       18:   34-block  3
+       18:   35:        Console::Log("^");
+       18:   35-block  0
+        -:   36:      }
+        1:   37:      break;
+        1:   37-block  0
+        -:   38:    }
+       12:   39:    Console::Log(" ");
+       12:   39-block  0
+        -:   40:  }
+        1:   41:  Console::Log("_ <-- Overflow Occurs Here");
+        1:   41-block  0
+        1:   42:  Console::Log("\n\n");
+        1:   42-block  0
+        -:   43:
+        -:   44:  // Align space
+        3:   45:  for (int i = 0; i < Line.length() + 1; ++i) {
+        1:   45-block  0
+        3:   45-block  1
+        2:   45-block  2
+        2:   46:    Console::Log(" ");
+        2:   46-block  0
+        -:   47:  }
+        1:   48:  Console::Log(Colors::BLUE, "= ", Colors::GREEN, "hint: ",
+        1:   48-block  0
+        -:   49:               Colors::RESET, "Integer values must be less than ", UINTPTR_MAX,
+        -:   50:                              ".\n",
+        -:   51:               Colors::RESET);
+        1:   52:}
+        -:   53:
+    #####:   54:void Diagnostic::ErrorInvalidChar(LexError &Error) {
+        -:   55:
+    #####:   56:}
+        -:   57:
+    #####:   58:void Diagnostic::ErrorMalformedUTF8(LexError &Error) {
+        -:   59:
+    #####:   60:}
+        -:   61:
+        1:   62:nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
+        1:   63:  bool Found = false;
+        1:   64:  int Count = 1;
+        1:   65:  const char *Copy = FileBuffer;
+        1:   65-block  0
+        -:   66:  const char *FoundPoint;
+        -:   67:
+        -:   68:
+        -:   69:  for (;;) {
+        2:   70:    if (*Copy == '\n') {
+        2:   70-block  0
+    #####:   71:      if (Found) {
+    %%%%%:   71-block  0
+    #####:   72:        return str(Range<const char *>(FoundPoint, FileBuffer));
+    %%%%%:   72-block  0
+    %%%%%:   72-block  1
+        -:   73:      }
+    #####:   74:      Count++;
+    %%%%%:   74-block  0
+        -:   75:    }
+        -:   76:
+        2:   77:    if (Count == Nth) {
+        2:   77-block  0
+        2:   78:      if (Found) // Prevent Infinite Loop where buffer input is only 1 line long
+        2:   78-block  0
+        1:   79:        return str(FileBuffer);
+        1:   79-block  0
+        1:   80:      Found = true;
+        1:   81:      FoundPoint = Copy;
+        1:   81-block  0
+        -:   82:    }
+        -:   83:
+        1:   84:    Copy++;
+        1:   84-block  0
+        -:   85:  }
+        -:   86:}
+        -:   87:
+        -:   88:

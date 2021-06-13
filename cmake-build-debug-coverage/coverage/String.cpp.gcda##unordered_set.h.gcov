@@ -1,0 +1,1791 @@
+        -:    0:Source:C:/msys64/mingw64/include/c++/10.2.0/bits/unordered_set.h
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Support\String.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Support\String.cpp.gcda
+        -:    0:Runs:1
+        -:    1:// unordered_set implementation -*- C++ -*-
+        -:    2:
+        -:    3:// Copyright (C) 2010-2020 Free Software Foundation, Inc.
+        -:    4://
+        -:    5:// This file is part of the GNU ISO C++ Library.  This library is free
+        -:    6:// software; you can redistribute it and/or modify it under the
+        -:    7:// terms of the GNU General Public License as published by the
+        -:    8:// Free Software Foundation; either version 3, or (at your option)
+        -:    9:// any later version.
+        -:   10:
+        -:   11:// This library is distributed in the hope that it will be useful,
+        -:   12:// but WITHOUT ANY WARRANTY; without even the implied warranty of
+        -:   13:// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        -:   14:// GNU General Public License for more details.
+        -:   15:
+        -:   16:// Under Section 7 of GPL version 3, you are granted additional
+        -:   17:// permissions described in the GCC Runtime Library Exception, version
+        -:   18:// 3.1, as published by the Free Software Foundation.
+        -:   19:
+        -:   20:// You should have received a copy of the GNU General Public License and
+        -:   21:// a copy of the GCC Runtime Library Exception along with this program;
+        -:   22:// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+        -:   23:// <http://www.gnu.org/licenses/>.
+        -:   24:
+        -:   25:/** @file bits/unordered_set.h
+        -:   26: *  This is an internal header file, included by other library headers.
+        -:   27: *  Do not attempt to use it directly. @headername{unordered_set}
+        -:   28: */
+        -:   29:
+        -:   30:#ifndef _UNORDERED_SET_H
+        -:   31:#define _UNORDERED_SET_H
+        -:   32:
+        -:   33:namespace std _GLIBCXX_VISIBILITY(default)
+        -:   34:{
+        -:   35:_GLIBCXX_BEGIN_NAMESPACE_VERSION
+        -:   36:_GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+        -:   37:
+        -:   38:  /// Base types for unordered_set.
+        -:   39:  template<bool _Cache>
+        -:   40:    using __uset_traits = __detail::_Hashtable_traits<_Cache, true, true>;
+        -:   41:
+        -:   42:  template<typename _Value,
+        -:   43:	   typename _Hash = hash<_Value>,
+        -:   44:	   typename _Pred = std::equal_to<_Value>,
+        -:   45:  	   typename _Alloc = std::allocator<_Value>,
+        -:   46:	   typename _Tr = __uset_traits<__cache_default<_Value, _Hash>::value>>
+        -:   47:    using __uset_hashtable = _Hashtable<_Value, _Value, _Alloc,
+        -:   48:					__detail::_Identity, _Pred, _Hash,
+        -:   49:					__detail::_Mod_range_hashing,
+        -:   50:					__detail::_Default_ranged_hash,
+        -:   51:					__detail::_Prime_rehash_policy, _Tr>;
+        -:   52:
+        -:   53:  /// Base types for unordered_multiset.
+        -:   54:  template<bool _Cache>
+        -:   55:    using __umset_traits = __detail::_Hashtable_traits<_Cache, true, false>;
+        -:   56:
+        -:   57:  template<typename _Value,
+        -:   58:	   typename _Hash = hash<_Value>,
+        -:   59:	   typename _Pred = std::equal_to<_Value>,
+        -:   60:	   typename _Alloc = std::allocator<_Value>,
+        -:   61:	   typename _Tr = __umset_traits<__cache_default<_Value, _Hash>::value>>
+        -:   62:    using __umset_hashtable = _Hashtable<_Value, _Value, _Alloc,
+        -:   63:					 __detail::_Identity,
+        -:   64:					 _Pred, _Hash,
+        -:   65:					 __detail::_Mod_range_hashing,
+        -:   66:					 __detail::_Default_ranged_hash,
+        -:   67:					 __detail::_Prime_rehash_policy, _Tr>;
+        -:   68:
+        -:   69:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -:   70:    class unordered_multiset;
+        -:   71:
+        -:   72:  /**
+        -:   73:   *  @brief A standard container composed of unique keys (containing
+        -:   74:   *  at most one of each key value) in which the elements' keys are
+        -:   75:   *  the elements themselves.
+        -:   76:   *
+        -:   77:   *  @ingroup unordered_associative_containers
+        -:   78:   *
+        -:   79:   *  @tparam  _Value  Type of key objects.
+        -:   80:   *  @tparam  _Hash  Hashing function object type, defaults to hash<_Value>.
+        -:   81:
+        -:   82:   *  @tparam _Pred Predicate function object type, defaults to
+        -:   83:   *                equal_to<_Value>.
+        -:   84:   *
+        -:   85:   *  @tparam  _Alloc  Allocator type, defaults to allocator<_Key>.
+        -:   86:   *
+        -:   87:   *  Meets the requirements of a <a href="tables.html#65">container</a>, and
+        -:   88:   *  <a href="tables.html#xx">unordered associative container</a>
+        -:   89:   *
+        -:   90:   *  Base is _Hashtable, dispatched at compile time via template
+        -:   91:   *  alias __uset_hashtable.
+        -:   92:   */
+        -:   93:  template<typename _Value,
+        -:   94:	   typename _Hash = hash<_Value>,
+        -:   95:	   typename _Pred = equal_to<_Value>,
+        -:   96:	   typename _Alloc = allocator<_Value>>
+        -:   97:    class unordered_set
+        -:   98:    {
+        -:   99:      typedef __uset_hashtable<_Value, _Hash, _Pred, _Alloc>  _Hashtable;
+        -:  100:      _Hashtable _M_h;
+        -:  101:
+        -:  102:    public:
+        -:  103:      // typedefs:
+        -:  104:      //@{
+        -:  105:      /// Public typedefs.
+        -:  106:      typedef typename _Hashtable::key_type	key_type;
+        -:  107:      typedef typename _Hashtable::value_type	value_type;
+        -:  108:      typedef typename _Hashtable::hasher	hasher;
+        -:  109:      typedef typename _Hashtable::key_equal	key_equal;
+        -:  110:      typedef typename _Hashtable::allocator_type allocator_type;
+        -:  111:      //@}
+        -:  112:
+        -:  113:      //@{
+        -:  114:      ///  Iterator-related typedefs.
+        -:  115:      typedef typename _Hashtable::pointer		pointer;
+        -:  116:      typedef typename _Hashtable::const_pointer	const_pointer;
+        -:  117:      typedef typename _Hashtable::reference		reference;
+        -:  118:      typedef typename _Hashtable::const_reference	const_reference;
+        -:  119:      typedef typename _Hashtable::iterator		iterator;
+        -:  120:      typedef typename _Hashtable::const_iterator	const_iterator;
+        -:  121:      typedef typename _Hashtable::local_iterator	local_iterator;
+        -:  122:      typedef typename _Hashtable::const_local_iterator	const_local_iterator;
+        -:  123:      typedef typename _Hashtable::size_type		size_type;
+        -:  124:      typedef typename _Hashtable::difference_type	difference_type;
+        -:  125:      //@}
+        -:  126:
+        -:  127:#if __cplusplus > 201402L
+        -:  128:      using node_type = typename _Hashtable::node_type;
+        -:  129:      using insert_return_type = typename _Hashtable::insert_return_type;
+        -:  130:#endif
+        -:  131:
+        -:  132:      // construct/destroy/copy
+        -:  133:
+        -:  134:      /// Default constructor.
+        1:  135:      unordered_set() = default;
+        1:  135-block  0
+        -:  136:
+        -:  137:      /**
+        -:  138:       *  @brief  Default constructor creates no elements.
+        -:  139:       *  @param __n  Minimal initial number of buckets.
+        -:  140:       *  @param __hf  A hash functor.
+        -:  141:       *  @param __eql  A key equality functor.
+        -:  142:       *  @param __a  An allocator object.
+        -:  143:       */
+        -:  144:      explicit
+        -:  145:      unordered_set(size_type __n,
+        -:  146:		    const hasher& __hf = hasher(),
+        -:  147:		    const key_equal& __eql = key_equal(),
+        -:  148:		    const allocator_type& __a = allocator_type())
+        -:  149:      : _M_h(__n, __hf, __eql, __a)
+        -:  150:      { }
+        -:  151:
+        -:  152:      /**
+        -:  153:       *  @brief  Builds an %unordered_set from a range.
+        -:  154:       *  @param  __first  An input iterator.
+        -:  155:       *  @param  __last  An input iterator.
+        -:  156:       *  @param __n  Minimal initial number of buckets.
+        -:  157:       *  @param __hf  A hash functor.
+        -:  158:       *  @param __eql  A key equality functor.
+        -:  159:       *  @param __a  An allocator object.
+        -:  160:       *
+        -:  161:       *  Create an %unordered_set consisting of copies of the elements from
+        -:  162:       *  [__first,__last).  This is linear in N (where N is
+        -:  163:       *  distance(__first,__last)).
+        -:  164:       */
+        -:  165:      template<typename _InputIterator>
+        -:  166:	unordered_set(_InputIterator __first, _InputIterator __last,
+        -:  167:		      size_type __n = 0,
+        -:  168:		      const hasher& __hf = hasher(),
+        -:  169:		      const key_equal& __eql = key_equal(),
+        -:  170:		      const allocator_type& __a = allocator_type())
+        -:  171:	: _M_h(__first, __last, __n, __hf, __eql, __a)
+        -:  172:	{ }
+        -:  173:
+        -:  174:      /// Copy constructor.
+        -:  175:      unordered_set(const unordered_set&) = default;
+        -:  176:
+        -:  177:      /// Move constructor.
+        -:  178:      unordered_set(unordered_set&&) = default;
+        -:  179:
+        -:  180:      /**
+        -:  181:       *  @brief Creates an %unordered_set with no elements.
+        -:  182:       *  @param __a An allocator object.
+        -:  183:       */
+        -:  184:      explicit
+        -:  185:      unordered_set(const allocator_type& __a)
+        -:  186:      : _M_h(__a)
+        -:  187:      { }
+        -:  188:
+        -:  189:      /*
+        -:  190:       *  @brief Copy constructor with allocator argument.
+        -:  191:       * @param  __uset  Input %unordered_set to copy.
+        -:  192:       * @param  __a  An allocator object.
+        -:  193:       */
+        -:  194:      unordered_set(const unordered_set& __uset,
+        -:  195:		    const allocator_type& __a)
+        -:  196:      : _M_h(__uset._M_h, __a)
+        -:  197:      { }
+        -:  198:
+        -:  199:      /*
+        -:  200:       *  @brief  Move constructor with allocator argument.
+        -:  201:       *  @param  __uset Input %unordered_set to move.
+        -:  202:       *  @param  __a    An allocator object.
+        -:  203:       */
+        -:  204:      unordered_set(unordered_set&& __uset,
+        -:  205:		    const allocator_type& __a)
+        -:  206:      : _M_h(std::move(__uset._M_h), __a)
+        -:  207:      { }
+        -:  208:
+        -:  209:      /**
+        -:  210:       *  @brief  Builds an %unordered_set from an initializer_list.
+        -:  211:       *  @param  __l  An initializer_list.
+        -:  212:       *  @param __n  Minimal initial number of buckets.
+        -:  213:       *  @param __hf  A hash functor.
+        -:  214:       *  @param __eql  A key equality functor.
+        -:  215:       *  @param  __a  An allocator object.
+        -:  216:       *
+        -:  217:       *  Create an %unordered_set consisting of copies of the elements in the
+        -:  218:       *  list. This is linear in N (where N is @a __l.size()).
+        -:  219:       */
+        -:  220:      unordered_set(initializer_list<value_type> __l,
+        -:  221:		    size_type __n = 0,
+        -:  222:		    const hasher& __hf = hasher(),
+        -:  223:		    const key_equal& __eql = key_equal(),
+        -:  224:		    const allocator_type& __a = allocator_type())
+        -:  225:      : _M_h(__l, __n, __hf, __eql, __a)
+        -:  226:      { }
+        -:  227:
+        -:  228:      unordered_set(size_type __n, const allocator_type& __a)
+        -:  229:      : unordered_set(__n, hasher(), key_equal(), __a)
+        -:  230:      { }
+        -:  231:
+        -:  232:      unordered_set(size_type __n, const hasher& __hf,
+        -:  233:		    const allocator_type& __a)
+        -:  234:      : unordered_set(__n, __hf, key_equal(), __a)
+        -:  235:      { }
+        -:  236:
+        -:  237:      template<typename _InputIterator>
+        -:  238:	unordered_set(_InputIterator __first, _InputIterator __last,
+        -:  239:		      size_type __n,
+        -:  240:		      const allocator_type& __a)
+        -:  241:	: unordered_set(__first, __last, __n, hasher(), key_equal(), __a)
+        -:  242:	{ }
+        -:  243:
+        -:  244:      template<typename _InputIterator>
+        -:  245:	unordered_set(_InputIterator __first, _InputIterator __last,
+        -:  246:		      size_type __n, const hasher& __hf,
+        -:  247:		      const allocator_type& __a)
+        -:  248:	: unordered_set(__first, __last, __n, __hf, key_equal(), __a)
+        -:  249:	{ }
+        -:  250:
+        -:  251:      unordered_set(initializer_list<value_type> __l,
+        -:  252:		    size_type __n,
+        -:  253:		    const allocator_type& __a)
+        -:  254:      : unordered_set(__l, __n, hasher(), key_equal(), __a)
+        -:  255:      { }
+        -:  256:
+        -:  257:      unordered_set(initializer_list<value_type> __l,
+        -:  258:		    size_type __n, const hasher& __hf,
+        -:  259:		    const allocator_type& __a)
+        -:  260:      : unordered_set(__l, __n, __hf, key_equal(), __a)
+        -:  261:      { }
+        -:  262:
+        -:  263:      /// Copy assignment operator.
+        -:  264:      unordered_set&
+        -:  265:      operator=(const unordered_set&) = default;
+        -:  266:
+        -:  267:      /// Move assignment operator.
+        -:  268:      unordered_set&
+        -:  269:      operator=(unordered_set&&) = default;
+        -:  270:
+        -:  271:      /**
+        -:  272:       *  @brief  %Unordered_set list assignment operator.
+        -:  273:       *  @param  __l  An initializer_list.
+        -:  274:       *
+        -:  275:       *  This function fills an %unordered_set with copies of the elements in
+        -:  276:       *  the initializer list @a __l.
+        -:  277:       *
+        -:  278:       *  Note that the assignment completely changes the %unordered_set and
+        -:  279:       *  that the resulting %unordered_set's size is the same as the number
+        -:  280:       *  of elements assigned.
+        -:  281:       */
+        -:  282:      unordered_set&
+        -:  283:      operator=(initializer_list<value_type> __l)
+        -:  284:      {
+        -:  285:	_M_h = __l;
+        -:  286:	return *this;
+        -:  287:      }
+        -:  288:
+        -:  289:      ///  Returns the allocator object used by the %unordered_set.
+        -:  290:      allocator_type
+        -:  291:      get_allocator() const noexcept
+        -:  292:      { return _M_h.get_allocator(); }
+        -:  293:
+        -:  294:      // size and capacity:
+        -:  295:
+        -:  296:      ///  Returns true if the %unordered_set is empty.
+        -:  297:      _GLIBCXX_NODISCARD bool
+        -:  298:      empty() const noexcept
+        -:  299:      { return _M_h.empty(); }
+        -:  300:
+        -:  301:      ///  Returns the size of the %unordered_set.
+        -:  302:      size_type
+        -:  303:      size() const noexcept
+        -:  304:      { return _M_h.size(); }
+        -:  305:
+        -:  306:      ///  Returns the maximum size of the %unordered_set.
+        -:  307:      size_type
+        -:  308:      max_size() const noexcept
+        -:  309:      { return _M_h.max_size(); }
+        -:  310:
+        -:  311:      // iterators.
+        -:  312:
+        -:  313:      //@{
+        -:  314:      /**
+        -:  315:       *  Returns a read-only (constant) iterator that points to the first
+        -:  316:       *  element in the %unordered_set.
+        -:  317:       */
+        -:  318:      iterator
+        -:  319:      begin() noexcept
+        -:  320:      { return _M_h.begin(); }
+        -:  321:
+        -:  322:      const_iterator
+        -:  323:      begin() const noexcept
+        -:  324:      { return _M_h.begin(); }
+        -:  325:      //@}
+        -:  326:
+        -:  327:      //@{
+        -:  328:      /**
+        -:  329:       *  Returns a read-only (constant) iterator that points one past the last
+        -:  330:       *  element in the %unordered_set.
+        -:  331:       */
+        -:  332:      iterator
+       27:  333:      end() noexcept
+       27:  334:      { return _M_h.end(); }
+       27:  334-block  0
+        -:  335:
+        -:  336:      const_iterator
+        -:  337:      end() const noexcept
+        -:  338:      { return _M_h.end(); }
+        -:  339:      //@}
+        -:  340:
+        -:  341:      /**
+        -:  342:       *  Returns a read-only (constant) iterator that points to the first
+        -:  343:       *  element in the %unordered_set.
+        -:  344:       */
+        -:  345:      const_iterator
+        -:  346:      cbegin() const noexcept
+        -:  347:      { return _M_h.begin(); }
+        -:  348:
+        -:  349:      /**
+        -:  350:       *  Returns a read-only (constant) iterator that points one past the last
+        -:  351:       *  element in the %unordered_set.
+        -:  352:       */
+        -:  353:      const_iterator
+        -:  354:      cend() const noexcept
+        -:  355:      { return _M_h.end(); }
+        -:  356:
+        -:  357:      // modifiers.
+        -:  358:
+        -:  359:      /**
+        -:  360:       *  @brief Attempts to build and insert an element into the
+        -:  361:       *  %unordered_set.
+        -:  362:       *  @param __args  Arguments used to generate an element.
+        -:  363:       *  @return  A pair, of which the first element is an iterator that points
+        -:  364:       *           to the possibly inserted element, and the second is a bool
+        -:  365:       *           that is true if the element was actually inserted.
+        -:  366:       *
+        -:  367:       *  This function attempts to build and insert an element into the
+        -:  368:       *  %unordered_set. An %unordered_set relies on unique keys and thus an
+        -:  369:       *  element is only inserted if it is not already present in the
+        -:  370:       *  %unordered_set.
+        -:  371:       *
+        -:  372:       *  Insertion requires amortized constant time.
+        -:  373:       */
+        -:  374:      template<typename... _Args>
+        -:  375:	std::pair<iterator, bool>
+        -:  376:	emplace(_Args&&... __args)
+        -:  377:	{ return _M_h.emplace(std::forward<_Args>(__args)...); }
+        -:  378:
+        -:  379:      /**
+        -:  380:       *  @brief Attempts to insert an element into the %unordered_set.
+        -:  381:       *  @param  __pos  An iterator that serves as a hint as to where the
+        -:  382:       *                element should be inserted.
+        -:  383:       *  @param  __args  Arguments used to generate the element to be
+        -:  384:       *                 inserted.
+        -:  385:       *  @return An iterator that points to the element with key equivalent to
+        -:  386:       *          the one generated from @a __args (may or may not be the
+        -:  387:       *          element itself).
+        -:  388:       *
+        -:  389:       *  This function is not concerned about whether the insertion took place,
+        -:  390:       *  and thus does not return a boolean like the single-argument emplace()
+        -:  391:       *  does.  Note that the first parameter is only a hint and can
+        -:  392:       *  potentially improve the performance of the insertion process.  A bad
+        -:  393:       *  hint would cause no gains in efficiency.
+        -:  394:       *
+        -:  395:       *  For more on @a hinting, see:
+        -:  396:       *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+        -:  397:       *
+        -:  398:       *  Insertion requires amortized constant time.
+        -:  399:       */
+        -:  400:      template<typename... _Args>
+        -:  401:	iterator
+        -:  402:	emplace_hint(const_iterator __pos, _Args&&... __args)
+        -:  403:	{ return _M_h.emplace_hint(__pos, std::forward<_Args>(__args)...); }
+        -:  404:
+        -:  405:      //@{
+        -:  406:      /**
+        -:  407:       *  @brief Attempts to insert an element into the %unordered_set.
+        -:  408:       *  @param  __x  Element to be inserted.
+        -:  409:       *  @return  A pair, of which the first element is an iterator that points
+        -:  410:       *           to the possibly inserted element, and the second is a bool
+        -:  411:       *           that is true if the element was actually inserted.
+        -:  412:       *
+        -:  413:       *  This function attempts to insert an element into the %unordered_set.
+        -:  414:       *  An %unordered_set relies on unique keys and thus an element is only
+        -:  415:       *  inserted if it is not already present in the %unordered_set.
+        -:  416:       *
+        -:  417:       *  Insertion requires amortized constant time.
+        -:  418:       */
+        -:  419:      std::pair<iterator, bool>
+       24:  420:      insert(const value_type& __x)
+       24:  421:      { return _M_h.insert(__x); }
+       24:  421-block  0
+        -:  422:
+        -:  423:      std::pair<iterator, bool>
+        -:  424:      insert(value_type&& __x)
+        -:  425:      { return _M_h.insert(std::move(__x)); }
+        -:  426:      //@}
+        -:  427:
+        -:  428:      //@{
+        -:  429:      /**
+        -:  430:       *  @brief Attempts to insert an element into the %unordered_set.
+        -:  431:       *  @param  __hint  An iterator that serves as a hint as to where the
+        -:  432:       *                 element should be inserted.
+        -:  433:       *  @param  __x  Element to be inserted.
+        -:  434:       *  @return An iterator that points to the element with key of
+        -:  435:       *           @a __x (may or may not be the element passed in).
+        -:  436:       *
+        -:  437:       *  This function is not concerned about whether the insertion took place,
+        -:  438:       *  and thus does not return a boolean like the single-argument insert()
+        -:  439:       *  does.  Note that the first parameter is only a hint and can
+        -:  440:       *  potentially improve the performance of the insertion process.  A bad
+        -:  441:       *  hint would cause no gains in efficiency.
+        -:  442:       *
+        -:  443:       *  For more on @a hinting, see:
+        -:  444:       *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+        -:  445:       *
+        -:  446:       *  Insertion requires amortized constant.
+        -:  447:       */
+        -:  448:      iterator
+        -:  449:      insert(const_iterator __hint, const value_type& __x)
+        -:  450:      { return _M_h.insert(__hint, __x); }
+        -:  451:
+        -:  452:      iterator
+        -:  453:      insert(const_iterator __hint, value_type&& __x)
+        -:  454:      { return _M_h.insert(__hint, std::move(__x)); }
+        -:  455:      //@}
+        -:  456:
+        -:  457:      /**
+        -:  458:       *  @brief A template function that attempts to insert a range of
+        -:  459:       *  elements.
+        -:  460:       *  @param  __first  Iterator pointing to the start of the range to be
+        -:  461:       *                   inserted.
+        -:  462:       *  @param  __last  Iterator pointing to the end of the range.
+        -:  463:       *
+        -:  464:       *  Complexity similar to that of the range constructor.
+        -:  465:       */
+        -:  466:      template<typename _InputIterator>
+        -:  467:	void
+        -:  468:	insert(_InputIterator __first, _InputIterator __last)
+        -:  469:	{ _M_h.insert(__first, __last); }
+        -:  470:
+        -:  471:      /**
+        -:  472:       *  @brief Attempts to insert a list of elements into the %unordered_set.
+        -:  473:       *  @param  __l  A std::initializer_list<value_type> of elements
+        -:  474:       *               to be inserted.
+        -:  475:       *
+        -:  476:       *  Complexity similar to that of the range constructor.
+        -:  477:       */
+        -:  478:      void
+        -:  479:      insert(initializer_list<value_type> __l)
+        -:  480:      { _M_h.insert(__l); }
+        -:  481:
+        -:  482:#if __cplusplus > 201402L
+        -:  483:      /// Extract a node.
+        -:  484:      node_type
+        -:  485:      extract(const_iterator __pos)
+        -:  486:      {
+        -:  487:	__glibcxx_assert(__pos != end());
+        -:  488:	return _M_h.extract(__pos);
+        -:  489:      }
+        -:  490:
+        -:  491:      /// Extract a node.
+        -:  492:      node_type
+        -:  493:      extract(const key_type& __key)
+        -:  494:      { return _M_h.extract(__key); }
+        -:  495:
+        -:  496:      /// Re-insert an extracted node.
+        -:  497:      insert_return_type
+        -:  498:      insert(node_type&& __nh)
+        -:  499:      { return _M_h._M_reinsert_node(std::move(__nh)); }
+        -:  500:
+        -:  501:      /// Re-insert an extracted node.
+        -:  502:      iterator
+        -:  503:      insert(const_iterator, node_type&& __nh)
+        -:  504:      { return _M_h._M_reinsert_node(std::move(__nh)).position; }
+        -:  505:#endif // C++17
+        -:  506:
+        -:  507:      //@{
+        -:  508:      /**
+        -:  509:       *  @brief Erases an element from an %unordered_set.
+        -:  510:       *  @param  __position  An iterator pointing to the element to be erased.
+        -:  511:       *  @return An iterator pointing to the element immediately following
+        -:  512:       *          @a __position prior to the element being erased. If no such
+        -:  513:       *          element exists, end() is returned.
+        -:  514:       *
+        -:  515:       *  This function erases an element, pointed to by the given iterator,
+        -:  516:       *  from an %unordered_set.  Note that this function only erases the
+        -:  517:       *  element, and that if the element is itself a pointer, the pointed-to
+        -:  518:       *  memory is not touched in any way.  Managing the pointer is the user's
+        -:  519:       *  responsibility.
+        -:  520:       */
+        -:  521:      iterator
+        -:  522:      erase(const_iterator __position)
+        -:  523:      { return _M_h.erase(__position); }
+        -:  524:
+        -:  525:      // LWG 2059.
+        -:  526:      iterator
+        -:  527:      erase(iterator __position)
+        -:  528:      { return _M_h.erase(__position); }
+        -:  529:      //@}
+        -:  530:
+        -:  531:      /**
+        -:  532:       *  @brief Erases elements according to the provided key.
+        -:  533:       *  @param  __x  Key of element to be erased.
+        -:  534:       *  @return  The number of elements erased.
+        -:  535:       *
+        -:  536:       *  This function erases all the elements located by the given key from
+        -:  537:       *  an %unordered_set. For an %unordered_set the result of this function
+        -:  538:       *  can only be 0 (not present) or 1 (present).
+        -:  539:       *  Note that this function only erases the element, and that if
+        -:  540:       *  the element is itself a pointer, the pointed-to memory is not touched
+        -:  541:       *  in any way.  Managing the pointer is the user's responsibility.
+        -:  542:       */
+        -:  543:      size_type
+        -:  544:      erase(const key_type& __x)
+        -:  545:      { return _M_h.erase(__x); }
+        -:  546:
+        -:  547:      /**
+        -:  548:       *  @brief Erases a [__first,__last) range of elements from an
+        -:  549:       *  %unordered_set.
+        -:  550:       *  @param  __first  Iterator pointing to the start of the range to be
+        -:  551:       *                  erased.
+        -:  552:       *  @param __last  Iterator pointing to the end of the range to
+        -:  553:       *                be erased.
+        -:  554:       *  @return The iterator @a __last.
+        -:  555:       *
+        -:  556:       *  This function erases a sequence of elements from an %unordered_set.
+        -:  557:       *  Note that this function only erases the element, and that if
+        -:  558:       *  the element is itself a pointer, the pointed-to memory is not touched
+        -:  559:       *  in any way.  Managing the pointer is the user's responsibility.
+        -:  560:       */
+        -:  561:      iterator
+        -:  562:      erase(const_iterator __first, const_iterator __last)
+        -:  563:      { return _M_h.erase(__first, __last); }
+        -:  564:
+        -:  565:      /**
+        -:  566:       *  Erases all elements in an %unordered_set. Note that this function only
+        -:  567:       *  erases the elements, and that if the elements themselves are pointers,
+        -:  568:       *  the pointed-to memory is not touched in any way. Managing the pointer
+        -:  569:       *  is the user's responsibility.
+        -:  570:       */
+        -:  571:      void
+        -:  572:      clear() noexcept
+        -:  573:      { _M_h.clear(); }
+        -:  574:
+        -:  575:      /**
+        -:  576:       *  @brief  Swaps data with another %unordered_set.
+        -:  577:       *  @param  __x  An %unordered_set of the same element and allocator
+        -:  578:       *  types.
+        -:  579:       *
+        -:  580:       *  This exchanges the elements between two sets in constant time.
+        -:  581:       *  Note that the global std::swap() function is specialized such that
+        -:  582:       *  std::swap(s1,s2) will feed to this function.
+        -:  583:       */
+        -:  584:      void
+        -:  585:      swap(unordered_set& __x)
+        -:  586:      noexcept( noexcept(_M_h.swap(__x._M_h)) )
+        -:  587:      { _M_h.swap(__x._M_h); }
+        -:  588:
+        -:  589:#if __cplusplus > 201402L
+        -:  590:      template<typename, typename, typename>
+        -:  591:	friend class std::_Hash_merge_helper;
+        -:  592:
+        -:  593:      template<typename _H2, typename _P2>
+        -:  594:	void
+        -:  595:	merge(unordered_set<_Value, _H2, _P2, _Alloc>& __source)
+        -:  596:	{
+        -:  597:	  using _Merge_helper = _Hash_merge_helper<unordered_set, _H2, _P2>;
+        -:  598:	  _M_h._M_merge_unique(_Merge_helper::_S_get_table(__source));
+        -:  599:	}
+        -:  600:
+        -:  601:      template<typename _H2, typename _P2>
+        -:  602:	void
+        -:  603:	merge(unordered_set<_Value, _H2, _P2, _Alloc>&& __source)
+        -:  604:	{ merge(__source); }
+        -:  605:
+        -:  606:      template<typename _H2, typename _P2>
+        -:  607:	void
+        -:  608:	merge(unordered_multiset<_Value, _H2, _P2, _Alloc>& __source)
+        -:  609:	{
+        -:  610:	  using _Merge_helper = _Hash_merge_helper<unordered_set, _H2, _P2>;
+        -:  611:	  _M_h._M_merge_unique(_Merge_helper::_S_get_table(__source));
+        -:  612:	}
+        -:  613:
+        -:  614:      template<typename _H2, typename _P2>
+        -:  615:	void
+        -:  616:	merge(unordered_multiset<_Value, _H2, _P2, _Alloc>&& __source)
+        -:  617:	{ merge(__source); }
+        -:  618:#endif // C++17
+        -:  619:
+        -:  620:      // observers.
+        -:  621:
+        -:  622:      ///  Returns the hash functor object with which the %unordered_set was
+        -:  623:      ///  constructed.
+        -:  624:      hasher
+        -:  625:      hash_function() const
+        -:  626:      { return _M_h.hash_function(); }
+        -:  627:
+        -:  628:      ///  Returns the key comparison object with which the %unordered_set was
+        -:  629:      ///  constructed.
+        -:  630:      key_equal
+        -:  631:      key_eq() const
+        -:  632:      { return _M_h.key_eq(); }
+        -:  633:
+        -:  634:      // lookup.
+        -:  635:
+        -:  636:      //@{
+        -:  637:      /**
+        -:  638:       *  @brief Tries to locate an element in an %unordered_set.
+        -:  639:       *  @param  __x  Element to be located.
+        -:  640:       *  @return  Iterator pointing to sought-after element, or end() if not
+        -:  641:       *           found.
+        -:  642:       *
+        -:  643:       *  This function takes a key and tries to locate the element with which
+        -:  644:       *  the key matches.  If successful the function returns an iterator
+        -:  645:       *  pointing to the sought after element.  If unsuccessful it returns the
+        -:  646:       *  past-the-end ( @c end() ) iterator.
+        -:  647:       */
+        -:  648:      iterator
+       27:  649:      find(const key_type& __x)
+       27:  650:      { return _M_h.find(__x); }
+       27:  650-block  0
+        -:  651:
+        -:  652:      const_iterator
+        -:  653:      find(const key_type& __x) const
+        -:  654:      { return _M_h.find(__x); }
+        -:  655:      //@}
+        -:  656:
+        -:  657:      /**
+        -:  658:       *  @brief  Finds the number of elements.
+        -:  659:       *  @param  __x  Element to located.
+        -:  660:       *  @return  Number of elements with specified key.
+        -:  661:       *
+        -:  662:       *  This function only makes sense for unordered_multisets; for
+        -:  663:       *  unordered_set the result will either be 0 (not present) or 1
+        -:  664:       *  (present).
+        -:  665:       */
+        -:  666:      size_type
+        -:  667:      count(const key_type& __x) const
+        -:  668:      { return _M_h.count(__x); }
+        -:  669:
+        -:  670:#if __cplusplus > 201703L
+        -:  671:      /**
+        -:  672:       *  @brief  Finds whether an element with the given key exists.
+        -:  673:       *  @param  __x  Key of elements to be located.
+        -:  674:       *  @return  True if there is any element with the specified key.
+        -:  675:       */
+        -:  676:      bool
+        -:  677:      contains(const key_type& __x) const
+        -:  678:      { return _M_h.find(__x) != _M_h.end(); }
+        -:  679:#endif
+        -:  680:
+        -:  681:      //@{
+        -:  682:      /**
+        -:  683:       *  @brief Finds a subsequence matching given key.
+        -:  684:       *  @param  __x  Key to be located.
+        -:  685:       *  @return  Pair of iterators that possibly points to the subsequence
+        -:  686:       *           matching given key.
+        -:  687:       *
+        -:  688:       *  This function probably only makes sense for multisets.
+        -:  689:       */
+        -:  690:      std::pair<iterator, iterator>
+        -:  691:      equal_range(const key_type& __x)
+        -:  692:      { return _M_h.equal_range(__x); }
+        -:  693:
+        -:  694:      std::pair<const_iterator, const_iterator>
+        -:  695:      equal_range(const key_type& __x) const
+        -:  696:      { return _M_h.equal_range(__x); }
+        -:  697:      //@}
+        -:  698:
+        -:  699:      // bucket interface.
+        -:  700:
+        -:  701:      /// Returns the number of buckets of the %unordered_set.
+        -:  702:      size_type
+        -:  703:      bucket_count() const noexcept
+        -:  704:      { return _M_h.bucket_count(); }
+        -:  705:
+        -:  706:      /// Returns the maximum number of buckets of the %unordered_set.
+        -:  707:      size_type
+        -:  708:      max_bucket_count() const noexcept
+        -:  709:      { return _M_h.max_bucket_count(); }
+        -:  710:
+        -:  711:      /*
+        -:  712:       * @brief  Returns the number of elements in a given bucket.
+        -:  713:       * @param  __n  A bucket index.
+        -:  714:       * @return  The number of elements in the bucket.
+        -:  715:       */
+        -:  716:      size_type
+        -:  717:      bucket_size(size_type __n) const
+        -:  718:      { return _M_h.bucket_size(__n); }
+        -:  719:
+        -:  720:      /*
+        -:  721:       * @brief  Returns the bucket index of a given element.
+        -:  722:       * @param  __key  A key instance.
+        -:  723:       * @return  The key bucket index.
+        -:  724:       */
+        -:  725:      size_type
+        -:  726:      bucket(const key_type& __key) const
+        -:  727:      { return _M_h.bucket(__key); }
+        -:  728:
+        -:  729:      //@{
+        -:  730:      /**
+        -:  731:       *  @brief  Returns a read-only (constant) iterator pointing to the first
+        -:  732:       *         bucket element.
+        -:  733:       *  @param  __n The bucket index.
+        -:  734:       *  @return  A read-only local iterator.
+        -:  735:       */
+        -:  736:      local_iterator
+        -:  737:      begin(size_type __n)
+        -:  738:      { return _M_h.begin(__n); }
+        -:  739:
+        -:  740:      const_local_iterator
+        -:  741:      begin(size_type __n) const
+        -:  742:      { return _M_h.begin(__n); }
+        -:  743:
+        -:  744:      const_local_iterator
+        -:  745:      cbegin(size_type __n) const
+        -:  746:      { return _M_h.cbegin(__n); }
+        -:  747:      //@}
+        -:  748:
+        -:  749:      //@{
+        -:  750:      /**
+        -:  751:       *  @brief  Returns a read-only (constant) iterator pointing to one past
+        -:  752:       *         the last bucket elements.
+        -:  753:       *  @param  __n The bucket index.
+        -:  754:       *  @return  A read-only local iterator.
+        -:  755:       */
+        -:  756:      local_iterator
+        -:  757:      end(size_type __n)
+        -:  758:      { return _M_h.end(__n); }
+        -:  759:
+        -:  760:      const_local_iterator
+        -:  761:      end(size_type __n) const
+        -:  762:      { return _M_h.end(__n); }
+        -:  763:
+        -:  764:      const_local_iterator
+        -:  765:      cend(size_type __n) const
+        -:  766:      { return _M_h.cend(__n); }
+        -:  767:      //@}
+        -:  768:
+        -:  769:      // hash policy.
+        -:  770:
+        -:  771:      /// Returns the average number of elements per bucket.
+        -:  772:      float
+        -:  773:      load_factor() const noexcept
+        -:  774:      { return _M_h.load_factor(); }
+        -:  775:
+        -:  776:      /// Returns a positive number that the %unordered_set tries to keep the
+        -:  777:      /// load factor less than or equal to.
+        -:  778:      float
+        -:  779:      max_load_factor() const noexcept
+        -:  780:      { return _M_h.max_load_factor(); }
+        -:  781:
+        -:  782:      /**
+        -:  783:       *  @brief  Change the %unordered_set maximum load factor.
+        -:  784:       *  @param  __z The new maximum load factor.
+        -:  785:       */
+        -:  786:      void
+        -:  787:      max_load_factor(float __z)
+        -:  788:      { _M_h.max_load_factor(__z); }
+        -:  789:
+        -:  790:      /**
+        -:  791:       *  @brief  May rehash the %unordered_set.
+        -:  792:       *  @param  __n The new number of buckets.
+        -:  793:       *
+        -:  794:       *  Rehash will occur only if the new number of buckets respect the
+        -:  795:       *  %unordered_set maximum load factor.
+        -:  796:       */
+        -:  797:      void
+        -:  798:      rehash(size_type __n)
+        -:  799:      { _M_h.rehash(__n); }
+        -:  800:
+        -:  801:      /**
+        -:  802:       *  @brief  Prepare the %unordered_set for a specified number of
+        -:  803:       *          elements.
+        -:  804:       *  @param  __n Number of elements required.
+        -:  805:       *
+        -:  806:       *  Same as rehash(ceil(n / max_load_factor())).
+        -:  807:       */
+        -:  808:      void
+        -:  809:      reserve(size_type __n)
+        -:  810:      { _M_h.reserve(__n); }
+        -:  811:
+        -:  812:      template<typename _Value1, typename _Hash1, typename _Pred1,
+        -:  813:	       typename _Alloc1>
+        -:  814:        friend bool
+        -:  815:        operator==(const unordered_set<_Value1, _Hash1, _Pred1, _Alloc1>&,
+        -:  816:		   const unordered_set<_Value1, _Hash1, _Pred1, _Alloc1>&);
+        -:  817:    };
+        -:  818:
+        -:  819:#if __cpp_deduction_guides >= 201606
+        -:  820:
+        -:  821:  template<typename _InputIterator,
+        -:  822:	   typename _Hash =
+        -:  823:	     hash<typename iterator_traits<_InputIterator>::value_type>,
+        -:  824:	   typename _Pred =
+        -:  825:	     equal_to<typename iterator_traits<_InputIterator>::value_type>,
+        -:  826:	   typename _Allocator =
+        -:  827:	     allocator<typename iterator_traits<_InputIterator>::value_type>,
+        -:  828:	   typename = _RequireInputIter<_InputIterator>,
+        -:  829:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -:  830:	   typename = _RequireNotAllocator<_Pred>,
+        -:  831:	   typename = _RequireAllocator<_Allocator>>
+        -:  832:    unordered_set(_InputIterator, _InputIterator,
+        -:  833:		  unordered_set<int>::size_type = {},
+        -:  834:		  _Hash = _Hash(), _Pred = _Pred(), _Allocator = _Allocator())
+        -:  835:    -> unordered_set<typename iterator_traits<_InputIterator>::value_type,
+        -:  836:		     _Hash, _Pred, _Allocator>;
+        -:  837:
+        -:  838:  template<typename _Tp, typename _Hash = hash<_Tp>,
+        -:  839:	   typename _Pred = equal_to<_Tp>,
+        -:  840:	   typename _Allocator = allocator<_Tp>,
+        -:  841:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -:  842:	   typename = _RequireNotAllocator<_Pred>,
+        -:  843:	   typename = _RequireAllocator<_Allocator>>
+        -:  844:    unordered_set(initializer_list<_Tp>,
+        -:  845:		  unordered_set<int>::size_type = {},
+        -:  846:		  _Hash = _Hash(), _Pred = _Pred(), _Allocator = _Allocator())
+        -:  847:    -> unordered_set<_Tp, _Hash, _Pred, _Allocator>;
+        -:  848:
+        -:  849:  template<typename _InputIterator, typename _Allocator,
+        -:  850:	   typename = _RequireInputIter<_InputIterator>,
+        -:  851:	   typename = _RequireAllocator<_Allocator>>
+        -:  852:    unordered_set(_InputIterator, _InputIterator,
+        -:  853:		  unordered_set<int>::size_type, _Allocator)
+        -:  854:    -> unordered_set<typename iterator_traits<_InputIterator>::value_type,
+        -:  855:		     hash<
+        -:  856:		       typename iterator_traits<_InputIterator>::value_type>,
+        -:  857:		     equal_to<
+        -:  858:		       typename iterator_traits<_InputIterator>::value_type>,
+        -:  859:		     _Allocator>;
+        -:  860:
+        -:  861:  template<typename _InputIterator, typename _Hash, typename _Allocator,
+        -:  862:	   typename = _RequireInputIter<_InputIterator>,
+        -:  863:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -:  864:	   typename = _RequireAllocator<_Allocator>>
+        -:  865:    unordered_set(_InputIterator, _InputIterator,
+        -:  866:		  unordered_set<int>::size_type,
+        -:  867:		  _Hash, _Allocator)
+        -:  868:    -> unordered_set<typename iterator_traits<_InputIterator>::value_type,
+        -:  869:		     _Hash,
+        -:  870:		     equal_to<
+        -:  871:		       typename iterator_traits<_InputIterator>::value_type>,
+        -:  872:		     _Allocator>;
+        -:  873:
+        -:  874:  template<typename _Tp, typename _Allocator,
+        -:  875:	   typename = _RequireAllocator<_Allocator>>
+        -:  876:    unordered_set(initializer_list<_Tp>,
+        -:  877:		  unordered_set<int>::size_type, _Allocator)
+        -:  878:    -> unordered_set<_Tp, hash<_Tp>, equal_to<_Tp>, _Allocator>;
+        -:  879:
+        -:  880:  template<typename _Tp, typename _Hash, typename _Allocator,
+        -:  881:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -:  882:	   typename = _RequireAllocator<_Allocator>>
+        -:  883:    unordered_set(initializer_list<_Tp>,
+        -:  884:		  unordered_set<int>::size_type, _Hash, _Allocator)
+        -:  885:    -> unordered_set<_Tp, _Hash, equal_to<_Tp>, _Allocator>;
+        -:  886:
+        -:  887:#endif
+        -:  888:
+        -:  889:  /**
+        -:  890:   *  @brief A standard container composed of equivalent keys
+        -:  891:   *  (possibly containing multiple of each key value) in which the
+        -:  892:   *  elements' keys are the elements themselves.
+        -:  893:   *
+        -:  894:   *  @ingroup unordered_associative_containers
+        -:  895:   *
+        -:  896:   *  @tparam  _Value  Type of key objects.
+        -:  897:   *  @tparam  _Hash  Hashing function object type, defaults to hash<_Value>.
+        -:  898:   *  @tparam  _Pred  Predicate function object type, defaults
+        -:  899:   *                  to equal_to<_Value>.
+        -:  900:   *  @tparam  _Alloc  Allocator type, defaults to allocator<_Key>.
+        -:  901:   *
+        -:  902:   *  Meets the requirements of a <a href="tables.html#65">container</a>, and
+        -:  903:   *  <a href="tables.html#xx">unordered associative container</a>
+        -:  904:   *
+        -:  905:   *  Base is _Hashtable, dispatched at compile time via template
+        -:  906:   *  alias __umset_hashtable.
+        -:  907:   */
+        -:  908:  template<typename _Value,
+        -:  909:	   typename _Hash = hash<_Value>,
+        -:  910:	   typename _Pred = equal_to<_Value>,
+        -:  911:	   typename _Alloc = allocator<_Value>>
+        -:  912:    class unordered_multiset
+        -:  913:    {
+        -:  914:      typedef __umset_hashtable<_Value, _Hash, _Pred, _Alloc>  _Hashtable;
+        -:  915:      _Hashtable _M_h;
+        -:  916:
+        -:  917:    public:
+        -:  918:      // typedefs:
+        -:  919:      //@{
+        -:  920:      /// Public typedefs.
+        -:  921:      typedef typename _Hashtable::key_type	key_type;
+        -:  922:      typedef typename _Hashtable::value_type	value_type;
+        -:  923:      typedef typename _Hashtable::hasher	hasher;
+        -:  924:      typedef typename _Hashtable::key_equal	key_equal;
+        -:  925:      typedef typename _Hashtable::allocator_type allocator_type;
+        -:  926:      //@}
+        -:  927:
+        -:  928:      //@{
+        -:  929:      ///  Iterator-related typedefs.
+        -:  930:      typedef typename _Hashtable::pointer		pointer;
+        -:  931:      typedef typename _Hashtable::const_pointer	const_pointer;
+        -:  932:      typedef typename _Hashtable::reference		reference;
+        -:  933:      typedef typename _Hashtable::const_reference	const_reference;
+        -:  934:      typedef typename _Hashtable::iterator		iterator;
+        -:  935:      typedef typename _Hashtable::const_iterator	const_iterator;
+        -:  936:      typedef typename _Hashtable::local_iterator	local_iterator;
+        -:  937:      typedef typename _Hashtable::const_local_iterator	const_local_iterator;
+        -:  938:      typedef typename _Hashtable::size_type		size_type;
+        -:  939:      typedef typename _Hashtable::difference_type	difference_type;
+        -:  940:      //@}
+        -:  941:
+        -:  942:#if __cplusplus > 201402L
+        -:  943:      using node_type = typename _Hashtable::node_type;
+        -:  944:#endif
+        -:  945:
+        -:  946:      // construct/destroy/copy
+        -:  947:
+        -:  948:      /// Default constructor.
+        -:  949:      unordered_multiset() = default;
+        -:  950:
+        -:  951:      /**
+        -:  952:       *  @brief  Default constructor creates no elements.
+        -:  953:       *  @param __n  Minimal initial number of buckets.
+        -:  954:       *  @param __hf  A hash functor.
+        -:  955:       *  @param __eql  A key equality functor.
+        -:  956:       *  @param __a  An allocator object.
+        -:  957:       */
+        -:  958:      explicit
+        -:  959:      unordered_multiset(size_type __n,
+        -:  960:			 const hasher& __hf = hasher(),
+        -:  961:			 const key_equal& __eql = key_equal(),
+        -:  962:			 const allocator_type& __a = allocator_type())
+        -:  963:      : _M_h(__n, __hf, __eql, __a)
+        -:  964:      { }
+        -:  965:
+        -:  966:      /**
+        -:  967:       *  @brief  Builds an %unordered_multiset from a range.
+        -:  968:       *  @param  __first  An input iterator.
+        -:  969:       *  @param  __last   An input iterator.
+        -:  970:       *  @param __n       Minimal initial number of buckets.
+        -:  971:       *  @param __hf      A hash functor.
+        -:  972:       *  @param __eql     A key equality functor.
+        -:  973:       *  @param __a       An allocator object.
+        -:  974:       *
+        -:  975:       *  Create an %unordered_multiset consisting of copies of the elements
+        -:  976:       *  from [__first,__last).  This is linear in N (where N is
+        -:  977:       *  distance(__first,__last)).
+        -:  978:       */
+        -:  979:      template<typename _InputIterator>
+        -:  980:	unordered_multiset(_InputIterator __first, _InputIterator __last,
+        -:  981:			   size_type __n = 0,
+        -:  982:			   const hasher& __hf = hasher(),
+        -:  983:			   const key_equal& __eql = key_equal(),
+        -:  984:			   const allocator_type& __a = allocator_type())
+        -:  985:	: _M_h(__first, __last, __n, __hf, __eql, __a)
+        -:  986:	{ }
+        -:  987:
+        -:  988:      /// Copy constructor.
+        -:  989:      unordered_multiset(const unordered_multiset&) = default;
+        -:  990:
+        -:  991:      /// Move constructor.
+        -:  992:      unordered_multiset(unordered_multiset&&) = default;
+        -:  993:
+        -:  994:      /**
+        -:  995:       *  @brief  Builds an %unordered_multiset from an initializer_list.
+        -:  996:       *  @param  __l  An initializer_list.
+        -:  997:       *  @param __n  Minimal initial number of buckets.
+        -:  998:       *  @param __hf  A hash functor.
+        -:  999:       *  @param __eql  A key equality functor.
+        -: 1000:       *  @param  __a  An allocator object.
+        -: 1001:       *
+        -: 1002:       *  Create an %unordered_multiset consisting of copies of the elements in
+        -: 1003:       *  the list. This is linear in N (where N is @a __l.size()).
+        -: 1004:       */
+        -: 1005:      unordered_multiset(initializer_list<value_type> __l,
+        -: 1006:			 size_type __n = 0,
+        -: 1007:			 const hasher& __hf = hasher(),
+        -: 1008:			 const key_equal& __eql = key_equal(),
+        -: 1009:			 const allocator_type& __a = allocator_type())
+        -: 1010:      : _M_h(__l, __n, __hf, __eql, __a)
+        -: 1011:      { }
+        -: 1012:
+        -: 1013:      /// Copy assignment operator.
+        -: 1014:      unordered_multiset&
+        -: 1015:      operator=(const unordered_multiset&) = default;
+        -: 1016:
+        -: 1017:      /// Move assignment operator.
+        -: 1018:      unordered_multiset&
+        -: 1019:      operator=(unordered_multiset&&) = default;
+        -: 1020:
+        -: 1021:      /**
+        -: 1022:       *  @brief Creates an %unordered_multiset with no elements.
+        -: 1023:       *  @param __a An allocator object.
+        -: 1024:       */
+        -: 1025:      explicit
+        -: 1026:      unordered_multiset(const allocator_type& __a)
+        -: 1027:      : _M_h(__a)
+        -: 1028:      { }
+        -: 1029:
+        -: 1030:      /*
+        -: 1031:       *  @brief Copy constructor with allocator argument.
+        -: 1032:       * @param  __uset  Input %unordered_multiset to copy.
+        -: 1033:       * @param  __a  An allocator object.
+        -: 1034:       */
+        -: 1035:      unordered_multiset(const unordered_multiset& __umset,
+        -: 1036:			 const allocator_type& __a)
+        -: 1037:      : _M_h(__umset._M_h, __a)
+        -: 1038:      { }
+        -: 1039:
+        -: 1040:      /*
+        -: 1041:       *  @brief  Move constructor with allocator argument.
+        -: 1042:       *  @param  __umset  Input %unordered_multiset to move.
+        -: 1043:       *  @param  __a  An allocator object.
+        -: 1044:       */
+        -: 1045:      unordered_multiset(unordered_multiset&& __umset,
+        -: 1046:			 const allocator_type& __a)
+        -: 1047:      : _M_h(std::move(__umset._M_h), __a)
+        -: 1048:      { }
+        -: 1049:
+        -: 1050:      unordered_multiset(size_type __n, const allocator_type& __a)
+        -: 1051:      : unordered_multiset(__n, hasher(), key_equal(), __a)
+        -: 1052:      { }
+        -: 1053:
+        -: 1054:      unordered_multiset(size_type __n, const hasher& __hf,
+        -: 1055:			 const allocator_type& __a)
+        -: 1056:      : unordered_multiset(__n, __hf, key_equal(), __a)
+        -: 1057:      { }
+        -: 1058:
+        -: 1059:      template<typename _InputIterator>
+        -: 1060:	unordered_multiset(_InputIterator __first, _InputIterator __last,
+        -: 1061:			   size_type __n,
+        -: 1062:			   const allocator_type& __a)
+        -: 1063:	: unordered_multiset(__first, __last, __n, hasher(), key_equal(), __a)
+        -: 1064:	{ }
+        -: 1065:
+        -: 1066:      template<typename _InputIterator>
+        -: 1067:	unordered_multiset(_InputIterator __first, _InputIterator __last,
+        -: 1068:			   size_type __n, const hasher& __hf,
+        -: 1069:			   const allocator_type& __a)
+        -: 1070:	: unordered_multiset(__first, __last, __n, __hf, key_equal(), __a)
+        -: 1071:	{ }
+        -: 1072:
+        -: 1073:      unordered_multiset(initializer_list<value_type> __l,
+        -: 1074:			 size_type __n,
+        -: 1075:			 const allocator_type& __a)
+        -: 1076:      : unordered_multiset(__l, __n, hasher(), key_equal(), __a)
+        -: 1077:      { }
+        -: 1078:
+        -: 1079:      unordered_multiset(initializer_list<value_type> __l,
+        -: 1080:			 size_type __n, const hasher& __hf,
+        -: 1081:			 const allocator_type& __a)
+        -: 1082:      : unordered_multiset(__l, __n, __hf, key_equal(), __a)
+        -: 1083:      { }
+        -: 1084:
+        -: 1085:      /**
+        -: 1086:       *  @brief  %Unordered_multiset list assignment operator.
+        -: 1087:       *  @param  __l  An initializer_list.
+        -: 1088:       *
+        -: 1089:       *  This function fills an %unordered_multiset with copies of the elements
+        -: 1090:       *  in the initializer list @a __l.
+        -: 1091:       *
+        -: 1092:       *  Note that the assignment completely changes the %unordered_multiset
+        -: 1093:       *  and that the resulting %unordered_multiset's size is the same as the
+        -: 1094:       *  number of elements assigned.
+        -: 1095:       */
+        -: 1096:      unordered_multiset&
+        -: 1097:      operator=(initializer_list<value_type> __l)
+        -: 1098:      {
+        -: 1099:	_M_h = __l;
+        -: 1100:	return *this;
+        -: 1101:      }
+        -: 1102:
+        -: 1103:      ///  Returns the allocator object used by the %unordered_multiset.
+        -: 1104:      allocator_type
+        -: 1105:      get_allocator() const noexcept
+        -: 1106:      { return _M_h.get_allocator(); }
+        -: 1107:
+        -: 1108:      // size and capacity:
+        -: 1109:
+        -: 1110:      ///  Returns true if the %unordered_multiset is empty.
+        -: 1111:      _GLIBCXX_NODISCARD bool
+        -: 1112:      empty() const noexcept
+        -: 1113:      { return _M_h.empty(); }
+        -: 1114:
+        -: 1115:      ///  Returns the size of the %unordered_multiset.
+        -: 1116:      size_type
+        -: 1117:      size() const noexcept
+        -: 1118:      { return _M_h.size(); }
+        -: 1119:
+        -: 1120:      ///  Returns the maximum size of the %unordered_multiset.
+        -: 1121:      size_type
+        -: 1122:      max_size() const noexcept
+        -: 1123:      { return _M_h.max_size(); }
+        -: 1124:
+        -: 1125:      // iterators.
+        -: 1126:
+        -: 1127:      //@{
+        -: 1128:      /**
+        -: 1129:       *  Returns a read-only (constant) iterator that points to the first
+        -: 1130:       *  element in the %unordered_multiset.
+        -: 1131:       */
+        -: 1132:      iterator
+        -: 1133:      begin() noexcept
+        -: 1134:      { return _M_h.begin(); }
+        -: 1135:
+        -: 1136:      const_iterator
+        -: 1137:      begin() const noexcept
+        -: 1138:      { return _M_h.begin(); }
+        -: 1139:      //@}
+        -: 1140:
+        -: 1141:      //@{
+        -: 1142:      /**
+        -: 1143:       *  Returns a read-only (constant) iterator that points one past the last
+        -: 1144:       *  element in the %unordered_multiset.
+        -: 1145:       */
+        -: 1146:      iterator
+        -: 1147:      end() noexcept
+        -: 1148:      { return _M_h.end(); }
+        -: 1149:
+        -: 1150:      const_iterator
+        -: 1151:      end() const noexcept
+        -: 1152:      { return _M_h.end(); }
+        -: 1153:      //@}
+        -: 1154:
+        -: 1155:      /**
+        -: 1156:       *  Returns a read-only (constant) iterator that points to the first
+        -: 1157:       *  element in the %unordered_multiset.
+        -: 1158:       */
+        -: 1159:      const_iterator
+        -: 1160:      cbegin() const noexcept
+        -: 1161:      { return _M_h.begin(); }
+        -: 1162:
+        -: 1163:      /**
+        -: 1164:       *  Returns a read-only (constant) iterator that points one past the last
+        -: 1165:       *  element in the %unordered_multiset.
+        -: 1166:       */
+        -: 1167:      const_iterator
+        -: 1168:      cend() const noexcept
+        -: 1169:      { return _M_h.end(); }
+        -: 1170:
+        -: 1171:      // modifiers.
+        -: 1172:
+        -: 1173:      /**
+        -: 1174:       *  @brief Builds and insert an element into the %unordered_multiset.
+        -: 1175:       *  @param __args  Arguments used to generate an element.
+        -: 1176:       *  @return  An iterator that points to the inserted element.
+        -: 1177:       *
+        -: 1178:       *  Insertion requires amortized constant time.
+        -: 1179:       */
+        -: 1180:      template<typename... _Args>
+        -: 1181:	iterator
+        -: 1182:	emplace(_Args&&... __args)
+        -: 1183:	{ return _M_h.emplace(std::forward<_Args>(__args)...); }
+        -: 1184:
+        -: 1185:      /**
+        -: 1186:       *  @brief Inserts an element into the %unordered_multiset.
+        -: 1187:       *  @param  __pos  An iterator that serves as a hint as to where the
+        -: 1188:       *                element should be inserted.
+        -: 1189:       *  @param  __args  Arguments used to generate the element to be
+        -: 1190:       *                 inserted.
+        -: 1191:       *  @return An iterator that points to the inserted element.
+        -: 1192:       *
+        -: 1193:       *  Note that the first parameter is only a hint and can potentially
+        -: 1194:       *  improve the performance of the insertion process.  A bad hint would
+        -: 1195:       *  cause no gains in efficiency.
+        -: 1196:       *
+        -: 1197:       *  For more on @a hinting, see:
+        -: 1198:       *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+        -: 1199:       *
+        -: 1200:       *  Insertion requires amortized constant time.
+        -: 1201:       */
+        -: 1202:      template<typename... _Args>
+        -: 1203:	iterator
+        -: 1204:	emplace_hint(const_iterator __pos, _Args&&... __args)
+        -: 1205:	{ return _M_h.emplace_hint(__pos, std::forward<_Args>(__args)...); }
+        -: 1206:
+        -: 1207:      //@{
+        -: 1208:      /**
+        -: 1209:       *  @brief Inserts an element into the %unordered_multiset.
+        -: 1210:       *  @param  __x  Element to be inserted.
+        -: 1211:       *  @return  An iterator that points to the inserted element.
+        -: 1212:       *
+        -: 1213:       *  Insertion requires amortized constant time.
+        -: 1214:       */
+        -: 1215:      iterator
+        -: 1216:      insert(const value_type& __x)
+        -: 1217:      { return _M_h.insert(__x); }
+        -: 1218:
+        -: 1219:      iterator
+        -: 1220:      insert(value_type&& __x)
+        -: 1221:      { return _M_h.insert(std::move(__x)); }
+        -: 1222:      //@}
+        -: 1223:
+        -: 1224:      //@{
+        -: 1225:      /**
+        -: 1226:       *  @brief Inserts an element into the %unordered_multiset.
+        -: 1227:       *  @param  __hint  An iterator that serves as a hint as to where the
+        -: 1228:       *                 element should be inserted.
+        -: 1229:       *  @param  __x  Element to be inserted.
+        -: 1230:       *  @return An iterator that points to the inserted element.
+        -: 1231:       *
+        -: 1232:       *  Note that the first parameter is only a hint and can potentially
+        -: 1233:       *  improve the performance of the insertion process.  A bad hint would
+        -: 1234:       *  cause no gains in efficiency.
+        -: 1235:       *
+        -: 1236:       *  For more on @a hinting, see:
+        -: 1237:       *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+        -: 1238:       *
+        -: 1239:       *  Insertion requires amortized constant.
+        -: 1240:       */
+        -: 1241:      iterator
+        -: 1242:      insert(const_iterator __hint, const value_type& __x)
+        -: 1243:      { return _M_h.insert(__hint, __x); }
+        -: 1244:
+        -: 1245:      iterator
+        -: 1246:      insert(const_iterator __hint, value_type&& __x)
+        -: 1247:      { return _M_h.insert(__hint, std::move(__x)); }
+        -: 1248:      //@}
+        -: 1249:
+        -: 1250:      /**
+        -: 1251:       *  @brief A template function that inserts a range of elements.
+        -: 1252:       *  @param  __first  Iterator pointing to the start of the range to be
+        -: 1253:       *                   inserted.
+        -: 1254:       *  @param  __last  Iterator pointing to the end of the range.
+        -: 1255:       *
+        -: 1256:       *  Complexity similar to that of the range constructor.
+        -: 1257:       */
+        -: 1258:      template<typename _InputIterator>
+        -: 1259:	void
+        -: 1260:	insert(_InputIterator __first, _InputIterator __last)
+        -: 1261:	{ _M_h.insert(__first, __last); }
+        -: 1262:
+        -: 1263:      /**
+        -: 1264:       *  @brief Inserts a list of elements into the %unordered_multiset.
+        -: 1265:       *  @param  __l  A std::initializer_list<value_type> of elements to be
+        -: 1266:       *              inserted.
+        -: 1267:       *
+        -: 1268:       *  Complexity similar to that of the range constructor.
+        -: 1269:       */
+        -: 1270:      void
+        -: 1271:      insert(initializer_list<value_type> __l)
+        -: 1272:      { _M_h.insert(__l); }
+        -: 1273:
+        -: 1274:#if __cplusplus > 201402L
+        -: 1275:      /// Extract a node.
+        -: 1276:      node_type
+        -: 1277:      extract(const_iterator __pos)
+        -: 1278:      {
+        -: 1279:	__glibcxx_assert(__pos != end());
+        -: 1280:	return _M_h.extract(__pos);
+        -: 1281:      }
+        -: 1282:
+        -: 1283:      /// Extract a node.
+        -: 1284:      node_type
+        -: 1285:      extract(const key_type& __key)
+        -: 1286:      { return _M_h.extract(__key); }
+        -: 1287:
+        -: 1288:      /// Re-insert an extracted node.
+        -: 1289:      iterator
+        -: 1290:      insert(node_type&& __nh)
+        -: 1291:      { return _M_h._M_reinsert_node_multi(cend(), std::move(__nh)); }
+        -: 1292:
+        -: 1293:      /// Re-insert an extracted node.
+        -: 1294:      iterator
+        -: 1295:      insert(const_iterator __hint, node_type&& __nh)
+        -: 1296:      { return _M_h._M_reinsert_node_multi(__hint, std::move(__nh)); }
+        -: 1297:#endif // C++17
+        -: 1298:
+        -: 1299:      //@{
+        -: 1300:      /**
+        -: 1301:       *  @brief Erases an element from an %unordered_multiset.
+        -: 1302:       *  @param  __position  An iterator pointing to the element to be erased.
+        -: 1303:       *  @return An iterator pointing to the element immediately following
+        -: 1304:       *          @a __position prior to the element being erased. If no such
+        -: 1305:       *          element exists, end() is returned.
+        -: 1306:       *
+        -: 1307:       *  This function erases an element, pointed to by the given iterator,
+        -: 1308:       *  from an %unordered_multiset.
+        -: 1309:       *
+        -: 1310:       *  Note that this function only erases the element, and that if the
+        -: 1311:       *  element is itself a pointer, the pointed-to memory is not touched in
+        -: 1312:       *  any way.  Managing the pointer is the user's responsibility.
+        -: 1313:       */
+        -: 1314:      iterator
+        -: 1315:      erase(const_iterator __position)
+        -: 1316:      { return _M_h.erase(__position); }
+        -: 1317:
+        -: 1318:      // LWG 2059.
+        -: 1319:      iterator
+        -: 1320:      erase(iterator __position)
+        -: 1321:      { return _M_h.erase(__position); }
+        -: 1322:      //@}
+        -: 1323:
+        -: 1324:
+        -: 1325:      /**
+        -: 1326:       *  @brief Erases elements according to the provided key.
+        -: 1327:       *  @param  __x  Key of element to be erased.
+        -: 1328:       *  @return  The number of elements erased.
+        -: 1329:       *
+        -: 1330:       *  This function erases all the elements located by the given key from
+        -: 1331:       *  an %unordered_multiset.
+        -: 1332:       *
+        -: 1333:       *  Note that this function only erases the element, and that if the
+        -: 1334:       *  element is itself a pointer, the pointed-to memory is not touched in
+        -: 1335:       *  any way.  Managing the pointer is the user's responsibility.
+        -: 1336:       */
+        -: 1337:      size_type
+        -: 1338:      erase(const key_type& __x)
+        -: 1339:      { return _M_h.erase(__x); }
+        -: 1340:
+        -: 1341:      /**
+        -: 1342:       *  @brief Erases a [__first,__last) range of elements from an
+        -: 1343:       *  %unordered_multiset.
+        -: 1344:       *  @param  __first  Iterator pointing to the start of the range to be
+        -: 1345:       *                  erased.
+        -: 1346:       *  @param __last  Iterator pointing to the end of the range to
+        -: 1347:       *                be erased.
+        -: 1348:       *  @return The iterator @a __last.
+        -: 1349:       *
+        -: 1350:       *  This function erases a sequence of elements from an
+        -: 1351:       *  %unordered_multiset.
+        -: 1352:       *
+        -: 1353:       *  Note that this function only erases the element, and that if
+        -: 1354:       *  the element is itself a pointer, the pointed-to memory is not touched
+        -: 1355:       *  in any way.  Managing the pointer is the user's responsibility.
+        -: 1356:       */
+        -: 1357:      iterator
+        -: 1358:      erase(const_iterator __first, const_iterator __last)
+        -: 1359:      { return _M_h.erase(__first, __last); }
+        -: 1360:
+        -: 1361:      /**
+        -: 1362:       *  Erases all elements in an %unordered_multiset.
+        -: 1363:       *
+        -: 1364:       *  Note that this function only erases the elements, and that if the
+        -: 1365:       *  elements themselves are pointers, the pointed-to memory is not touched
+        -: 1366:       *  in any way. Managing the pointer is the user's responsibility.
+        -: 1367:       */
+        -: 1368:      void
+        -: 1369:      clear() noexcept
+        -: 1370:      { _M_h.clear(); }
+        -: 1371:
+        -: 1372:      /**
+        -: 1373:       *  @brief  Swaps data with another %unordered_multiset.
+        -: 1374:       *  @param  __x  An %unordered_multiset of the same element and allocator
+        -: 1375:       *  types.
+        -: 1376:       *
+        -: 1377:       *  This exchanges the elements between two sets in constant time.
+        -: 1378:       *  Note that the global std::swap() function is specialized such that
+        -: 1379:       *  std::swap(s1,s2) will feed to this function.
+        -: 1380:       */
+        -: 1381:      void
+        -: 1382:      swap(unordered_multiset& __x)
+        -: 1383:      noexcept( noexcept(_M_h.swap(__x._M_h)) )
+        -: 1384:      { _M_h.swap(__x._M_h); }
+        -: 1385:
+        -: 1386:#if __cplusplus > 201402L
+        -: 1387:      template<typename, typename, typename>
+        -: 1388:	friend class std::_Hash_merge_helper;
+        -: 1389:
+        -: 1390:      template<typename _H2, typename _P2>
+        -: 1391:	void
+        -: 1392:	merge(unordered_multiset<_Value, _H2, _P2, _Alloc>& __source)
+        -: 1393:	{
+        -: 1394:	  using _Merge_helper
+        -: 1395:	    = _Hash_merge_helper<unordered_multiset, _H2, _P2>;
+        -: 1396:	  _M_h._M_merge_multi(_Merge_helper::_S_get_table(__source));
+        -: 1397:	}
+        -: 1398:
+        -: 1399:      template<typename _H2, typename _P2>
+        -: 1400:	void
+        -: 1401:	merge(unordered_multiset<_Value, _H2, _P2, _Alloc>&& __source)
+        -: 1402:	{ merge(__source); }
+        -: 1403:
+        -: 1404:      template<typename _H2, typename _P2>
+        -: 1405:	void
+        -: 1406:	merge(unordered_set<_Value, _H2, _P2, _Alloc>& __source)
+        -: 1407:	{
+        -: 1408:	  using _Merge_helper
+        -: 1409:	    = _Hash_merge_helper<unordered_multiset, _H2, _P2>;
+        -: 1410:	  _M_h._M_merge_multi(_Merge_helper::_S_get_table(__source));
+        -: 1411:	}
+        -: 1412:
+        -: 1413:      template<typename _H2, typename _P2>
+        -: 1414:	void
+        -: 1415:	merge(unordered_set<_Value, _H2, _P2, _Alloc>&& __source)
+        -: 1416:	{ merge(__source); }
+        -: 1417:#endif // C++17
+        -: 1418:
+        -: 1419:      // observers.
+        -: 1420:
+        -: 1421:      ///  Returns the hash functor object with which the %unordered_multiset
+        -: 1422:      ///  was constructed.
+        -: 1423:      hasher
+        -: 1424:      hash_function() const
+        -: 1425:      { return _M_h.hash_function(); }
+        -: 1426:
+        -: 1427:      ///  Returns the key comparison object with which the %unordered_multiset
+        -: 1428:      ///  was constructed.
+        -: 1429:      key_equal
+        -: 1430:      key_eq() const
+        -: 1431:      { return _M_h.key_eq(); }
+        -: 1432:
+        -: 1433:      // lookup.
+        -: 1434:
+        -: 1435:      //@{
+        -: 1436:      /**
+        -: 1437:       *  @brief Tries to locate an element in an %unordered_multiset.
+        -: 1438:       *  @param  __x  Element to be located.
+        -: 1439:       *  @return  Iterator pointing to sought-after element, or end() if not
+        -: 1440:       *           found.
+        -: 1441:       *
+        -: 1442:       *  This function takes a key and tries to locate the element with which
+        -: 1443:       *  the key matches.  If successful the function returns an iterator
+        -: 1444:       *  pointing to the sought after element.  If unsuccessful it returns the
+        -: 1445:       *  past-the-end ( @c end() ) iterator.
+        -: 1446:       */
+        -: 1447:      iterator
+        -: 1448:      find(const key_type& __x)
+        -: 1449:      { return _M_h.find(__x); }
+        -: 1450:
+        -: 1451:      const_iterator
+        -: 1452:      find(const key_type& __x) const
+        -: 1453:      { return _M_h.find(__x); }
+        -: 1454:      //@}
+        -: 1455:
+        -: 1456:      /**
+        -: 1457:       *  @brief  Finds the number of elements.
+        -: 1458:       *  @param  __x  Element to located.
+        -: 1459:       *  @return  Number of elements with specified key.
+        -: 1460:       */
+        -: 1461:      size_type
+        -: 1462:      count(const key_type& __x) const
+        -: 1463:      { return _M_h.count(__x); }
+        -: 1464:
+        -: 1465:#if __cplusplus > 201703L
+        -: 1466:      /**
+        -: 1467:       *  @brief  Finds whether an element with the given key exists.
+        -: 1468:       *  @param  __x  Key of elements to be located.
+        -: 1469:       *  @return  True if there is any element with the specified key.
+        -: 1470:       */
+        -: 1471:      bool
+        -: 1472:      contains(const key_type& __x) const
+        -: 1473:      { return _M_h.find(__x) != _M_h.end(); }
+        -: 1474:#endif
+        -: 1475:
+        -: 1476:      //@{
+        -: 1477:      /**
+        -: 1478:       *  @brief Finds a subsequence matching given key.
+        -: 1479:       *  @param  __x  Key to be located.
+        -: 1480:       *  @return  Pair of iterators that possibly points to the subsequence
+        -: 1481:       *           matching given key.
+        -: 1482:       */
+        -: 1483:      std::pair<iterator, iterator>
+        -: 1484:      equal_range(const key_type& __x)
+        -: 1485:      { return _M_h.equal_range(__x); }
+        -: 1486:
+        -: 1487:      std::pair<const_iterator, const_iterator>
+        -: 1488:      equal_range(const key_type& __x) const
+        -: 1489:      { return _M_h.equal_range(__x); }
+        -: 1490:      //@}
+        -: 1491:
+        -: 1492:      // bucket interface.
+        -: 1493:
+        -: 1494:      /// Returns the number of buckets of the %unordered_multiset.
+        -: 1495:      size_type
+        -: 1496:      bucket_count() const noexcept
+        -: 1497:      { return _M_h.bucket_count(); }
+        -: 1498:
+        -: 1499:      /// Returns the maximum number of buckets of the %unordered_multiset.
+        -: 1500:      size_type
+        -: 1501:      max_bucket_count() const noexcept
+        -: 1502:      { return _M_h.max_bucket_count(); }
+        -: 1503:
+        -: 1504:      /*
+        -: 1505:       * @brief  Returns the number of elements in a given bucket.
+        -: 1506:       * @param  __n  A bucket index.
+        -: 1507:       * @return  The number of elements in the bucket.
+        -: 1508:       */
+        -: 1509:      size_type
+        -: 1510:      bucket_size(size_type __n) const
+        -: 1511:      { return _M_h.bucket_size(__n); }
+        -: 1512:
+        -: 1513:      /*
+        -: 1514:       * @brief  Returns the bucket index of a given element.
+        -: 1515:       * @param  __key  A key instance.
+        -: 1516:       * @return  The key bucket index.
+        -: 1517:       */
+        -: 1518:      size_type
+        -: 1519:      bucket(const key_type& __key) const
+        -: 1520:      { return _M_h.bucket(__key); }
+        -: 1521:
+        -: 1522:      //@{
+        -: 1523:      /**
+        -: 1524:       *  @brief  Returns a read-only (constant) iterator pointing to the first
+        -: 1525:       *         bucket element.
+        -: 1526:       *  @param  __n The bucket index.
+        -: 1527:       *  @return  A read-only local iterator.
+        -: 1528:       */
+        -: 1529:      local_iterator
+        -: 1530:      begin(size_type __n)
+        -: 1531:      { return _M_h.begin(__n); }
+        -: 1532:
+        -: 1533:      const_local_iterator
+        -: 1534:      begin(size_type __n) const
+        -: 1535:      { return _M_h.begin(__n); }
+        -: 1536:
+        -: 1537:      const_local_iterator
+        -: 1538:      cbegin(size_type __n) const
+        -: 1539:      { return _M_h.cbegin(__n); }
+        -: 1540:      //@}
+        -: 1541:
+        -: 1542:      //@{
+        -: 1543:      /**
+        -: 1544:       *  @brief  Returns a read-only (constant) iterator pointing to one past
+        -: 1545:       *         the last bucket elements.
+        -: 1546:       *  @param  __n The bucket index.
+        -: 1547:       *  @return  A read-only local iterator.
+        -: 1548:       */
+        -: 1549:      local_iterator
+        -: 1550:      end(size_type __n)
+        -: 1551:      { return _M_h.end(__n); }
+        -: 1552:
+        -: 1553:      const_local_iterator
+        -: 1554:      end(size_type __n) const
+        -: 1555:      { return _M_h.end(__n); }
+        -: 1556:
+        -: 1557:      const_local_iterator
+        -: 1558:      cend(size_type __n) const
+        -: 1559:      { return _M_h.cend(__n); }
+        -: 1560:      //@}
+        -: 1561:
+        -: 1562:      // hash policy.
+        -: 1563:
+        -: 1564:      /// Returns the average number of elements per bucket.
+        -: 1565:      float
+        -: 1566:      load_factor() const noexcept
+        -: 1567:      { return _M_h.load_factor(); }
+        -: 1568:
+        -: 1569:      /// Returns a positive number that the %unordered_multiset tries to keep the
+        -: 1570:      /// load factor less than or equal to.
+        -: 1571:      float
+        -: 1572:      max_load_factor() const noexcept
+        -: 1573:      { return _M_h.max_load_factor(); }
+        -: 1574:
+        -: 1575:      /**
+        -: 1576:       *  @brief  Change the %unordered_multiset maximum load factor.
+        -: 1577:       *  @param  __z The new maximum load factor.
+        -: 1578:       */
+        -: 1579:      void
+        -: 1580:      max_load_factor(float __z)
+        -: 1581:      { _M_h.max_load_factor(__z); }
+        -: 1582:
+        -: 1583:      /**
+        -: 1584:       *  @brief  May rehash the %unordered_multiset.
+        -: 1585:       *  @param  __n The new number of buckets.
+        -: 1586:       *
+        -: 1587:       *  Rehash will occur only if the new number of buckets respect the
+        -: 1588:       *  %unordered_multiset maximum load factor.
+        -: 1589:       */
+        -: 1590:      void
+        -: 1591:      rehash(size_type __n)
+        -: 1592:      { _M_h.rehash(__n); }
+        -: 1593:
+        -: 1594:      /**
+        -: 1595:       *  @brief  Prepare the %unordered_multiset for a specified number of
+        -: 1596:       *          elements.
+        -: 1597:       *  @param  __n Number of elements required.
+        -: 1598:       *
+        -: 1599:       *  Same as rehash(ceil(n / max_load_factor())).
+        -: 1600:       */
+        -: 1601:      void
+        -: 1602:      reserve(size_type __n)
+        -: 1603:      { _M_h.reserve(__n); }
+        -: 1604:
+        -: 1605:      template<typename _Value1, typename _Hash1, typename _Pred1,
+        -: 1606:	       typename _Alloc1>
+        -: 1607:        friend bool
+        -: 1608:      operator==(const unordered_multiset<_Value1, _Hash1, _Pred1, _Alloc1>&,
+        -: 1609:		 const unordered_multiset<_Value1, _Hash1, _Pred1, _Alloc1>&);
+        -: 1610:    };
+        -: 1611:
+        -: 1612:
+        -: 1613:#if __cpp_deduction_guides >= 201606
+        -: 1614:
+        -: 1615:  template<typename _InputIterator,
+        -: 1616:	   typename _Hash =
+        -: 1617:	     hash<typename iterator_traits<_InputIterator>::value_type>,
+        -: 1618:	   typename _Pred =
+        -: 1619:	     equal_to<typename iterator_traits<_InputIterator>::value_type>,
+        -: 1620:	   typename _Allocator =
+        -: 1621:	     allocator<typename iterator_traits<_InputIterator>::value_type>,
+        -: 1622:	   typename = _RequireInputIter<_InputIterator>,
+        -: 1623:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -: 1624:	   typename = _RequireNotAllocator<_Pred>,
+        -: 1625:	   typename = _RequireAllocator<_Allocator>>
+        -: 1626:    unordered_multiset(_InputIterator, _InputIterator,
+        -: 1627:		       unordered_multiset<int>::size_type = {},
+        -: 1628:		       _Hash = _Hash(), _Pred = _Pred(),
+        -: 1629:		       _Allocator = _Allocator())
+        -: 1630:    -> unordered_multiset<typename iterator_traits<_InputIterator>::value_type,
+        -: 1631:                          _Hash, _Pred, _Allocator>;
+        -: 1632:
+        -: 1633:  template<typename _Tp, typename _Hash = hash<_Tp>,
+        -: 1634:	   typename _Pred = equal_to<_Tp>,
+        -: 1635:	   typename _Allocator = allocator<_Tp>,
+        -: 1636:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -: 1637:	   typename = _RequireNotAllocator<_Pred>,
+        -: 1638:	   typename = _RequireAllocator<_Allocator>>
+        -: 1639:    unordered_multiset(initializer_list<_Tp>,
+        -: 1640:		       unordered_multiset<int>::size_type = {},
+        -: 1641:		       _Hash = _Hash(), _Pred = _Pred(),
+        -: 1642:		       _Allocator = _Allocator())
+        -: 1643:    -> unordered_multiset<_Tp, _Hash, _Pred, _Allocator>;
+        -: 1644:
+        -: 1645:  template<typename _InputIterator, typename _Allocator,
+        -: 1646:	   typename = _RequireInputIter<_InputIterator>,
+        -: 1647:	   typename = _RequireAllocator<_Allocator>>
+        -: 1648:    unordered_multiset(_InputIterator, _InputIterator,
+        -: 1649:		       unordered_multiset<int>::size_type, _Allocator)
+        -: 1650:    -> unordered_multiset<typename iterator_traits<_InputIterator>::value_type,
+        -: 1651:			  hash<typename
+        -: 1652:			       iterator_traits<_InputIterator>::value_type>,
+        -: 1653:			  equal_to<typename
+        -: 1654:				   iterator_traits<_InputIterator>::value_type>,
+        -: 1655:			  _Allocator>;
+        -: 1656:
+        -: 1657:  template<typename _InputIterator, typename _Hash, typename _Allocator,
+        -: 1658:	   typename = _RequireInputIter<_InputIterator>,
+        -: 1659:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -: 1660:	   typename = _RequireAllocator<_Allocator>>
+        -: 1661:    unordered_multiset(_InputIterator, _InputIterator,
+        -: 1662:		       unordered_multiset<int>::size_type,
+        -: 1663:		       _Hash, _Allocator)
+        -: 1664:    -> unordered_multiset<typename
+        -: 1665:			  iterator_traits<_InputIterator>::value_type,
+        -: 1666:			  _Hash,
+        -: 1667:			  equal_to<
+        -: 1668:			    typename
+        -: 1669:			    iterator_traits<_InputIterator>::value_type>,
+        -: 1670:			  _Allocator>;
+        -: 1671:
+        -: 1672:  template<typename _Tp, typename _Allocator,
+        -: 1673:	   typename = _RequireAllocator<_Allocator>>
+        -: 1674:    unordered_multiset(initializer_list<_Tp>,
+        -: 1675:		       unordered_multiset<int>::size_type, _Allocator)
+        -: 1676:    -> unordered_multiset<_Tp, hash<_Tp>, equal_to<_Tp>, _Allocator>;
+        -: 1677:
+        -: 1678:  template<typename _Tp, typename _Hash, typename _Allocator,
+        -: 1679:	   typename = _RequireNotAllocatorOrIntegral<_Hash>,
+        -: 1680:	   typename = _RequireAllocator<_Allocator>>
+        -: 1681:    unordered_multiset(initializer_list<_Tp>,
+        -: 1682:		       unordered_multiset<int>::size_type, _Hash, _Allocator)
+        -: 1683:    -> unordered_multiset<_Tp, _Hash, equal_to<_Tp>, _Allocator>;
+        -: 1684:
+        -: 1685:#endif
+        -: 1686:
+        -: 1687:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -: 1688:    inline void
+        -: 1689:    swap(unordered_set<_Value, _Hash, _Pred, _Alloc>& __x,
+        -: 1690:	 unordered_set<_Value, _Hash, _Pred, _Alloc>& __y)
+        -: 1691:    noexcept(noexcept(__x.swap(__y)))
+        -: 1692:    { __x.swap(__y); }
+        -: 1693:
+        -: 1694:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -: 1695:    inline void
+        -: 1696:    swap(unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __x,
+        -: 1697:	 unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __y)
+        -: 1698:    noexcept(noexcept(__x.swap(__y)))
+        -: 1699:    { __x.swap(__y); }
+        -: 1700:
+        -: 1701:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -: 1702:    inline bool
+        -: 1703:    operator==(const unordered_set<_Value, _Hash, _Pred, _Alloc>& __x,
+        -: 1704:	       const unordered_set<_Value, _Hash, _Pred, _Alloc>& __y)
+        -: 1705:    { return __x._M_h._M_equal(__y._M_h); }
+        -: 1706:
+        -: 1707:#if __cpp_impl_three_way_comparison < 201907L
+        -: 1708:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -: 1709:    inline bool
+        -: 1710:    operator!=(const unordered_set<_Value, _Hash, _Pred, _Alloc>& __x,
+        -: 1711:	       const unordered_set<_Value, _Hash, _Pred, _Alloc>& __y)
+        -: 1712:    { return !(__x == __y); }
+        -: 1713:#endif
+        -: 1714:
+        -: 1715:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -: 1716:    inline bool
+        -: 1717:    operator==(const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __x,
+        -: 1718:	       const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __y)
+        -: 1719:    { return __x._M_h._M_equal(__y._M_h); }
+        -: 1720:
+        -: 1721:#if __cpp_impl_three_way_comparison < 201907L
+        -: 1722:  template<class _Value, class _Hash, class _Pred, class _Alloc>
+        -: 1723:    inline bool
+        -: 1724:    operator!=(const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __x,
+        -: 1725:	       const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __y)
+        -: 1726:    { return !(__x == __y); }
+        -: 1727:#endif
+        -: 1728:
+        -: 1729:_GLIBCXX_END_NAMESPACE_CONTAINER
+        -: 1730:
+        -: 1731:#if __cplusplus > 201402L
+        -: 1732:  // Allow std::unordered_set access to internals of compatible sets.
+        -: 1733:  template<typename _Val, typename _Hash1, typename _Eq1, typename _Alloc,
+        -: 1734:	   typename _Hash2, typename _Eq2>
+        -: 1735:    struct _Hash_merge_helper<
+        -: 1736:      _GLIBCXX_STD_C::unordered_set<_Val, _Hash1, _Eq1, _Alloc>, _Hash2, _Eq2>
+        -: 1737:    {
+        -: 1738:    private:
+        -: 1739:      template<typename... _Tp>
+        -: 1740:	using unordered_set = _GLIBCXX_STD_C::unordered_set<_Tp...>;
+        -: 1741:      template<typename... _Tp>
+        -: 1742:	using unordered_multiset = _GLIBCXX_STD_C::unordered_multiset<_Tp...>;
+        -: 1743:
+        -: 1744:      friend unordered_set<_Val, _Hash1, _Eq1, _Alloc>;
+        -: 1745:
+        -: 1746:      static auto&
+        -: 1747:      _S_get_table(unordered_set<_Val, _Hash2, _Eq2, _Alloc>& __set)
+        -: 1748:      { return __set._M_h; }
+        -: 1749:
+        -: 1750:      static auto&
+        -: 1751:      _S_get_table(unordered_multiset<_Val, _Hash2, _Eq2, _Alloc>& __set)
+        -: 1752:      { return __set._M_h; }
+        -: 1753:    };
+        -: 1754:
+        -: 1755:  // Allow std::unordered_multiset access to internals of compatible sets.
+        -: 1756:  template<typename _Val, typename _Hash1, typename _Eq1, typename _Alloc,
+        -: 1757:	   typename _Hash2, typename _Eq2>
+        -: 1758:    struct _Hash_merge_helper<
+        -: 1759:      _GLIBCXX_STD_C::unordered_multiset<_Val, _Hash1, _Eq1, _Alloc>,
+        -: 1760:      _Hash2, _Eq2>
+        -: 1761:    {
+        -: 1762:    private:
+        -: 1763:      template<typename... _Tp>
+        -: 1764:	using unordered_set = _GLIBCXX_STD_C::unordered_set<_Tp...>;
+        -: 1765:      template<typename... _Tp>
+        -: 1766:	using unordered_multiset = _GLIBCXX_STD_C::unordered_multiset<_Tp...>;
+        -: 1767:
+        -: 1768:      friend unordered_multiset<_Val, _Hash1, _Eq1, _Alloc>;
+        -: 1769:
+        -: 1770:      static auto&
+        -: 1771:      _S_get_table(unordered_set<_Val, _Hash2, _Eq2, _Alloc>& __set)
+        -: 1772:      { return __set._M_h; }
+        -: 1773:
+        -: 1774:      static auto&
+        -: 1775:      _S_get_table(unordered_multiset<_Val, _Hash2, _Eq2, _Alloc>& __set)
+        -: 1776:      { return __set._M_h; }
+        -: 1777:    };
+        -: 1778:#endif // C++17
+        -: 1779:
+        -: 1780:_GLIBCXX_END_NAMESPACE_VERSION
+        -: 1781:} // namespace std
+        -: 1782:
+        -: 1783:#endif /* _UNORDERED_SET_H */

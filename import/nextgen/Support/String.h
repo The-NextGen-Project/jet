@@ -34,7 +34,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
 
     struct intern_eq {
       NG_INLINE bool operator()(str const &LHS, str const &RHS) const {
-        return strcmp(LHS._, RHS._) == 0;
+        return strncmp(LHS._, RHS._, LHS.len) == 0;
       }
     };
 
@@ -70,9 +70,6 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       }
     }
 
-    str(const str &RHS) : len(RHS.len), hash_cache(RHS.hash_cache), _(RHS._) {
-    }
-
 
 
     [[nodiscard]]
@@ -102,7 +99,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       return std::string((const char *) *this);
     }
 
-    /*implicit*/ NG_INLINE operator const char *() const {
+    explicit NG_INLINE operator const char *() const {
       return static_cast<const char *>(_);
     }
 
@@ -167,6 +164,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       _ -= (size_t) (offset);
       return *this;
     }
+
     const char *_{};     // char* data
     bool is_heap_allocated = false;
   private:
@@ -191,16 +189,12 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       return Strings;
     }
 
-    static NG_INLINE str Intern(const str &s) {
-      return (*Strings().insert(s).first);
+
+    static NG_INLINE str &Get(str &Str) {
+      return const_cast<str &>(*(Strings().find(Str)));
     }
 
-    static NG_INLINE str Get(str &Str) {
-      return *(Strings().find(Str));
-    }
-
-    static NG_INLINE str InsertOrGet(Allocator *Mem,
-                                     str &Str) {
+    static NG_INLINE str InsertOrGet(str &Str) {
       auto Find = Strings().find(Str);
       if (Find != Strings().end()) {
         return *Find;
@@ -208,8 +202,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
 
         // Ident, no longer than 256 characters
         auto Size = Str.size();
-        auto Insert = (str)
-          Mem->CopyValues(const_cast<char *>(Str.begin()), Size);
+        auto Insert = (str) Str;
         Insert.setHash(Str.getHashCache());
         return (*Strings().insert(Insert).first);
       }
@@ -218,6 +211,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
   };
 
   str operator""_intern(const char *s, size_t len);
+  std::ostream &operator<<(std::ostream &s, nextgen::str &str);
 }
 
 #endif //NEXTGEN_STR_H

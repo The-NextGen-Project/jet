@@ -1,0 +1,49 @@
+        -:    0:Source:C:/Users/Owner/3D Objects/jet/lib/Support/Allocator.cpp
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Support\Allocator.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Support\Allocator.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include <nextgen/Support/Allocator.h>
+        -:    2:
+    #####:    3:void *nextgen::mem::os::calloc(size_t mem, size_t size) {
+    #####:    4:  if (mem == 0) return nullptr;
+    %%%%%:    4-block  0
+    %%%%%:    4-block  1
+    #####:    5:  auto *p = ::calloc(mem, size);
+    #####:    6:  if (p == nullptr)
+    %%%%%:    6-block  0
+    #####:    7:    PANIC("malloc failed");
+    %%%%%:    7-block  0
+    #####:    8:  return p;
+    %%%%%:    8-block  0
+        -:    9:}
+        -:   10:
+        4:   11:void *nextgen::mem::os::malloc(size_t size) {
+       4*:   12:  if (size == 0) return nullptr;
+        4:   12-block  0
+    %%%%%:   12-block  1
+        4:   13:  auto *p = ::malloc(size);
+        4:   14:  if (p == nullptr)
+        4:   14-block  0
+    #####:   15:    PANIC("malloc failed");
+    %%%%%:   15-block  0
+        4:   16:  return p;
+        4:   16-block  0
+        -:   17:}
+        -:   18:
+    #####:   19:void *nextgen::mem::os::realloc(void *buf, size_t size) {
+    #####:   20:  if (buf == nullptr && size == 0) return nullptr;
+    %%%%%:   20-block  0
+    %%%%%:   20-block  1
+    %%%%%:   20-block  2
+    #####:   21:  auto *p = ::realloc(buf, size);
+    #####:   22:  if (p == nullptr)
+    %%%%%:   22-block  0
+    #####:   23:    PANIC("realloc failed");
+    %%%%%:   23-block  0
+    #####:   24:  return p;
+    %%%%%:   24-block  0
+        -:   25:}
+        -:   26:
+    #####:   27:void nextgen::mem::os::free(void *p) {
+    #####:   28:  std::free(p);
+    #####:   29:}

@@ -9,12 +9,12 @@ nextgen::str nextgen::operator""_intern(const char *s, size_t len) {
     ss.setHash();
 
 
-    return StringInterner::Intern(ss);
+    return StringInterner::InsertOrGet(ss);
 }
 
 // We write using the length because `str` may contain shadowed data
 // to Range<const char*>.
-std::ostream &operator<<(std::ostream &s, nextgen::str &str) {
+std::ostream &nextgen::operator<<(std::ostream &s, nextgen::str &str) {
   s.write(str.begin(), str.size());
   return s;
 }

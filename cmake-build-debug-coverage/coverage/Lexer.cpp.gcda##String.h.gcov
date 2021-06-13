@@ -1,0 +1,237 @@
+        -:    0:Source:C:/Users/Owner/3DOBJE~1/jet/import/nextgen/Support/String.h
+        -:    0:Graph:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Lex\Lexer.cpp.gcno
+        -:    0:Data:C:\Users\Owner\3D Objects\jet\cmake-build-debug-coverage\CMakeFiles\jet.dir\lib\Lex\Lexer.cpp.gcda
+        -:    0:Runs:1
+        -:    1:# ifndef NEXTGEN_STR_H
+        -:    2:# define NEXTGEN_STR_H
+        -:    3:# include "Core.h"
+        -:    4:# include "Allocator.h"
+        -:    5:
+        -:    6:namespace nextgen { using namespace core; using namespace nextgen::mem;
+        -:    7:
+        -:    8:  template<typename T>
+        -:    9:  struct Range {
+        -:   10:
+        -:   11:    T begin;
+        -:   12:    T end;
+        -:   13:
+        1:   14:    Range(T begin, T end) : begin(begin), end(end) {}
+        -:   15:
+        -:   16:    Range() = default;
+        -:   17:
+        -:   18:    [[nodiscard]]
+        1:   19:    NG_INLINE size_t range() const { // STD NAMING
+        1:   20:      return (size_t) (end - begin);
+        1:   20-block  0
+        -:   21:    }
+        -:   22:  };
+        -:   23:
+        -:   24:
+        -:   25:  class str { // STD NAMING
+        -:   26:  public:
+    #####:   27:    str() = default;
+        -:   28:
+        -:   29:    struct intern_hash { // std::unordered_map<str, str::intern_hash>
+    #####:   30:      size_t operator()(str const &s) const {
+    #####:   31:        return s.getHashCache();
+    %%%%%:   31-block  0
+        -:   32:      }
+        -:   33:    };
+        -:   34:
+        -:   35:    struct intern_eq {
+    #####:   36:      NG_INLINE bool operator()(str const &LHS, str const &RHS) const {
+    #####:   37:        return strncmp(LHS._, RHS._, LHS.len) == 0;
+    %%%%%:   37-block  0
+        -:   38:      }
+        -:   39:    };
+        -:   40:
+        -:   41:
+        -:   42:    template<unsigned long N>
+        -:   43:    /*implicit*/ constexpr
+        -:   44:    str(const char(&data)[N]) : len(N), _(data) {}
+        -:   45:
+        1:   46:    /*implicit*/ str(const char *data)
+        1:   47:    : len(strlen(data)), _(data) {}
+        -:   48:
+        -:   49:    /*implicit*/ str(std::string &data) {
+        -:   50:      len = data.length();
+        -:   51:      _ = data.c_str();
+        -:   52:    }
+        -:   53:
+        1:   54:    /*implicit*/ str(char c) {
+        1:   55:      len = 1;
+        1:   56:      _ = &c;
+        1:   57:    }
+        -:   58:
+    #####:   59:    explicit str(const char *data, size_t len)
+    #####:   60:    : len(len), _(data) {}
+        -:   61:
+        -:   62:
+        1:   63:    explicit str(Range<const char *> range, bool ALLOC = false)
+        1:   64:    : len(range.range())  {
+        1:   64-block  0
+        1:   65:      if (ALLOC) {
+        -:   66:        // TODO: Allocate Range
+        -:   67:      } else {
+        -:   68:        // Set empty
+        1:   69:        _ = (const char *) range.begin;
+        1:   69-block  0
+        -:   70:      }
+        1:   71:    }
+        -:   72:
+        -:   73:
+        -:   74:
+        -:   75:    [[nodiscard]]
+    #####:   76:    NG_INLINE size_t size() const { return len; }
+    %%%%%:   76-block  0
+        -:   77:
+        -:   78:
+        -:   79:    // String FNV-1a Hashing Algorithm (Internal)
+        -:   80:    [[nodiscard]]
+        -:   81:    size_t hash() const {
+        -:   82:      auto val = FNV_OFF;
+        -:   83:      for (auto i = 0; i < len; ++i) {
+        -:   84:        val ^= (_[i]);
+        -:   85:        val *= FNV_PRIME;
+        -:   86:      }
+        -:   87:      return val;
+        -:   88:    }
+        -:   89:
+       96:   90:    NG_INLINE bool operator==(str const &other) const {
+       96:   91:      return _ == other._;
+       96:   91-block  0
+        -:   92:    }
+        -:   93:
+        -:   94:    NG_INLINE char operator[](size_t index) const {
+        -:   95:      return (static_cast<const char *>(_))[index];
+        -:   96:    }
+        -:   97:
+        -:   98:    NG_INLINE /*implicit*/ operator std::string() const {
+        -:   99:      return std::string((const char *) *this);
+        -:  100:    }
+        -:  101:
+        4:  102:    /*implicit*/ NG_INLINE operator const char *() const {
+        4:  103:      return static_cast<const char *>(_);
+        4:  103-block  0
+        -:  104:    }
+        -:  105:
+        -:  106:
+        -:  107:    NG_INLINE str operator-(const size_t size) const {
+        -:  108:      return {
+        -:  109:        _ - size
+        -:  110:      };
+        -:  111:    }
+        -:  112:
+        -:  113:    NG_INLINE str operator+(int offset) const {
+        -:  114:      return {
+        -:  115:        _ + offset
+        -:  116:      };
+        -:  117:    }
+        -:  118:
+        -:  119:    NG_AINLINE char operator*() const {
+        -:  120:      return *_;
+        -:  121:    }
+        -:  122:
+        -:  123:    NG_AINLINE const char *begin() const {
+        -:  124:      return _;
+        -:  125:    }
+        -:  126:
+        -:  127:    NG_AINLINE const char *end() const {
+        -:  128:      return _ + len;
+        -:  129:    }
+        -:  130:
+        -:  131:    // Only used in intern_hash. DO NOT call this
+        -:  132:    // function if you have not set your hash value, otherwise your hash
+        -:  133:    // results may be invalid.
+    #####:  134:    NG_INLINE size_t getHashCache() const {
+    #####:  135:      return hash_cache;
+    %%%%%:  135-block  0
+        -:  136:    }
+        -:  137:
+        -:  138:    // Mutation.
+        -:  139:
+        -:  140:    NG_INLINE void setHash() {
+        -:  141:      hash_cache = hash();
+        -:  142:    }
+        -:  143:
+    #####:  144:    NG_INLINE void setHash(size_t hash) {
+    #####:  145:      hash_cache = hash;
+    #####:  146:    }
+        -:  147:
+        -:  148:    NG_INLINE str operator++() {
+        -:  149:      _++;
+        -:  150:      return *this;
+        -:  151:    }
+        -:  152:
+        -:  153:    NG_INLINE str operator--() {
+        -:  154:      _--;
+        -:  155:      return *this;
+        -:  156:    }
+        -:  157:
+        -:  158:    NG_INLINE str operator+=(int offset) {
+        -:  159:      _ += (size_t) (offset);
+        -:  160:      return *this;
+        -:  161:    }
+        -:  162:
+        -:  163:    NG_INLINE str operator-=(int offset) {
+        -:  164:      _ -= (size_t) (offset);
+        -:  165:      return *this;
+        -:  166:    }
+        -:  167:    const char *_{};     // char* data
+        -:  168:    bool is_heap_allocated = false;
+        -:  169:  private:
+        -:  170:    unsigned long len{}; // String length
+        -:  171:    size_t hash_cache = 0;
+        -:  172:  };
+        -:  173:
+        -:  174:
+        -:  175:  // Very thin wrapper around std::unordered_set for String interning.
+        -:  176:  // Mostly O(1) Retrieval (FNV-1a is fast and good String hash).
+        -:  177:  // Designed around the symbols retrieved for the token and not the token
+        -:  178:  // values.
+        -:  179:  class StringInterner {
+        -:  180:  public:
+        -:  181:    using Allocator = mem::ArenaSegment;
+        -:  182:
+        -:  183:
+    #####:  184:    static NG_INLINE auto Strings() -> std::unordered_set<str, str::intern_hash,
+        -:  185:    str::intern_eq>& {
+        -:  186:      static std::unordered_set<str, str::intern_hash, str::intern_eq>
+    #####:  187:          Strings;
+    %%%%%:  187-block  0
+    %%%%%:  187-block  1
+    %%%%%:  187-block  2
+    #####:  188:      return Strings;
+    %%%%%:  188-block  0
+        -:  189:    }
+        -:  190:
+        -:  191:
+        -:  192:    static NG_INLINE str &Get(str &Str) {
+        -:  193:      return const_cast<str &>(*(Strings().find(Str)));
+        -:  194:    }
+        -:  195:
+    #####:  196:    static NG_INLINE str InsertOrGet(str &Str) {
+    #####:  197:      auto Find = Strings().find(Str);
+    %%%%%:  197-block  0
+    #####:  198:      if (Find != Strings().end()) {
+    %%%%%:  198-block  0
+    #####:  199:        return *Find;
+    %%%%%:  199-block  0
+        -:  200:      } else {
+        -:  201:
+        -:  202:        // Ident, no longer than 256 characters
+    #####:  203:        auto Size = Str.size();
+    %%%%%:  203-block  0
+    #####:  204:        auto Insert = (str) Str;
+    #####:  205:        Insert.setHash(Str.getHashCache());
+    #####:  206:        return (*Strings().insert(Insert).first);
+    %%%%%:  206-block  0
+        -:  207:      }
+        -:  208:    }
+        -:  209:
+        -:  210:  };
+        -:  211:
+        -:  212:  str operator""_intern(const char *s, size_t len);
+        -:  213:}
+        -:  214:
+        -:  215:#endif //NEXTGEN_STR_H

@@ -61,6 +61,7 @@ int main(
       diagnostic.Build(Error);
     }
 
+
   } catch (std::exception &) {
     return EXIT_FAILURE;
   }
