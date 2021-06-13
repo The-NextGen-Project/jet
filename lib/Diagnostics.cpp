@@ -77,7 +77,7 @@ nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
 
     if (Count == Nth) {
       if (Found) // Prevent Infinite Loop where buffer input is only 1 line long
-        return {FileBuffer, BufferLength};
+        return str {FileBuffer, BufferLength};
       Found = true;
       FoundPoint = Copy;
     }
