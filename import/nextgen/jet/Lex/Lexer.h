@@ -2,25 +2,30 @@
 # define NEXTGEN_LEXER_H
 
 # include "Token.h"
+
 namespace nextgen { namespace jet { using namespace nextgen::core;
 
   enum LexErrorType {
-    MalformedUTF8,
-    InvalidChar,
+
+    // Other
     UnexpectedEOF,
     OutOfRange,
     Unreachable,
+
+    // Strings
+    MalformedUTF8,
+    InvalidChar,
+    InvalidStringEscape,
+    InvalidUnicodeEscapeClose,
+    HexEscapeOutOfRange,
+    MissingClosingDelim,
+
+    // Numbers
+    DigitOutOfRange,
+    InvalidDot,
+    InvalidNumberValue,
     IntegerOverflow,
     FloatingPointOverflow,
-
-    DigitOutOfRange,
-    DoubleUnderscore,
-
-    MissingClosingForChar,
-    MissingClosingForString,
-
-    InvalidDot,
-    InvalidNumberValue
 
   };
 
@@ -34,7 +39,88 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     LexErrorType Error;
     TokenTraits::SourceLocation Location;
     Token FailedToken;
+
+    int Metadata[5];
   };
+
+    class Diagnostic {
+    private:
+      const char *FileBuffer;
+      const char *FileName;
+      ArenaSegment *Memory;
+      size_t BufferLength;
+    public:
+      Diagnostic() = default;
+
+      Diagnostic(ArenaSegment *Mem, const char *Buffer, size_t BufLen, const
+      char *FileName)
+        : FileBuffer(Buffer), FileName(FileName), Memory(Mem), BufferLength(BufLen) {}
+
+      /// Build Error Message for a Lexing Error
+      NG_INLINE void Build(LexError Error) {
+        Console::Log(Colors::RED, "Error "
+                                  "---------------------------------------------------------- ", FileName, ":",
+                     Error.Location.Line, ":", Error.Location
+                       .Column, "\n",
+                     Colors::RESET);
+        switch (Error.Error) {
+          case MalformedUTF8:
+            break;
+          case InvalidChar:
+            break;
+          case UnexpectedEOF:
+            break;
+          case OutOfRange:
+            break;
+          case Unreachable:
+            break;
+          case IntegerOverflow:
+            ErrorIntegerOverflow(Error);
+            break;
+          case FloatingPointOverflow:
+            break;
+          case DigitOutOfRange:
+            ErrorDigitOutOfRange(Error);
+            break;
+          case MissingClosingDelim:
+            ErrorMissingClosingDelim(Error);
+            break;
+          case InvalidDot:
+            break;
+          case InvalidNumberValue:
+            break;
+          case InvalidStringEscape:
+            ErrorInvalidStringEscape(Error);
+            break;
+          case InvalidUnicodeEscapeClose:
+            break;
+          case HexEscapeOutOfRange:
+            ErrorHexEscapeOutOfRange(Error);
+            break;
+          default:
+            UNREACHABLE;
+        }
+        Console::Log(Colors::RESET, "\n");
+      }
+
+    private:
+      // Helpers
+      str GetNthLineOfBuffer(size_t Nth);
+      void ErrorLexSetup(std::string &Line, const char *Message, LexError &Error);
+
+      template<typename ... Args> void AddHint
+                      (std::string &Line, Args&& ...Hint);
+
+
+      // Lex Errors
+      void ErrorIntegerOverflow(LexError &Error);
+      void ErrorDigitOutOfRange(LexError &Error);
+      void ErrorInvalidChar(LexError &Error);
+      void ErrorMalformedUTF8(LexError &Error);
+      void ErrorMissingClosingDelim(LexError &Error);
+      void ErrorHexEscapeOutOfRange(LexError &Error);
+      void ErrorInvalidStringEscape(LexError &Error);
+    };
 
 
   class Lexer {
@@ -51,14 +137,18 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
     LexMode Mode;
 
+    Diagnostic ErrorBuilder;
+
+
   public:
 
     /// Initialization of values through Lexer::New
-    static auto New(Allocator *Mem, const File *Buffer,
+    static auto New(Allocator *Mem, const File *Buffer, const char *FileName,
                     const size_t BufferLength,
                     LexMode Mode = LexMode::TokenMode) -> Lexer {
       Lexer Instance = Lexer(Mem, Buffer, BufferLength);
       Instance.Mode = Mode;
+      Instance.ErrorBuilder = Diagnostic(Mem, Buffer, BufferLength, FileName);
       return Instance;
     }
 
@@ -76,7 +166,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       do {
         auto Instance = NextToken();
         if (Instance.IsErr()) {
-          // TODO: Handle Error
+          ErrorBuilder.Build(Instance.Error().Unwrap());
         }
         Tokens.Add(Instance.Unwrap());
       } while (Buffer);

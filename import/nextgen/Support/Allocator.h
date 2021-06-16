@@ -198,25 +198,20 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     template <size_t N>
     struct Arena {
       Arena() {
-        auto node = begin;
+        Begin = (ArenaSegment*) os::malloc(sizeof(ArenaSegment) * N);
+        auto Node = Begin;
         for (auto i = 0; i < N; ++i) {
-          node = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
-          *node = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof
-                                                                      (ArenaSegment)));
-          node = node->getNext();
+          *Node = ArenaSegment::New(Begin + i);
+          Node = Node->getNext();
         }
       }
 
 
       ~Arena() {
-        /*auto start = begin;
-        while (start->getNext()) {
-          auto temp = start->getNext();
-          os::free(start);
-          start = temp;
-        }*/
+        if (Begin)
+          os::free(Begin);
       }
-      ArenaSegment *begin = nullptr;
+      ArenaSegment *Begin = nullptr;
     };
 
 }} // namespace nextgen::mem

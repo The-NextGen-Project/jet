@@ -118,6 +118,12 @@ namespace nextgen { namespace jet {
         char SingleByte;
       };
     };
+
+
+    struct ErrorInfo {
+      int metadata[5];
+    };
+
   };
 
   class Token {
@@ -127,8 +133,10 @@ namespace nextgen { namespace jet {
 
     nextgen::str ID;
     SourceLocation Location;
-    TokenValue InternalValue;
+    TokenValue InternalValue{};
     unsigned Flags;
+
+
   public:
 
     /// Default constructor is used to avoid any single initialization conflicts
@@ -163,7 +171,7 @@ namespace nextgen { namespace jet {
     }
 
     /// Return String instance that represents lexed Token
-    NG_AINLINE const str Name() const {
+    NG_AINLINE str Name() const {
       return ID;
     }
 
@@ -172,6 +180,7 @@ namespace nextgen { namespace jet {
     NG_INLINE void setValue(T v) {
       ValueSet(v);
     }
+
 
     /// Set the token type (used in cases where type is determined later)
     NG_AINLINE void setKind(TokenKind Kind) {
@@ -188,7 +197,7 @@ namespace nextgen { namespace jet {
       return Location;
     }
 
-    /// Set a flag for extraneous metadeta for the token
+    /// Set a flag for extraneous metadata for the token
     NG_AINLINE void setFlag(TokenClassification flag) {
       Flags |= flag;
     }
@@ -210,21 +219,21 @@ namespace nextgen { namespace jet {
 
     /// Pretty Print Token to the Screen. This usually works nicely for
     /// Diagnostics, as tokens on the line need to be printed normally.
-/*    void PrettyPrint() {
+    void PrettyPrint() {
       if (isKeyword()) {
         Console::Log(Colors::RED);
       }
       auto Kind = getKind();
       switch (Kind) {
         case String:
-          Console::Log(Colors::GREEN, "\"");
+          Console::Log(Colors::GREEN);
           break;
         case Integer:
         case Decimal:
           Console::Log(Colors::BLUE);
           break;
         case Char:
-          Console::Log(Colors::GREEN, "\"");
+          Console::Log(Colors::GREEN, "\'");
           break;
         case Identifier:
           Console::Log(Colors::YELLOW);
@@ -236,15 +245,8 @@ namespace nextgen { namespace jet {
       }
 
       Console::Log(Name());
-      Console::Log(Name().size());
-      if (Kind == TokenKind::String) {
-        Console::Log("\"");
-      }
-      else if (Kind == TokenKind::Char) {
-        Console::Log("'");
-      }
       Console::Log(Colors::RESET);
-    }*/
+    }
 
     bool assignment = false; // (ie: +=, -=, *=)
   private:

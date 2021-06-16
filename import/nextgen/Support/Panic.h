@@ -72,10 +72,10 @@ namespace nextgen {
   };
 
 # define PANIC(msg) nextgen::PanicAt<sizeof(msg), sizeof(__FILE__), sizeof \
-("panic("#msg");"), __LINE__, false>(msg, __FILE__, "PANIC("#msg");")
+("PANIC("#msg");"), __LINE__, false>(msg, __FILE__, "PANIC("#msg");")
 # define ASSERT(cond, msg) if (!(cond)) nextgen::PanicAt<sizeof(msg), sizeof \
 (__FILE__), sizeof("ASSERT("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, \
-"assert("#cond", "#msg");")
+"ASSERT("#cond", "#msg");")
 
   // Panic at a specific point in the code. This is simulated as an exception
 // throw caught by

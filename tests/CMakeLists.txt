@@ -7,6 +7,7 @@ project(tests)
 add_executable(tests
 
         # Link Support
+        ../lib/Diagnostics.cpp
         ../lib/Support/Panic.cpp
         ../lib/Support/Allocator.cpp
         ../lib/Support/String.cpp

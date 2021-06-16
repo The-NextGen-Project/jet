@@ -168,7 +168,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     const char *_{};     // char* data
     bool is_heap_allocated = false;
   private:
-    unsigned long len{}; // String length
+    size_t len{}; // String length
     size_t hash_cache = 0;
   };
 

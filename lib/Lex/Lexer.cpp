@@ -6,9 +6,6 @@ using namespace nextgen::jet;
 # define TOKEN(type, text, k, value) Token::New(text, {CurrentLine, CurrentColumn} \
                                                     ,value, k)
 
-
-
-
 static constexpr TokenKind TokenKindClass[256] {
 
   // Error code
@@ -237,20 +234,6 @@ static auto ReturnValidKeyword(str &value, TokenKind else_) -> TokenKind {
   return else_;
 }
 
-/// For Printing, same as above.
-static auto ReturnValidKeyword(std::string &value, TokenKind else_) ->
-TokenKind {
-  for (auto i = 0; i < SizeOfArray(Keywords); ++i) {
-
-    // We don't intern when lex printing
-    if (value == std::string(Keywords[i].key._))
-      return Keywords[i].id;
-  }
-  return else_;
-}
-
-
-
 
 auto Lexer::NextToken() -> Result<Token, LexError> {
   TokenKind Kind = TokenKindClass[Curr()];
@@ -291,7 +274,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         auto Hash  = FNV_OFF;
 
         // Classification for Unsigned Values
-        TokenClassification Flags = static_cast<TokenClassification>(0);
+        auto Flags = static_cast<TokenClassification>(0);
 
         // Start of token
         auto Begin = Buffer;
@@ -333,29 +316,32 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
           Hash ^= Current;
           Hash *= FNV_PRIME;
 
-          int digit = IntegerBits[Current];
+          int Digit = IntegerBits[Current];
 
-          if (digit < 0) {
+          if (Digit < 0) {
             break;
           }
 
-          if (digit >= Radix) {
+          if (Digit >= Radix) {
             return Err<Token, LexError>( LexError {
               LexErrorType::DigitOutOfRange,
               { CurrentLine, CurrentColumn },
               Token::New(str(Range<const char *>(Begin, Buffer)),
-                         {CurrentLine, BeginCol}, TokenKind::Integer)
+                         {CurrentLine, BeginCol}, TokenKind::Integer),
+              { Radix, Digit + 1 }
             });
           }
-          if (IntegerValue > (UINTPTR_MAX - digit) / Radix) {
+
+          if (IntegerValue > (UINTPTR_MAX - Digit) / Radix) {
             return Err<Token, LexError>( LexError {
               LexErrorType::IntegerOverflow,
               { CurrentLine, CurrentColumn },
               Token::New(str(Range<const char *>(Begin, Buffer)),
-                         {CurrentLine, BeginCol}, TokenKind::Integer)
+                         {CurrentLine, BeginCol},
+                         TokenKind::Integer),
             });
           }
-          IntegerValue = IntegerValue * Radix + digit;
+          IntegerValue = IntegerValue * Radix + Digit;
         } while (Next(1));
 
         // Token Suffix
@@ -364,8 +350,10 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
             break;
           case 'u': // Unsigned
             Flags = TokenClassification::Unsigned;
+            Next(1);
             break;
           case 'e': // x10^power
+            if (Radix == 16) UNREACHABLE;
             break;
         }
 
@@ -384,11 +372,123 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         Instance.setFlag(Flags);
         return Ok<Token, LexError>(Instance);
       }
-      case String:
-        break;
+      case String: {
+        auto Begin = this->Buffer;
+        auto BeginCol = CurrentColumn;
+
+
+        // FNV-1a Hash on String as Lexing as to not do it twice
+        // https://en.wikipedia.org/wiki/Fowler–Noll–Vo_function
+        auto val = FNV_OFF;
+        char Current = Next(1);
+
+        // Equivalent to C99 String Standard
+        auto StringAllocator = Memory->GetAllocatorForAvailableSpace(4095);
+
+        char *ID = (char*) StringAllocator->BlockPoint();
+        size_t Len = 0;
+
+        do {
+          Current = Curr();
+
+          if (Current == '\0') {
+            return Err<Token, LexError>( LexError {
+              LexErrorType::MissingClosingDelim,
+              { CurrentLine, CurrentColumn },
+              Token::New(str(Range<const char *>(Begin, Buffer)),
+                         {CurrentLine, BeginCol},
+                         TokenKind::String),
+              { '"'}
+            });
+          }
+
+          if (Current == '\\') {
+            switch (Next(1)) {
+              case 'a':
+                Current = '\a';
+                break;
+              case 'b':
+                Current = '\b';
+                break;
+              case 'r':
+                Current = '\r';
+                break;
+              case 'n':
+                Current = '\n';
+                break;
+              case 'v':
+                Current = '\v';
+                break;
+              case 't':
+                Current = '\t';
+                break;
+              case 'x':  {
+                auto V1 = IntegerBits[Next(1)];
+                if (V1 >= 16) {
+                  return Err<Token, LexError>(LexError {
+                    LexErrorType::HexEscapeOutOfRange,
+                    { CurrentLine, CurrentColumn },
+                    Token::New(str(Range<const char *>(Begin, Buffer)),
+                               {CurrentLine, BeginCol},
+                               TokenKind::String),
+                    { V1 + 1 } // Pass in the invalid digit for the escape
+                  });
+                }
+                auto V2 = IntegerBits[Next(1)];
+                if (V2 >= 16) {
+                  return Err<Token, LexError>(LexError {
+                    LexErrorType::HexEscapeOutOfRange,
+                    { CurrentLine, CurrentColumn },
+                    Token::New(str(Range<const char *>(Begin, Buffer)),
+                               {CurrentLine, BeginCol},
+                               TokenKind::String),
+                    { V2 + 1} // Pass in the invalid digit for the escape
+                  });
+                }
+
+                // Unroll Loop
+                int Value = V1;
+                Value = Value * 16 + V2;
+
+                // @Safety Guaranteed! We know for a fact that this conversion
+                // is safe because of the validity.
+                Current = (char) Value;
+                break;
+              }
+              case 'u': // TODO: IDK how to do this properly but ... Unicode Char
+                break;
+              default:
+                return Err<Token, LexError>( LexError {
+                  LexErrorType::InvalidStringEscape,
+                  { CurrentLine, CurrentColumn },
+                  Token::New(str(Range<const char *>(Begin, Buffer)),
+                             {CurrentLine, BeginCol},
+                             TokenKind::String),
+                });
+            }
+          }
+
+          val ^= Current;
+          val *= FNV_PRIME;
+
+          ID[Len++] = Current;
+
+
+        } while (Next(1) != '"');
+
+        ID[Len++] = '\0';
+
+        auto S = str(ID, Len);
+        S.setHash(val);
+        auto Intern = StringInterner::InsertOrGet(S);
+
+        Instance = TOKEN(const char *, Intern, TokenKind::String, "");
+        Next(1); // Skip the last '"'
+        return Ok<Token, LexError>(Instance);
+      }
       case Decimal:
         break;
-      case Identifier: { // Identifier are no more than 256 characters
+      case Identifier: {
 
 
         auto Begin = this->Buffer;
@@ -406,7 +506,6 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
 
 
         } while (TokenKindClass[Next(1)] == TokenKind::Identifier);
-
 
         auto End = this->Buffer;
 
@@ -445,6 +544,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
           group(TokenKind::LeftShift, TokenKind::Equals):
             Instance.assignment = true;
             Instance = TOKEN(const char *, "<<=", TokenKind::LeftShift, "<<=");
+            break;
           default:
             Instance = TOKEN(const char *, "<<", TokenKind::LeftShift, "<<");
             break;
@@ -457,6 +557,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
           group(TokenKind::RightShift, TokenKind::Equals):
             Instance.assignment = true;
             Instance = TOKEN(const char *, ">>=", TokenKind::RightShift, ">>=");
+            break;
           default:
             Instance = TOKEN(const char *, ">>", TokenKind::RightShift, ">>");
             break;
@@ -506,6 +607,7 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
           group(TokenKind::Plus, TokenKind::Equals):
             Instance = TOKEN(const char *, "+=", TokenKind::Plus, "+=");
             Instance.assignment = true;
+            break;
           default:
             Instance = TOKEN(char, '+', TokenKind::Plus, '+');
             break;
@@ -521,33 +623,82 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
           group(TokenKind::Minus, TokenKind::Equals):
             Instance = TOKEN(const char *, "-=", TokenKind::MinusMinus, "-=");
             Instance.assignment = true;
+            break;
           default:
             Instance = TOKEN(char, '-', TokenKind::Minus, '-');
             break;
         }
         break;
       }
-      case Slash:
+      case Slash: {
+        auto s1 = TokenKindClass[Peek(1)];
+        match (Kind, s1) {
+          group(TokenKind::Slash, TokenKind::Star):
+            Instance = TOKEN(const char *, "/=", TokenKind::Slash, "/=");
+            Instance.assignment = true;
+            break;
+          default:
+            Instance = TOKEN(const char *, '/', TokenKind::Star, '/');
+            break;
+        }
         break;
-      case Star:
+      }
+      case Star: {
+        auto s1 = TokenKindClass[Peek(1)];
+        match (Kind, s1) {
+          group(TokenKind::Star, TokenKind::Star):
+            Kind = TokenKind::Pow;
+            goto start;
+          group(TokenKind::Star, TokenKind::Equals):
+            Instance = TOKEN(const char *, "*=", TokenKind::Star, "*=");
+            Instance.assignment = true;
+            break;
+          default:
+            Instance = TOKEN(const char *, '*', TokenKind::Star, '*');
+            break;
+        }
         break;
+      }
+      case Pow: {
+        auto s1 = TokenKindClass[Peek(1)];
+        match (Kind, s1) {
+          group(TokenKind::Pow, TokenKind::Equals):
+            Instance.assignment = true;
+            Instance = TOKEN(const char *, "**=", TokenKind::Pow, "**=");
+            break;
+          default:
+            Instance = TOKEN(const char *, "**", TokenKind::Pow, "**");
+            break;
+        }
+        break;
+      }
       case NewLine: // \n or \r
         SkipNewLine();
         goto start; // Does this so 2 function calls aren't wasted.
-      case Char:
+      case Char: {
+        auto Begin = Buffer;
+        auto BeginCol = CurrentColumn;
         Instance = TOKEN(char, Next(1), TokenKind::Char, Curr());
         if (TokenKindClass[Next(1)] != TokenKind::Char) {
           return Err<Token, LexError>(LexError{
-            LexErrorType::MissingClosingForChar,
-            {CurrentLine, CurrentColumn} // 'x[?] <-- Missing Closing!
+            LexErrorType::MissingClosingDelim,
+            {CurrentLine, CurrentColumn}, // 'x[?] <-- Missing Closing!
+            Token::New(str(Range<const char *>(Begin, Buffer)),
+                       {CurrentLine, BeginCol},
+                       TokenKind::String),
+            {'\''}
           });
         }
         break;
+      }
       case Whitespace: // Skip whitespace
         Next(1);
         Kind = TokenKindClass[Curr()];
         goto start;
       case Dot: {
+        auto Begin = Buffer;
+        auto BeginCol = CurrentColumn;
+
         auto s1 = TokenKindClass[Peek(1)];
         auto s2 = TokenKindClass[Peek(2)];
         auto s3 = TokenKindClass[Peek(3)];
@@ -568,7 +719,10 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
         if (s3 == TokenKind::Dot && Instance.getKind() == TokenKind::Ellipsis) {
           return Err<Token, LexError>(LexError{
             LexErrorType::InvalidDot,
-            {CurrentLine, CurrentColumn + 1}
+            {CurrentLine, CurrentColumn + 1},
+            Token::New(str(Range<const char *>(Begin, Buffer)),
+                       {CurrentLine, BeginCol},
+                       TokenKind::Ellipsis)
           });
         }
 
@@ -576,9 +730,20 @@ auto Lexer::NextToken() -> Result<Token, LexError> {
       }
         // Cannot be generated by the TokenKind table, assigned after checks
       case EqualsEquals:
-      case Pow:
       case Boolean:
         UNREACHABLE;
+        break;
+      case LParenthesis:
+      case RParenthesis:
+      case LBracket:
+      case RBracket:
+      case LCurlyBrace:
+      case RCurlyBrace:
+      case AND:
+      case NOT:
+      case XOR:
+      case Colon:
+        Instance = TOKEN(char, Curr(), Kind, Curr());
         break;
       case Error:
         return Err<Token, LexError>(LexError{
@@ -636,9 +801,9 @@ void Lexer::PrintNextToken() {
         do {
 
           auto Current = Curr();
-          int digit = IntegerBits[Current];
+          int Digit = IntegerBits[Current];
 
-          if (digit < 0) {
+          if (Digit < 0) {
             break;
           }
 
@@ -661,8 +826,30 @@ void Lexer::PrintNextToken() {
 
         break;
       }
-      case String:
+      case String: {
+        auto Begin = this->Buffer;
+        int Offset = 1;
+        Console::Log(Colors::GREEN);
+
+        char Current;
+        do {
+          Current = Curr();
+
+          if (Current == '\0') {
+            Offset = 0;
+            break;
+          }
+        } while (Next(1) != '"');
+
+
+        auto End = this->Buffer;
+
+        auto Print = str(Begin, End - Begin + Offset);
+        Console::Log(Print, Colors::RESET);
+
+        Next(1); // Skip the last '"'
         break;
+      }
       case Decimal:
         break;
       case Identifier: { // Maybe : Identifier length no more 256 characters?
@@ -702,12 +889,14 @@ void Lexer::PrintNextToken() {
         match (Kind, s1) {
           group(TokenKind::LessThan, TokenKind::Equals):
             Console::Log("<=");
+            Next(2);
             break;
           group(TokenKind::LessThan, TokenKind::LessThan):
             Kind = TokenKind::LeftShift;
             goto start;
           default:
             Console::Log("<");
+            Next(1);
             break;
         }
         break;
@@ -717,8 +906,11 @@ void Lexer::PrintNextToken() {
         match (Kind, s1) {
           group(TokenKind::LeftShift, TokenKind::Equals):
             Console::Log("<<=");
+            Next(3);
+            break;
           default:
             Console::Log("<<");
+            Next(2);
             break;
         }
         break;
@@ -728,8 +920,11 @@ void Lexer::PrintNextToken() {
         match (Kind, s1) {
           group(TokenKind::RightShift, TokenKind::Equals):
             Console::Log(">>=");
+            Next(3);
+            break;
           default:
             Console::Log(">>");
+            Next(2);
             break;
         }
         break;
@@ -739,12 +934,14 @@ void Lexer::PrintNextToken() {
         match (Kind, s1) {
           group(TokenKind::GreaterThan, TokenKind::Equals):
             Console::Log(">=");
+            Next(2);
             break;
           group(TokenKind::GreaterThan, TokenKind::GreaterThan):
             Kind = TokenKind::LeftShift;
             goto start;
           default:
             Console::Log(">");
+            Next(1);
             break;
         }
         break;
@@ -753,6 +950,7 @@ void Lexer::PrintNextToken() {
         auto s1 = TokenKindClass[Peek(1)];
         if (s1 == TokenKind::Equals) {
           Console::Log("==");
+          Next(1);
         } else {
           Console::Log("=");
         }
@@ -763,8 +961,10 @@ void Lexer::PrintNextToken() {
         auto s1 = TokenKindClass[Peek(1)];
         if (s1 == TokenKind::QuestionMark) {
           Console::Log("??");
+          Next(2);
         } else {
           Console::Log("?");
+          Next(1);
         }
         break;
       }
@@ -773,11 +973,15 @@ void Lexer::PrintNextToken() {
         match (Kind, s1) {
           group(TokenKind::Plus, TokenKind::PlusPlus):
             Console::Log("++");
+            Next(2);
             break;
           group(TokenKind::Plus, TokenKind::Equals):
             Console::Log("+=");
+            Next(2);
+            break;
           default:
             Console::Log("+");
+            Next(1);
             break;
         }
         break;
@@ -787,26 +991,70 @@ void Lexer::PrintNextToken() {
         match (Kind, s1) {
           group(TokenKind::Minus, TokenKind::Minus):
             Console::Log("--");
+            Next(2);
             break;
           group(TokenKind::Minus, TokenKind::Equals):
             Console::Log("-=");
+            Next(2);
             break;
           default:
             Console::Log("-");
+            Next(1);
             break;
         }
         break;
       }
-      case Slash:
+      case Slash: {
+        auto s1 = TokenKindClass[Peek(1)];
+        match (Kind, s1) {
+          group(TokenKind::Slash, TokenKind::Star):
+            Instance = TOKEN(const char *, "/=", TokenKind::Slash, "/=");
+            Instance.assignment = true;
+            break;
+          default:
+            Instance = TOKEN(const char *, '/', TokenKind::Star, '/');
+            break;
+        }
         break;
-      case Star:
+      }
+      case Star: {
+        auto s1 = TokenKindClass[Peek(1)];
+        match (Kind, s1) {
+          group(TokenKind::Star, TokenKind::Star):
+            Kind = TokenKind::Pow;
+            goto start;
+          group(TokenKind::Star, TokenKind::Equals):
+            Console::Log("*=");
+            break;
+          default:
+            Console::Log('*');
+            break;
+        }
         break;
+      }
+      case Pow: {
+        auto s1 = TokenKindClass[Peek(1)];
+        match (Kind, s1) {
+          group(TokenKind::Pow, TokenKind::Equals):
+            Console::Log("**=");
+            Next(3);
+            break;
+          default:
+            Console::Log("**");
+            Next(2);
+            break;
+        }
+        break;
+      }
       case NewLine: // \n or \r
         Console::Log(Curr());
         SkipNewLine();
         goto start; // Does this so 2 function calls aren't wasted.
       case Char:
-        Console::Log(Colors::GREEN, "'", Next(1), "'", Colors::RESET);
+        Console::Log(Colors::GREEN, "'", Next(1), Colors::RESET);
+        if (Peek(1) == '\'')
+          Console::Log("'");
+        Next(1);
         break;
       case Whitespace: // Skip whitespace
         Console::Log(Curr());
@@ -816,36 +1064,30 @@ void Lexer::PrintNextToken() {
       case Dot: {
         auto s1 = TokenKindClass[Peek(1)];
         auto s2 = TokenKindClass[Peek(2)];
-        auto s3 = TokenKindClass[Peek(3)];
 
         match (Kind, s1) {
           group(TokenKind::Dot, TokenKind::Dot):
             s2 == TokenKind::Dot ?
-                       Console::Log("...") :
-                       Console::Log("..");
+                Next(3), Console::Log("...") :
+                (Next(2), Console::Log(".."));
             break;
           default:
             Console::Log(".");
+            Next(1);
             break;
         }
         break;
       }
-        // Cannot be generated by the TokenKind table, assigned after checks
+      // Cannot be generated by the TokenKind table, assigned after checks
       case EqualsEquals:
-      case Pow:
       case Boolean:
         UNREACHABLE;
         break;
       case Error:
-        Buffer = 0;
+        Buffer = nullptr;
         break;
       default:
-        //Console::Log(Curr());
         break;
     }
   }
 }
-
-
-
-
