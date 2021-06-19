@@ -12,9 +12,10 @@ Resources
 -----------------
 
 * [Download](#download)
+* [About](https://github.com/The-NextGen-Project/The-NextGen-Project#about)
+* [Introduction To The Language](#a-test-flight)
 * [r/Programming Languages Discord Channel](https://discord.gg/tft9Nw5jm6)
 * [Documentation](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
-* [About](https://github.com/The-NextGen-Project/The-NextGen-Project#about)
 * [Contributing](#contributing)
 * [License](#license)
 
@@ -46,7 +47,7 @@ fn fib(n) {
 }
 ```
 The language will be using advanced type-inference in order to limit the amount of static typing that is needed. Jet is by default, statically-typed, however, types are
-usually inferred by the langugage most of the time, and generate clean and easy to read code. This way we get to appeal to both those who like static typping and those that
+usually inferred by the langugage most of the time, and generate clean and easy to read code. This way we get to appeal to both those who like static typing and those that
 prefer mainly dynamic typing.
 
 ### Error Messages
@@ -56,7 +57,7 @@ is causing the error is invalid. For example, look at a lexer error message pert
 ![](https://github.com/The-NextGen-Project/jet/blob/main/.github/LexErrorExample1.png)
 
 The error message points out the initial error, points out the offending line and character, gives a potential solution, and explains
-why what the programmer wrote was invalid. These components identify the problem and give oppurtunities for a solution to help the 
+why what the programmer wrote was invalid. These components identify the problem and give opportunities for a solution to help the 
 programmer debug and fix their error. We took inspiration from both Rust and Elm to produce a hybrid error message type that 
 encapsulates all that the programmer needs to identify the problem and solve it.
 
