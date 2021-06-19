@@ -49,6 +49,11 @@ The language will be using advanced type-inference in order to limit the amount 
 usually inferred by the langugage most of the time, and generate clean and easy to read code. This way we get to appeal to both those who like static typping and those that
 prefer mainly dynamic typing.
 
+### Error Messages
+Jet has **amazing** error messages. Even for simple error, Jet makes sure that the programmer knows the error and why their code
+is causing the error is invalid. For example, look at a lexer error message of integer overflow:
+![](https://github.com/The-NextGen-Project/jet/blob/main/.github/LexError1.png)
+
 Progress
 ----------
 - [x] Lexer (with edge cases handled later)
