@@ -51,8 +51,23 @@ prefer mainly dynamic typing.
 
 ### Error Messages
 Jet has **amazing** error messages. Even for simple error, Jet makes sure that the programmer knows the error and why their code
-is causing the error is invalid. For example, look at a lexer error message of integer overflow:
-![](https://github.com/The-NextGen-Project/jet/blob/main/.github/LexError1.png)
+is causing the error is invalid. For example, look at a lexer error message pertaining to an **integer overflow**:
+
+![](https://github.com/The-NextGen-Project/jet/blob/main/.github/LexErrorExample1.png)
+
+The error message points out the initial error, points out the offending line and character, gives a potential solution, and explains
+why what the programmer wrote was invalid. These components identify the problem and give oppurtunities for a solution to help the 
+programmer debug and fix their error. We took inspiration from both Rust and Elm to produce a hybrid error message type that 
+encapsulates all that the programmer needs to identify the problem and solve it.
+
+Let's have a look at another example, for an **invalid string escape**:
+
+![](https://github.com/The-NextGen-Project/jet/blob/main/.github/LexErrorExample2.png)
+
+Beginners learning to program may not know what is valid in complicated escapes like a hexadecimal escape, therefore we cater to beginners
+offering exclusive and clear error messages. By telling the programmer what is directly valid, it prevents programmers to lookup documentation
+unless it is necessary to explain an error. 
+
 
 Progress
 ----------
