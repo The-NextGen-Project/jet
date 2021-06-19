@@ -3,12 +3,16 @@
 [![Linux](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Linux?label=Linux&style=for-the-badge&logo=github)]()
 [![Mac](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/MacOS?label=MacOS&style=for-the-badge&logo=github)]()
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
-#### Open Source Programming Language made by Open Source Developers for the Open Source Community. High Performance, Cross-Platform, and easy Integration.
+#### Open Source Programming Language made by Open Source Developers for the Open Source Community. High Performance, Cross-Platform, and easy language Integration.
+> **NOTE:** The language is in its early development stages. Progress and goals for the language will be updated accordingly on Github, be sure to look out for updates.
+> While quite a lot of syntax and features have been planned out, they are subject to rapid change and removal, please be considerate as the feedback we receive from the
+> community may influence some of our syntax. 
 
-Table of Contents
+Resources
 -----------------
 
 * [Download](#download)
+* [r/Programming Languages Discord Channel](https://discord.gg/tft9Nw5jm6)
 * [Documentation](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
 * [About](https://github.com/The-NextGen-Project/The-NextGen-Project#about)
 * [Contributing](#contributing)
@@ -25,6 +29,40 @@ cmake -DCMAKE_BUILD_TYPE=Release -GYourBuildGenerator
 make
 ```
 > **Note:** For building the project on windows, it can be done by simply building with MSVC or, if you have MinGW installed it will work with that C compiler as well. For setting up a build system that is fast, I reccommend using [Ninja](https://ninja-build.org/) which works on Windows, Linux, and Mac as a CMake generator.
+
+A Test Flight
+-------------
+Offering a little taste of the lang, here is some syntax. A hello world program is as follows:
+```zig
+print("Hello, World!")
+```
+Fibonacci Implemented in the lang would be as follows:
+```zig
+fn fib(n) {
+  return n.match {
+    0 or 1 => n
+    . => fib(n-1) + fib(n-2)
+  }
+}
+```
+The language will be using advanced type-inference in order to limit the amount of static typing that is needed. Jet is by default, statically-typed, however, types are
+usually inferred by the langugage most of the time, and generate clean and easy to read code. This way we get to appeal to both those who like static typping and those that
+prefer mainly dynamic typing.
+
+Progress
+----------
+- [x] Lexer (with edge cases handled later)
+- [ ] Parser
+- [ ] Semantic Analysis
+- [ ] Lower-AST
+- [ ] IR-Gen
+- [ ] IR-Optimization
+- [ ] Code Generation
+- [ ] C-Interop
+- [ ] Code Generation (JS)
+- [ ] Code Generation (WASM)
+- [ ] Standard Library
+- [ ] Python Integration
 
 Contributing
 -------------
