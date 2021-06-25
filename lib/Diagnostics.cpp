@@ -1,8 +1,80 @@
 #include <nextgen/jet/Diagnostics.h>
 #include <nextgen/jet/Lex/Lexer.h>
+#include <nextgen/jet/Parse/Parser.h>
 
 
 using namespace nextgen::jet;
+
+void Diagnostic::Build(LexError Error) {
+  SourceLine = GetNthLineOfBuffer(Error.Location.Line);
+  Console::Log(Colors::RED, "Error "
+                                "---------------------------------------------------------- ", FileName, ":",
+                    Error.Location.Line, ":", Error.Location
+                      .Column, "\n",
+                    Colors::RESET);
+  switch (Error.Error) {
+    case MalformedUTF8:
+      break;
+    case InvalidChar:
+      Console::Log("Invalid Char");
+      break;
+    case UnexpectedEOF:
+      Console::Log("EOF");
+      break;
+    case OutOfRange:
+      Console::Log("Out of Buffer Range");
+      break;
+    case Unreachable:
+      Console::Log("Unreachable");
+      break;
+    case IntegerOverflow:
+      ErrorIntegerOverflow(Error);
+      break;
+    case FloatingPointOverflow:
+      break;
+    case DigitOutOfRange:
+      ErrorDigitOutOfRange(Error);
+      break;
+    case MissingClosingDelim:
+      ErrorMissingClosingDelim(Error);
+      break;
+    case InvalidDot:
+      Console::Log("Invalid Dot");
+      break;
+    case InvalidNumberValue:
+      Console::Log("Invalid Number");
+      break;
+    case InvalidStringEscape:
+      ErrorInvalidStringEscape(Error);
+      break;
+    case InvalidUnicodeEscapeClose:
+
+      break;
+    case HexEscapeOutOfRange:
+      ErrorHexEscapeOutOfRange(Error);
+      break;
+    default:
+      UNREACHABLE;
+  }
+  Console::Log(Colors::RESET, "\n");
+}
+
+void Diagnostic::Build(ParseError Error) {
+  switch (Error.Error) {
+    case ReservedIdentifierAsVariableName:
+      break;
+    case UnexpectedExpression:
+      break;
+    case InvalidToken:
+      break;
+    case ExpectedToken:
+      break;
+    case MissingFunctionName:
+      break;
+    case MissingVariableName:
+      break;
+  }
+}
 
 nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
   bool Found = false;
@@ -10,24 +82,29 @@ nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
   const char *Copy = FileBuffer;
   const char *FoundPoint;
 
+  if (Nth == 1) {
+    return str {FileBuffer, BufferLength};
+  }
 
-  for (;;) {
+  for (auto I = 0; I < BufferLength; ++I) {
     if (*Copy == '\n') {
       if (Found) {
-        return str(Range<const char *>(FoundPoint, FileBuffer));
+        return str(Range<const char *>(FoundPoint, Copy));
       }
       Count++;
     }
-
     if (Count == Nth) {
-      if (Found) // Prevent Infinite Loop where buffer input is only 1 line long
-        return str {FileBuffer, BufferLength};
-      Found = true;
-      FoundPoint = Copy;
+      if (!Found) {
+        FoundPoint = Copy + 1;
+        Found = true;
+      }
     }
-
     Copy++;
   }
+
+  return str {FoundPoint, BufferLength};
+
+
 }
 
 
@@ -53,7 +130,24 @@ void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ",
                Colors::RESET, "Integer values must be less than ", UINTPTR_MAX,
                               ".\n",
-               Colors::RESET);
+               Colors::RESET, '\n');
+
+  Console::Log("An ", Colors::RED,
+               "Integer Overflow", Colors::RESET,
+               " occurs when a numeric literal's value ", Colors::BLUE,
+               "exceeds ", Colors::RESET,
+               "the limit bound by their computer. \n", Colors::YELLOW);
+# ifdef BIT32
+    Console::Log("Your computer is 32-Bit", Colors::RESET,
+                 " which has a limit of ",
+                 Colors::GREEN, UINTPTR_MAX, Colors::RESET, " but ",
+                 "your value exceeds that.");
+# else
+  Console::Log("Your computer is 64-Bit", Colors::RESET,
+                 " which has a limit of ",
+                 Colors::GREEN, UINTPTR_MAX, Colors::RESET, " but ",
+                 "your value exceeds that.");
+# endif
 }
 
 void Diagnostic::ErrorInvalidChar(LexError &Error) {
@@ -71,43 +165,40 @@ void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
   auto Line = std::to_string(Error.Location.Line);
   ErrorLexSetup(Line, "Digit does not match Integer Radix", Error);
 
-  constexpr char ValidDigits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+  AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ", Colors::RESET,
+          "The integer value you wrote was ",
+          Colors::YELLOW, "Base ", Error.Metadata[0], Colors::RESET,
+          " which accepts digits ");
 
-  AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ",
-          Colors::RESET, "Value started as Base ", Error.Metadata[0],
-          " but value encountered was Base ",
-          Error.Metadata[1], Colors::RESET, '\n');
-  AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
-          Colors::RESET);
-  Error.FailedToken.PrettyPrint();
-  Console::Log(Colors::GREEN, ValidDigits[0], Colors::RESET, ", ");
-  for (auto i = 1; i < Error.Metadata[0]; ++i) {
-    if (i % 4 == 0) {
-      Console::Log("\n");
-      // Align space
-      for (auto j = 0; j < Line.length() + 1; ++j) {
-        Console::Log(" ");
-      }
-      Console::Log("       ");
-    }
-    Error.FailedToken.PrettyPrint();
-    Console::Log(Colors::GREEN, ValidDigits[i], Colors::RESET);
-
-    if (i != Error.Metadata[0] - 1)
-      Console::Log(", ");
-
+  switch (Error.Metadata[0]) {
+    case 10:
+      Console::Log("[", Colors::YELLOW, "0-9", Colors::RESET, "]");
+      break;
+    case 16:
+      Console::Log(Colors::YELLOW, "0-9, a-f, and A-F", Colors::RESET,
+                   " not ", Colors::RED, "'", SourceLine[Error.Location.Column],
+                   "'",Colors::RESET, '\n');
+      break;
+    default:
+      UNREACHABLE;
   }
-  Console::Log('\n');
-  AddHint(Line, Colors::BLUE, "= ", Colors::YELLOW, "note: ",
-          Colors::RESET, "When using letters in numbers, casing does not "
-                         "matter");
+  AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
+          Colors::RESET, "Insert ");
+  Error.FailedToken.PrettyPrint();
 
-/*  Console::Log(Colors::RED, "_ <-- ", Colors::RESET, "[", Colors::GREEN, "'a'.."
-                                                                     ".'f' "
-                                                                  "or "
-                                                              "'A'.."
-                                                        ".'F'",
-               Colors::RESET, "]");*/
+  switch (Error.Metadata[0]) {
+    case 10:
+      Console::Log(Colors::RED, "_ <-- ", Colors::RESET, "[",
+                   Colors::YELLOW, "0-9", Colors::RESET, "]\n");
+      break;
+    case 16:
+      Console::Log(Colors::RED, "_ <-- ", Colors::RESET, "[",
+                   Colors::YELLOW, "0-9a-fA-F", Colors::RESET, "]\n");
+      break;
+    default:
+      UNREACHABLE;
+  }
+
 }
 
 void Diagnostic::ErrorHexEscapeOutOfRange(LexError &Error) {
@@ -116,40 +207,25 @@ void Diagnostic::ErrorHexEscapeOutOfRange(LexError &Error) {
   auto Line = std::to_string(Error.Location.Line);
   ErrorLexSetup(Line, "Digit is not Base 16", Error);
 
-  constexpr char ValidDigits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ",
           Colors::RESET, "Value started as Base 16"
                          " but value encountered was Base ",
           Error.Metadata[0], '\n');
 
   AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
-          Colors::RESET);
+          Colors::RESET, "Insert ");
   Error.FailedToken.PrettyPrint();
-  Console::Log(Colors::BLUE, ValidDigits[0], Colors::GREEN, '"',
-               Colors::RESET, ", ");
+  Console::Log(Colors::RED, "_ <-- ", Colors::RESET, "[",
+               Colors::YELLOW, "0-9a-fA-F", Colors::RESET, "]\n\n");
 
-  for (auto i = 1; i < 16; ++i) {
-    if (i % 4 == 0) {
-      Console::Log("\n");
-      // Align space
-      for (auto j = 0; j < Line.length() + 1; ++j) {
-        Console::Log(" ");
-      }
-      Console::Log("       ");
-    }
-    Error.FailedToken.PrettyPrint();
-    Console::Log(Colors::BLUE, ValidDigits[i], Colors::GREEN, '"',
-                 Colors::RESET);
-
-    if (i != Error.Metadata[0] - 1)
-      Console::Log(", ");
-  }
-
-  Console::Log('\n');
-  AddHint(Line, Colors::BLUE, "= ", Colors::YELLOW, "note: ",
-          Colors::RESET, "When using letters in numbers, casing does not "
-                         "matter");
+  Console::Log("Hex escapes turn", Colors::BLUE," 2 ", Colors::RESET,
+               "hexadecimal chars in to a single char; for "
+               "example:\n", Colors::GREEN, "\\x32 ", Colors::RESET,
+               "becomes the", Colors::GREEN, " <space>", Colors::RESET,
+               " character. Hex escapes accept digits", Colors::YELLOW,
+               " 0-9, a-f, and A-F ", Colors::RESET, "\nbut your value was "
+                                                     "none of "
+                                                    "these.");
 }
 
 void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
@@ -159,14 +235,25 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
   ErrorLexSetup(Line, "Not a String Escape", Error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
-          Colors::GREEN, R"(\a, \b, \v, \n, \r, \x[0-9a-fA-F]{2}, \u{[0-9a-fA-F]})");
+          Colors::GREEN,
+          R"(\a, \b, \v, \n, \r, \', \", \x[0-9a-fA-F]{2}, \u{[0-9a-fA-F]}{1,6})",
+          "\n\n");
+
+  Console::Log(Colors::BLUE, "String Escapes are used to escape "
+               "characters that ""are otherwise hard to display. \n",
+               Colors::RED, "'\\",
+               SourceLine[Error.Location.Column - 1], "'", Colors::BLUE,
+               " is not a valid string escape. "
+               "View the complete list in the language documentation: \n",
+               "https://github.com/The-NextGen-Project/jet/blob/main/LANG.md",
+               Colors::RESET);
+
 }
 
 void Diagnostic::ErrorLexSetup(std::string& Line, const char *Message,
                                LexError &Error) {
 
-  auto SourceLine = GetNthLineOfBuffer(Error.Location.Line);
-  auto LexPrint = Lexer::New(Memory, (const char *) SourceLine, FileName,
+  auto LexPrint = Lexer(Memory, (const char *) SourceLine, FileName,
                              SourceLine.size(),
                              LexMode::PrintingMode);
 
@@ -203,4 +290,5 @@ NG_INLINE void Diagnostic::AddHint(std::string &Line, Args&& ... Hint) {
 
   Console::Log(Hint..., Colors::RESET);
 }
+
 

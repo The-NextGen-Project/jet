@@ -1,180 +1,93 @@
-/* ----- Variables ----- */
-var x = 23; // Inferred
-var b: int = 324;  // Explicitly defined
+// Jet Features. All possible features (excluding most operators)
 
-var mut some_list = [1, 2, 3, 4, 5];
-some_list << 23;
-some_list << 4324; // some_list = [1, 2, 3, 4, 5, 23, 4324]
+var a = 23
+var b = "Hello"
+var c = 23.34
+var d = 23u 
+var e = 23.3432f
+var f = "Hello" * 2 // String Multiplication
+print(a) // 23
 
+var g: int = 23
+var h: str = "Hello"
+var i: float64 = 23.3432f
+var j: $(a) = 4324 // $(variable_name) <-- Typeof variable_name
+var k: &int = &a
+print(k) // 0x234fbf2 <-- Memory address of a
 
-/* ----- Constructs ----- */
-for i in 0..10 { // Prints "Hello" 10 times
-  print("Hello");
-}
-for n in some_list { // Print "Wow" 7 times
-  print("Wow");
-}
-var some_bool = false;
-var q = 0;
-while not some_bool {
-  print("Wow");
-  q++;
-  if q is 3  {
-    break;
+// List Declaration
+var li = [1, 2, 3, 4, 5, 6, 7, 8]
+
+var heap_allocation = box 23
+var match_init = a.match {
+  23 {
+    "Is 23"
+  }
+  . {
+    "Not 23"
   }
 }
 
-var nice = 232;
-if nice > 232 {
-// ...
-} elif nice < 232 {
-// ...
+if a == 23 {
+  var function_ptr = print
+  function_ptr("Hello, World!")
+} elif a * 2 == 33 {
+  var some_thing = 23
 } else {
-// ...
+  print("I have no friends!")
 }
 
-var my_var: int = 23;
+for 23 { // Prints Hi\n 23 times
+  print("Hi\n")
+}
 
-/* ----- Functions ----- */
+for x 0..10 { // Print Hi\n 10 times
+  print("Hi\n")
+}
+
+for n in li {
+  print(n, '\n')
+}
+
+for {
+  // Forever Run ...
+}
+
+print(li[2]) // 3
+print(li[2 .. 6]) // [3, 4, 5, 6]
+
+import module
+import "https://github.com/aboss123/jetproject" // Github Imports
+
+fn some_func(param1, param2, param3) { // Generic parameter types
+  print($(param1))
+}
+some_func(243, 1, 1) // int
+print($(some_func(222, "Hi", [1, 2, 3]))) // void
 
 
-fn[T, V] my_func(v: T, d: T) {
-  wow.foo();
-  if ok {
-    print("Hi");
+fn im_void() {
+  print("This is actual 'console.log'");
+}
+
+LinkedList : struct {
+  next: box LinkedList
+}
+
+LinkedList : struct[T](value: T, next: LinkedList? = None)
+LinkedList[T].prepend = fn(self, value: T) {
+  return LinkedList(value, self)
+}
+LinkedList[T].size = fn(self) {
+  match self.next {
+    None => 1,
+    (next) => next.size() + 1
   }
 }
-
-var my_optional_var: int? = None;
-
-
-fn another_func(i: int, maybe: int?) { // Inferred return type
- var should_be_int: int = maybe?; // Unwrap optional value syntax
- return should_be_int;
-}
-
-fn explicit(int a, int b) str {
-  return str(a) + b; // Casting
-}
-
-fn explicit(a int, b str) str {
-  return str(a) + b; // Casting
-}
-
-fn restrict(b bool, accept union(str, int, float64)) { // Union parameter types are values of the given types
-  if (b) {
-    print(accept);
+LinkedList[T].stringify = fn(self) str {
+  var fmt = match self.next {
+    None => str(self.value),
+    next => str(self.value) + next.stringify()
   }
-}
-
-restrict(false, "Hello");
-restrict(true, 23);
-restrict(false, 23f);
-
-
-/* ----- Structs and Enums ----- */
-Dataclass : struct {
-  a : int;
-  s : str;
-  d : float64;
-}
-
-Map : struct[K, V] {
-  values: (K, V)[]; // Array of tuple of type (K, V). Where K and V are generic
-}
-
-TokenType : enum {
-  LPAREN,
-  RPAREN,
-  INTEGER
-}
-
-RustEnum : enum { // Capture data values in enums
-  Cool(str),
-  Integer(int),
-  SomeStruct(Dataclass)
-}
-
-Result : enum[T, E] { // Generic Enum
-  Ok(T),
-  Err(E)
-}
-
-Generic!(int)
-Generic<int>
-Generic[int]
-
-generic![int: Equatable] // <-- Good!
-
-IHaveFunctions : struct {
- v List![int];
-
-}
-
-IHaveFunctions.foo = fn() {
-  return 23;
-}
-
-IHaveFunctions.modify = fn(self, a, b) {
-   self.v << a
-}
-
-str.to_int = fn() {
-  // do something
-}
-
-var a = SomeStruct {}
-
-impl IHaveFunctions {
-
- fn foo() {
-
- }
-
- fn wow(self) {
-   self.v = 23;
- }
- fn some_static() IHaveFunctions {
-   IHaveFunctions {
-    v: 23
-   }
- }
-}
-
-
-
-// Initialize Structs
-var ihf = IHaveFunctions { v: 0 };
-ihf.wow();
-
-
-// Call Static Functions
-var CONST = IHaveFunctions.some_static();
-
-// Grouped Enum Values
-var decl = RustEnum.Integer(232);
-
-fn parse_some_html_file() HTMLRoot {
-  return html {
-    <p>hello</p>
-  }
-}
-
-fn aa() {
-    gwion {
-
-    }
-}
-import mod
-
-
-
-
-#[lang="gwion"]
-macro gwion {
-  html(stream: token[]) {
-    // Parse HTML and do Stuff
-  }
-
-  // $id, $path, $
+  print(fmt)
 }

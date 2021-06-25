@@ -16,9 +16,20 @@ add_executable(tests
         # Lexical Analysis
         ../lib/Lex/Lexer.cpp
 
+        # Parsing
+        ../lib/Parse/Parser.cpp
 
+        ################################
+
+        # Support
         Support/ListTest.cpp
+
+        # Lex
         Lex/LexTest.cpp
+
+        # Parse
+        Parse/ParseTest.cpp
+
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)

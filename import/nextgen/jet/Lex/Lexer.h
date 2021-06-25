@@ -2,6 +2,7 @@
 # define NEXTGEN_LEXER_H
 
 # include "Token.h"
+# include "../Diagnostics.h"
 
 namespace nextgen { namespace jet { using namespace nextgen::core;
 
@@ -43,86 +44,6 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     int Metadata[5];
   };
 
-    class Diagnostic {
-    private:
-      const char *FileBuffer;
-      const char *FileName;
-      ArenaSegment *Memory;
-      size_t BufferLength;
-    public:
-      Diagnostic() = default;
-
-      Diagnostic(ArenaSegment *Mem, const char *Buffer, size_t BufLen, const
-      char *FileName)
-        : FileBuffer(Buffer), FileName(FileName), Memory(Mem), BufferLength(BufLen) {}
-
-      /// Build Error Message for a Lexing Error
-      NG_INLINE void Build(LexError Error) {
-        Console::Log(Colors::RED, "Error "
-                                  "---------------------------------------------------------- ", FileName, ":",
-                     Error.Location.Line, ":", Error.Location
-                       .Column, "\n",
-                     Colors::RESET);
-        switch (Error.Error) {
-          case MalformedUTF8:
-            break;
-          case InvalidChar:
-            break;
-          case UnexpectedEOF:
-            break;
-          case OutOfRange:
-            break;
-          case Unreachable:
-            break;
-          case IntegerOverflow:
-            ErrorIntegerOverflow(Error);
-            break;
-          case FloatingPointOverflow:
-            break;
-          case DigitOutOfRange:
-            ErrorDigitOutOfRange(Error);
-            break;
-          case MissingClosingDelim:
-            ErrorMissingClosingDelim(Error);
-            break;
-          case InvalidDot:
-            break;
-          case InvalidNumberValue:
-            break;
-          case InvalidStringEscape:
-            ErrorInvalidStringEscape(Error);
-            break;
-          case InvalidUnicodeEscapeClose:
-            break;
-          case HexEscapeOutOfRange:
-            ErrorHexEscapeOutOfRange(Error);
-            break;
-          default:
-            UNREACHABLE;
-        }
-        Console::Log(Colors::RESET, "\n");
-      }
-
-    private:
-      // Helpers
-      str GetNthLineOfBuffer(size_t Nth);
-      void ErrorLexSetup(std::string &Line, const char *Message, LexError &Error);
-
-      template<typename ... Args> void AddHint
-                      (std::string &Line, Args&& ...Hint);
-
-
-      // Lex Errors
-      void ErrorIntegerOverflow(LexError &Error);
-      void ErrorDigitOutOfRange(LexError &Error);
-      void ErrorInvalidChar(LexError &Error);
-      void ErrorMalformedUTF8(LexError &Error);
-      void ErrorMissingClosingDelim(LexError &Error);
-      void ErrorHexEscapeOutOfRange(LexError &Error);
-      void ErrorInvalidStringEscape(LexError &Error);
-    };
-
-
   class Lexer {
     using Allocator = mem::ArenaSegment;
     using File = char;
@@ -139,21 +60,21 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
     Diagnostic ErrorBuilder;
 
+    bool Fatal = false; // Error Thrown
 
   public:
 
-    /// Initialization of values through Lexer::New
-    static auto New(Allocator *Mem, const File *Buffer, const char *FileName,
-                    const size_t BufferLength,
-                    LexMode Mode = LexMode::TokenMode) -> Lexer {
-      Lexer Instance = Lexer(Mem, Buffer, BufferLength);
-      Instance.Mode = Mode;
-      Instance.ErrorBuilder = Diagnostic(Mem, Buffer, BufferLength, FileName);
-      return Instance;
+    friend class Parser;
+
+    Lexer(Allocator *Mem, const File *Buffer, const char *FileName, 
+                                              const size_t BufSize,
+                                              LexMode Mode = LexMode::TokenMode)
+    : Memory(Mem), Buffer(Buffer), BufferSize(BufSize), Mode(Mode) {
+      ErrorBuilder = Diagnostic(Mem, Buffer, BufSize, FileName);
     }
 
     /// Get the next valid Token in the File stream
-    auto NextToken() -> Result<Token, LexError>;
+    auto NextToken() -> Token;
 
     /// Print the values of token with Syntax Highlighting
     void PrintNextToken();
@@ -162,14 +83,15 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     /// and count it as fatal. Compiler cannot proceed without
     /// lexing phase being valid.
     NG_INLINE auto Lex() -> Vec<Token> {
-      Vec<Token> Tokens = Vec<Token>::New();
+      auto Tokens = Vec<Token>{};
       do {
         auto Instance = NextToken();
-        if (Instance.IsErr()) {
-          ErrorBuilder.Build(Instance.Error().Unwrap());
-        }
-        Tokens.Add(Instance.Unwrap());
-      } while (Buffer);
+        Tokens.Add(Instance);
+      } while (!Fatal && BufferPosition < BufferSize);
+
+      // Insert EOFToken for Out of Range Values
+      Tokens.Add(Token("\n", {CurrentLine, CurrentColumn},
+                       TokenKind::EOFToken));
       return Tokens;
     }
 
@@ -197,13 +119,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     NG_INLINE auto Next(size_t NChars) -> char {
 
       if (BufferPosition >= BufferSize) {
-
-        // TODO: Get Diagnostics Working in Panic Situation
-        LexError Error = LexError {
-          LexErrorType::OutOfRange,
-          { CurrentLine, CurrentColumn }
-        };
-
+        Fatal = true;
         return '\0';
       }
 
@@ -215,16 +131,15 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
   private:
 
-    /// Initializer Shadow Constructor
-    Lexer(Allocator *Mem, const File *Buffer, const size_t BufSize)
-    : Memory(Mem), Buffer(Buffer), BufferSize(BufSize) {}
-
     /// Matches a new line encountered in the buffer and handles
     /// them appropriately depending on \n or \r.
     NG_INLINE void SkipNewLine() {
       CurrentLine++;
+      Next(1);
+      CurrentColumn = 1;
+
       char Current = *Buffer;
-      char NextCh  = Next(1);
+      char NextCh  = Peek(1);
       match(Current, NextCh) {
         group('\n', '\r'):
         group ('\r', '\n'): {

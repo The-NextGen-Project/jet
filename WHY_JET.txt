@@ -1,0 +1,68 @@
+Out of all the possible languages that one could be dealing with, why Jet?
+--------------------------------------------------------------------------
+
+Absolutely phenomenal error messages. The one thing we made sure to do was
+ensure that the compiler was not lacking in what we consider one of the most
+important parts of a language. One might think that a language like Rust also
+has good error messages too, so why this one? What makes our errors special?
+
+Good Question. Consider this: Most languages don't spend the time on each individual
+error, rather, directing to `--explain` like in Rust, or to simply visit the language's
+documentation. We like to explain most of our errors directly in the error messages.
+When writing our messages, we made it clear to the HUMAN that we are addressing.
+For example, look at a LEXER error message for integer literal overflow:
+
+Error ---------------------------------------------------------- src/test.jet:1:30
+Integer Value Too Large
+
+1 |      var test = 0xffffffffffffffffffaaaaaaa 
+                    ^^^^^^^^^^^^^^^^^^_ <-- Overflow Occurs Here
+
+  = hint: Integer values must be less than 18446744073709551615.
+
+An Integer Overflow occurs when a numeric literal's value exceeds the limit bound by their computer.
+Your computer is 64-Bit which has a limit of 18446744073709551615 but your value exceeds that.
+
+This error message is a simple and clear error message. Pointing out the offending line with a hint 
+and a proper explanation addressing what the error is and why the code written is not acceptable to
+the compiler. I have yet to see any compiler with such a personalized and well-written error, (other than of course Elm).
+
+We take pride in being able to address issues and fix issues easily and with as much clarity as possible.
+And a bonus! Rendered code is syntax highlighted so that the user can easily read their code.
+
+Portability and Performance
+----------------------------
+Some might say that C is a true portable compiled language and we say, you're probably right.
+We would rather acknowledge C rather than ridicule it for its shortcomings, because there are quite a few.
+Despite this, generating and targetting C that is compiled quickly, and that is easily embeddable with Jet
+is a priority. Many foundations for graphics, networking, and other essential libraries are written in C.
+
+The Python Interpreter is also written in C and with C interop we will have the chance to be able to integrate
+with other languages as well. Python is so portable because it is written in C, and because of this, a generated
+C, or targetted C-platform backend is in the plans for Jet.
+
+Here are the few languages that Jet hopes to target:
+C, WASM, and JavaScript.
+
+Wait, what about performance? Isn't JavaScript slow? 
+Well yes, JavaScript is slow, but it expands the realm of Jet into Web Development.
+And don't worry, the compiler will know when to use lower-level code when necessary
+when using JavaScript functions, and to generate and interact with the DOM.
+
+Please don't be making false promises around a seemingly amazing language. Well yes,
+we understand that some of the goals here are difficult to reach, but we are making progress
+to realize our goals. We want to be as clear as possible with the community of programmers that 
+what we are doing is worth having done, and that is why encourage outside contributions and ability
+to communicate our progress.
+
+This is just only the BEGINNING and we can get started faster and better with help of contributions.
+We are making active design and devloping decisions with some of the brightest people in Programming
+Language Design, and take public criticism very seriously in how we develop the language. The goal is 
+to have C-Backend Generation maturity by June 22 2023 
+(meaning that library integration, networking, and web server design is implemented) with a baseline
+standard library that is developed. We hope that you will take part in something that could benefit 
+everyone as uniting applications together to be easily integrated in one language is what the Next
+Generation Project is about.
+
+Thanks,
+Ashish (Founder of Next Generation Project)

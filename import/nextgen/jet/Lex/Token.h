@@ -14,6 +14,7 @@ namespace nextgen { namespace jet {
     Assignment   = 1 << 3,
     Unsigned     = 1 << 4,
     Keyword      = 1 << 5,
+    Literal      = 1 << 6,
   };
 
   enum TokenKind {
@@ -81,6 +82,23 @@ namespace nextgen { namespace jet {
     Percent,// %
     Char,   // \'
     Dot,    // .
+    At,     // @
+    SemiColon, // ;
+    ExclamationPoint, // !
+    Comma,
+
+    PlusEquals,
+    MinusEquals,
+    DivEquals,
+    PowEquals,
+    MulEquals,
+    GreaterThanEquals,
+    LessThanEquals,
+    LeftShiftEquals,
+    RightShiftEquals,
+    ANDEquals,
+    XOREquals,
+    OREquals,
 
 
     EqualsEquals, // ==
@@ -93,7 +111,8 @@ namespace nextgen { namespace jet {
     PlusPlus,     // ++
     MinusMinus,   // --
 
-    Error
+    Error,
+    EOFToken
   };
 
   struct TokenTraits {
@@ -119,11 +138,6 @@ namespace nextgen { namespace jet {
       };
     };
 
-
-    struct ErrorInfo {
-      int metadata[5];
-    };
-
   };
 
   class Token {
@@ -142,27 +156,18 @@ namespace nextgen { namespace jet {
     /// Default constructor is used to avoid any single initialization conflicts
     Token() = default;
 
-    /// Set literal token value and generate correct Token Instance
     template<typename T>
-    static auto New(const nextgen::str &ID, SourceLocation Location, T Value,
+    Token(const nextgen::str &ID, SourceLocation Location, T Value,
          TokenKind Kind,
          TokenClassification Flags = static_cast<TokenClassification>(0))
-      -> Token {
-
-      Token Instance = Token(ID, Location, Flags);
-      Instance.setValue(Value);
-      Instance.setKind(Kind);
-      return Instance;
+      : ID(ID),  Flags(Flags), Location(Location) {
+        setKind(Kind);
+        setValue(Value);
     }
 
-    /// Trivial Token creation for Failed Tokens Built during lexing
-    static auto New(nextgen::str ID, SourceLocation Loc, TokenKind Kind) ->
-    Token {
-      Token Instance;
-      Instance.setKind(Kind);
-      Instance.ID = ID;
-      Instance.Location = Loc;
-      return Instance;
+    Token(nextgen::str ID, SourceLocation Loc, TokenKind Kind) 
+    : ID(ID), Location(Loc) {
+      setKind(Kind);
     }
 
     /// Get the token's length
@@ -188,8 +193,17 @@ namespace nextgen { namespace jet {
     }
 
     /// Get the token type
-    NG_AINLINE auto getKind() -> TokenKind {
+    NG_AINLINE auto getKind() const -> TokenKind {
       return InternalValue.Kind;
+    }
+
+    /// Determine whether the token is a keyword
+    NG_AINLINE bool isKeyword() const {
+      return Flags & TokenClassification::Keyword;
+    }
+
+    NG_INLINE bool isLiteral() const {
+      return Flags & TokenClassification::Literal;
     }
 
     /// Retrieve Source Location of the Token (Source Range)
@@ -210,11 +224,6 @@ namespace nextgen { namespace jet {
       T v;
       ValueSetAndGet(v);
       return v;
-    }
-
-    /// Determine whether the token is a given Keyword or Typename
-    NG_AINLINE bool isKeyword() {
-      return Flags & TokenClassification::Keyword;
     }
 
     /// Pretty Print Token to the Screen. This usually works nicely for
@@ -250,11 +259,6 @@ namespace nextgen { namespace jet {
 
     bool assignment = false; // (ie: +=, -=, *=)
   private:
-
-    /// Private initialization constructor
-    Token(const nextgen::str &ID, SourceLocation Location,
-          TokenClassification Flags)
-      : ID(ID), Flags(Flags), Location(Location) {}
 
     // Generic Type Inference on Inferred Value
 

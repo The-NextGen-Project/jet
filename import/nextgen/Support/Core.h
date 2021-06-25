@@ -118,7 +118,7 @@ namespace nextgen { namespace core {
       return Result(Err);
     }
 
-    T Unwrap() {
+    NG_INLINE T Unwrap() {
       ASSERT(is, "Unwrapped Error Result!");
       return Ok;
     }

@@ -5,8 +5,6 @@
 
 namespace nextgen { namespace mem { using namespace nextgen::core;
 
-
-
   // STD NAMING
   namespace os { // System allocators/libc
 
@@ -34,88 +32,60 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
 
   template<typename T>
-  struct Vec {
-    using Self = Vec;
+  class Vec {
 
-    static auto Replace(const Vec<T> &vec) -> Self {
-      auto x = Vec<T> {};
-      x.len = vec.len;
-      x.cap = vec.cap;
-      x.ptr.swap((Box<T> &) std::move(vec.ptr));
-      return x;
+    // Default
+    Box<T> Pointer  = Box<T>((T*) os::calloc(1, sizeof(T)));
+    size_t Length   = 0;
+    size_t Capacity = 1;
+
+  public:
+    Vec() = default;
+    explicit Vec(size_t Cap) : Capacity(Cap) {
+      Pointer = Box<T>((T*) os::calloc(Cap, sizeof(T)));
     }
-
-    static auto Copy(const Vec<T> &vec) -> Self {
-      T *raw = vec.ptr.get();
-      size_t len = vec.Size();
-      return Clone(raw, len);
-    }
-
-    static auto Clone(T *raw, size_t len) -> Vec<T> {
-      auto vec = Vec<T>::WithCapacity(len);
-      for (auto i = 0; i < len; ++i)
-        vec.Add(raw[i]);
-      return vec;
-    }
-
-    static auto New() -> Self {
-      return Vec {
-        Box<T>((T*)os::calloc(1, sizeof(T))),
-        0,
-        1
-      };
-    }
-
-    static auto WithCapacity(size_t capacity) -> Self {
-      auto vec = Vec {};
-      vec.ptr = Box<T>((T*)os::calloc(capacity, sizeof(T)));
-      vec.len = 0;
-      vec.cap = capacity;
-      return vec;
-    }
-
 
     NG_INLINE T *IntoRaw() {
-      return ptr.get();
+      return Pointer.get();
     }
 
     void Add(T elem) {
-      if (len + 1 > cap) {
-        cap *= 2;
-        auto new_ptr = (T *) os::realloc(IntoRaw(), sizeof(T) * cap);
-        ptr.release();
-        ptr.reset(new_ptr);
+      if (Length + 1 > Capacity) {
+        Capacity *= 2;
+        auto NewPtr = (T *) os::realloc(IntoRaw(), sizeof(T) * Capacity);
+        Pointer.release();
+        Pointer.reset(NewPtr);
       }
-      IntoRaw()[len++] = elem;
+      IntoRaw()[Length++] = elem;
     }
 
     void Pop() {
-      ASSERT(len >= 1, "Invalid List Pop.");
-      return IntoRaw()[--len];
+      ASSERT(Length >= 1, "Invalid List Pop.");
+      return IntoRaw()[--Length];
     }
 
     NG_INLINE void Clear() {
-      len = 0;
-      ptr.reset();
+      Length = 0;
+      Pointer.reset();
     }
 
     NG_AINLINE auto Size() -> size_t const {
-      return len;
+      return Length;
     }
 
-    NG_AINLINE auto Capacity() -> size_t const {
-      return cap;
+    NG_AINLINE auto Cap() -> size_t const {
+      return Capacity;
     }
 
-    NG_AINLINE auto operator[](size_t index) -> T {
-      ASSERT(index < UINTPTR_MAX, "Outside Index Range");
-      return IntoRaw()[index];
+    NG_AINLINE auto operator[](size_t Index) -> T* {
+      ASSERT(Index < UINTPTR_MAX, "Outside Index Range");
+      return IntoRaw() + Index;
     }
 
-    Box<T> ptr;
-
-    size_t len;
-    size_t cap;
+    NG_AINLINE auto At(size_t Index) -> T {
+      ASSERT(Index < UINTPTR_MAX, "Outside Index Range");
+      return IntoRaw()[Index];
+    }
   };
 
     struct ArenaSegment  {

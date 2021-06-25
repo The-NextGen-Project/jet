@@ -26,4 +26,9 @@ add_executable(jet main.cpp
 
         # Lexical Analysis
         lib/Lex/Lexer.cpp
-        import/nextgen/jet/Diagnostics.h lib/Diagnostics.cpp)
+        lib/Diagnostics.cpp
+
+        # Parsing
+        lib/Parse/Parser.cpp
+
+        )

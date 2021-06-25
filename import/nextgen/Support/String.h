@@ -70,8 +70,6 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       }
     }
 
-
-
     [[nodiscard]]
     NG_INLINE size_t size() const { return len; }
 

@@ -76,6 +76,7 @@ typedef __int8 int8_t;
 #   include <cstring>
 #   include <unordered_set>
 #   include <memory>
+#   include <array>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32
@@ -89,16 +90,12 @@ typedef __int8 int8_t;
 #           error "This Compiler Does not have this detection"
 #       endif
 #   endif
-#   if _WIN32 || _WIN64 /* Only windows has this here because MSVC sometimes does not have stdint.h */
-#       if _WIN64
-#           ifndef BIT32
-#               define BIT32
-#           endif
-#       else
-#           ifndef BIT64
-#               define BIT64
-#           endif
-#   endif
+#   if !defined(BIT32) && !defined(BIT64)
+#     ifdef _WIN64 /* Only windows has this here because MSVC sometimes does not have stdint.h */
+        define BIT64
+#     else
+#       define BIT32
+#     endif
 #   endif
 #   if defined(BIT32)
 #       define FNV_PRIME 16777619u
