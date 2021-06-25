@@ -37,7 +37,7 @@ Current Status: **WIP**
 ### Type Annotations
 | Annotation     | Description |
 | -------------  | ------------- |
-| `^`            | Designates a type as a smart pointer (a little more into that later).  |
+| `box`          | Designates a type as smart pointer value |
 | `*`            | Type is a pointer. |
 | `?`            | Optional type. Either None or the value. |
 | `&`            | Memory reference to the location of an object (or a pass by reference). |
@@ -59,7 +59,7 @@ Current Status: **WIP**
 | `~`            | Bitwise Not and Concat. |
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
-| `??`           | Value / Operation action. |
+| `??`           | Then operator |
 > **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
 > in the future, but the list is not likely to change much at all.
 
@@ -72,7 +72,7 @@ Current Status: **Planned**
 
 Variables
 ---------
-Current Status: **WIP**
+Current Status: **Almost Done**
 
 The programming language is gradually typed. Static typing is only required when the compiler cannot infer the type.
 Variables may be declared in two different ways:
@@ -85,7 +85,7 @@ interact with that variable.
 ```zig
 var cant_change_me = 2324;
 cant_change_me = 24354; // Compiler error!
-mut var change_me = 3342;
+mut change_me = 3342;
 change_me = 23424; // Ok
 ```
 Custom initialization is specified in with different primitive datatypes (ie: lists and tuples). Other than these two, the
@@ -154,7 +154,7 @@ languages.
 ### Function Declaration
 Current Status: **WIP**
 ```zig
-fn my_func(a int, b int, c str) {
+fn my_func(a: int, b: int, c: str) {
 ...
 }
 ```
@@ -162,17 +162,8 @@ Parameters are ordered in the format of VariableName -> Typename. A variable of 
 written as `name str`. For those familiar with Golang, it follows a similar naming convention. Generic functions are also 
 supported:
 ```zig
-fn generics(a?, b?, c int) {
+fn generics(a, b) {
  ...
-}
-```
-The `?` after an identifier that is not a type declares that the value has an anonymous type (generic type / value). One thing
-you may consider is how are functions type-checked or function checked. An example of a scenario in which a custom struct value is
-passed into a generic parameter and calls the function `foo`:
-```zig
-fn test(a?) {
-  a.foo(); // A is guranteed to have the function foo with no parameters. 
-  var x = a.bar(23); // This DOES NOT result in a compile time error because the rest of the function may guarantee that this value is legit.
 }
 ```
 Generic function parameters have anonymous traits bounded to them which means that their functions and generated code is guarnteed to be valid
@@ -180,17 +171,32 @@ otherwise a compile-time error will be thrown otherwise. This allows for a mix o
 generalized for similar actions. To make it easier for anonymous trait building, it is best for the programmer to statically define their variables
 to make it easier for the compiler.
 
+### Default Values
+```zig
+fn default_values(a: int = 0xffff, b: str) {
+...
+}
+```
+Default values allow for flexibility in programming, especially when you want to handle a case without passing in a parameter. Currently
+it is not planned to have default values for parameters that don't have their type explicitely stated.
+
 ### Lambdas
 Current Status: **Planned**
 
 Lambdas are small anonymous functions that can be passed in as callbacks into functions to be called. They are generally declared as a parameters
 by the following method:
 ```zig
-fn func(lambda fn(int) -> int) {
+fn func(lambda: fn(int) -> int) {
   lambda(23); // Calling the function
 }
 ```
-You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended.
+You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended. An Example
+for this function call may be (in reference to the above example):
+```zig
+func(|x| => {
+  return x * x
+})
+```
 
 Modules
 --------
