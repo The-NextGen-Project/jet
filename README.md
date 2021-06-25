@@ -1,4 +1,4 @@
-![Jet](https://media.discordapp.net/attachments/843628427260329994/858031284014022666/JETV4Scaled.png)
+![Jet](https://github.com/The-NextGen-Project/jet/blob/main/.github/JETV4Large3.png)
 [![GitHub license](https://img.shields.io/github/license/The-NextGen-Project/jet?color=%2320ba37&label=License&logo=%2320ba37&logoColor=%2320ba37&style=for-the-badge)](https://github.com/The-NextGen-Project/jet/blob/main/LICENSE) 
 [![Linux](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Linux?label=Linux&style=for-the-badge&logo=github)]()
 [![Mac](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/MacOS?label=MacOS&style=for-the-badge&logo=github)]()
