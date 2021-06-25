@@ -3,7 +3,7 @@
 [![Linux](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Linux?label=Linux&style=for-the-badge&logo=github)]()
 [![Mac](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/MacOS?label=MacOS&style=for-the-badge&logo=github)]()
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
-#### Open Source Programming Language made by Open Source Developers for the Open Source Community. High Performance, Cross-Platform, and easy language Integration.
+#### Fast Language for Developing Consistent Native, Mobile App, and Web Applications.
 > **NOTE:** The language is in its early development stages. Progress and goals for the language will be updated accordingly on Github, be sure to look out for updates.
 > While quite a lot of syntax and features have been planned out, they are subject to rapid change and removal, please be considerate as the feedback we receive from the
 > community may influence some of our syntax. 
@@ -12,11 +12,11 @@ Resources
 -----------------
 
 * [Download](#download)
-* [About](https://github.com/The-NextGen-Project/The-NextGen-Project#about)
 * [Introduction To The Language](#a-test-flight)
-* [r/Programming Languages Discord Channel](https://discord.gg/tft9Nw5jm6)
 * [Documentation](https://github.com/The-NextGen-Project/jet/blob/main/LANG.md)
 * [Contributing](#contributing)
+* [Discord Server](https://discord.gg/8cnuzFxZGx)
+* [r/Programming Languages Discord Channel](https://discord.gg/tft9Nw5jm6)
 * [License](#license)
 
 Download 
