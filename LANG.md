@@ -29,9 +29,8 @@ Current Status: **WIP**
 | `float64`     | 64 bit decimal value. |
 | `bool`        | Boolean Value: true or false.  |
 | `fn(Arg Types...) -> Ret`       | Function Lambda.   |
-| `utf8`        | A valid utf8 character. |
 | `char`        | A 1 byte character. |
-| `str`         | Alias for `[utf8]` |
+| `str`         | Array of characters |
 | `None`        | Optional value for `None` |
 
 ### Type Annotations
@@ -60,8 +59,6 @@ Current Status: **WIP**
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
 | `??`           | Then operator |
-> **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
-> in the future, but the list is not likely to change much at all.
 
 
 ### Operator Overloading
@@ -98,8 +95,8 @@ Current Status: **WIP**
 
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
-```js
-var list = [1, 2, 3, 4, 5]; // This by default is a dynamic array unless specefied like below
+```zig
+mut list = [1, 2, 3, 4, 5]; // Can now add values to the list
 var fixed: [5,int] = [1, 2, 3, 4, 5];
 ```
 
