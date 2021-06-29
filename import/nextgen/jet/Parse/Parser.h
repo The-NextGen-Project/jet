@@ -14,6 +14,9 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     MissingFunctionName,
     MissingVariableName,
 
+    ExpectedIdentifierForFunctionParameter,
+    ExpectedIdentiierForStructProperty,
+
     MissingClosingParenthesis,
     MissingClosingCurlyBrace
   };
@@ -64,9 +67,20 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     auto ParseExpression(int PreviousBinding = -1) -> SyntaxExpression*;
     auto MatchExpression() -> SyntaxExpression*;
 
-    auto ParseValueType() -> SyntaxType;
-    auto ParseVariableDecl() -> SyntaxExpression*;
-    auto ParseIfStatement() -> SyntaxExpression*;
+    // ========= Parsing Specifics ==========
+
+    auto ParseValueType()      -> Option<SyntaxType>;
+    auto ParseFunctionParam()  -> Vec<SyntaxFunctionParameter>;
+    auto ParseVariableDecl()   -> SyntaxExpression*;
+    auto ParseFunctionDecl()   -> SyntaxExpression*;
+    auto ParseStructDecl()     -> SyntaxExpression*;
+    auto ParseIfStatement()    -> SyntaxExpression*;
+    auto ParseForStatement()   -> SyntaxExpression*;
+    auto ParseMatchStatement() -> SyntaxExpression*;
+    auto ParseFunctionCall()   -> SyntaxExpression*;
+
+    auto ParseBlock() -> SyntaxBlock;
+
 
     /// Lookahead 'NTok' amount of times in the list
     auto Peek(size_t NTok) -> Token*;

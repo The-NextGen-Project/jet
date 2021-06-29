@@ -22,6 +22,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
         os::free(ptr);
       }
     };
+
   }
 
   template<typename T>
@@ -35,38 +36,40 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
   class Vec {
 
     // Default
-    Box<T> Pointer  = Box<T>((T*) os::calloc(1, sizeof(T)));
+    T *Pointer  = ((T*) os::calloc(1, sizeof(T)));
     size_t Length   = 0;
     size_t Capacity = 1;
 
   public:
     Vec() = default;
     explicit Vec(size_t Cap) : Capacity(Cap) {
-      Pointer = Box<T>((T*) os::calloc(Cap, sizeof(T)));
+      Pointer = ((T*) os::calloc(Cap, sizeof(T)));
     }
 
     NG_INLINE T *IntoRaw() {
-      return Pointer.get();
+      return Pointer;
     }
 
     void Add(T elem) {
       if (Length + 1 > Capacity) {
         Capacity *= 2;
-        auto NewPtr = (T *) os::realloc(IntoRaw(), sizeof(T) * Capacity);
-        Pointer.release();
-        Pointer.reset(NewPtr);
+        Pointer = (T*) os::realloc(IntoRaw(), sizeof(T) * Capacity);
       }
-      IntoRaw()[Length++] = elem;
+      Pointer[Length++] = elem;
     }
 
     void Pop() {
       ASSERT(Length >= 1, "Invalid List Pop.");
-      return IntoRaw()[--Length];
+      return Pointer[--Length];
+    }
+
+    bool Empty() {
+      return Length == 0;
     }
 
     NG_INLINE void Clear() {
       Length = 0;
-      Pointer.reset();
+      os::free(Pointer);
     }
 
     NG_AINLINE auto Size() -> size_t const {
@@ -77,14 +80,18 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       return Capacity;
     }
 
+    NG_AINLINE auto GetPointer() -> T* const {
+      return Pointer;
+    }
+
     NG_AINLINE auto operator[](size_t Index) -> T* {
       ASSERT(Index < UINTPTR_MAX, "Outside Index Range");
-      return IntoRaw() + Index;
+      return Pointer + Index;
     }
 
     NG_AINLINE auto At(size_t Index) -> T {
       ASSERT(Index < UINTPTR_MAX, "Outside Index Range");
-      return IntoRaw()[Index];
+      return Pointer[Index];
     }
   };
 
@@ -103,11 +110,13 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       template<typename T = void>
       NG_INLINE auto Next(size_t allocation_size) -> T* {
 
+        auto Change = sizeof(T) * allocation_size;
+
         if (allocation_size == 0) {
           return (T*) nullptr;
         }
 
-        if (allocation_size + Offset >= size) {
+        if (Change + Offset >= size) {
           if (NextSegment == nullptr) {
             NextSegment = (ArenaSegment*) os::malloc(sizeof(ArenaSegment));
             *NextSegment = ArenaSegment::New((ArenaSegment*) os::malloc(sizeof(ArenaSegment)));
@@ -115,9 +124,8 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
           // Switch to next allocator on fail
           return getNext()->Next<T>(allocation_size);
         }
-
-        Offset += allocation_size;
-        return (T*)(block + allocation_size);
+        Offset += Change;
+        return (T*)(block + Offset);
       }
 
       NG_INLINE bool HasSpaceFor(size_t space) {

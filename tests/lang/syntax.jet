@@ -1,93 +1,103 @@
-// Jet Features. All possible features (excluding most operators)
+import 'https://github.com/aboss123/JetProject.git' // Github Module
+import math // Direct Module
+import "C": "stdio.h"
 
-var a = 23
-var b = "Hello"
-var c = 23.34
-var d = 23u 
-var e = 23.3432f
-var f = "Hello" * 2 // String Multiplication
-print(a) // 23
+var heap_allocated: box str = box "Wow, I'm allocated"
+var nice: any[] = [1, 2, "hi", 2.23, 21u, &heap_allocated]
+mut nice_mutable: any[] = [1, 223, heap_allocated, "WEW", (box 21)]
+nice += 23 // Illegal (Error Here!)
+nice_mutable += "wow \n I didn't know I was cool\n\r\b\t" // Ok
 
-var g: int = 23
-var h: str = "Hello"
-var i: float64 = 23.3432f
-var j: $(a) = 4324 // $(variable_name) <-- Typeof variable_name
-var k: &int = &a
-print(k) // 0x234fbf2 <-- Memory address of a
+if nice_mutable[1] is 223 {
+  print("Hello\n")
+}
+elif heap_allocated[0] == 'W' {
+  print("Never runs ...\n")
+}
+else {
+  // Error Here! (value must be mutable, no exception)
+  print("Oh no! This is illegal: ", (heap_allocated + "Wow"))
 
-// List Declaration
-var li = [1, 2, 3, 4, 5, 6, 7, 8]
-
-var heap_allocation = box 23
-var match_init = a.match {
-  23 {
-    "Is 23"
-  }
-  . {
-    "Not 23"
-  }
+  mut i_can_have_string_concat = box "Omg"
+  i_can_have_string_concat += '1'
+  print(i_can_have_string_concat) // Would be "Omg1"
 }
 
-if a == 23 {
-  var function_ptr = print
-  function_ptr("Hello, World!")
-} elif a * 2 == 33 {
-  var some_thing = 23
-} else {
-  print("I have no friends!")
-}
-
-for 23 { // Prints Hi\n 23 times
+for 0..10 { // Prints Hi\n 10 Times
   print("Hi\n")
 }
-
-for x 0..10 { // Print Hi\n 10 times
-  print("Hi\n")
+for value in nice { // Outputs entire list
+  print(value)
 }
-
-for n in li {
-  print(n, '\n')
+for nice_mutable[1] is 223 { // May also take in boolean expressions
+  // do something ...
 }
-
 for {
-  // Forever Run ...
+  // Runs forever ...
 }
 
-print(li[2]) // 3
-print(li[2 .. 6]) // [3, 4, 5, 6]
-
-import module
-import "https://github.com/aboss123/jetproject" // Github Imports
-
-fn some_func(param1, param2, param3) { // Generic parameter types
-  print($(param1))
-}
-some_func(243, 1, 1) // int
-print($(some_func(222, "Hi", [1, 2, 3]))) // void
-
-
-fn im_void() {
-  print("This is actual 'console.log'");
+export var HOLY_CONSTANT_VARIABLE = 2.124143242343243234
+var optional: ?float64 = HOLY_CONSTANT_VARIABLE
+match optional { // Match values
+  None => print("No value\n"),
+  value => print(value, '\n')
 }
 
-LinkedList : struct {
-  next: box LinkedList
+fn my_function(param1: int, param2: str) { // Inferred as no-return
+  print(param2 * param1) // String multiplication is allowed
+}
+fn my_function_generic(param1, param2) { // Ok
+  // This operation must be valid at compile time
+  print(param1 * param2)
 }
 
-LinkedList : struct[T](value: T, next: LinkedList? = None)
+export fn i_can_be_viewed() str { // Export value to other modules
+  return "OMG!"
+}
+
+LinkedList : struct[T](value: T, next: ?LinkedList = None) // Default Args
 LinkedList[T].prepend = fn(self, value: T) {
   return LinkedList(value, self)
 }
 LinkedList[T].size = fn(self) {
   match self.next {
     None => 1,
-    (next) => next.size() + 1
+    node => node.size() + 1
   }
 }
 LinkedList[T].stringify = fn(self) str {
   var fmt = match self.next {
     None => str(self.value),
-    next => str(self.value) + next.stringify()
+    node => str(self.value) + node.stringify()
   }
   print(fmt)
+}
+
+SevenDeadlySins : enum {
+  Escanor,
+  Meliodas,
+  Diane,
+  King,
+  Ban,
+  Merlin
+}
+
+
+/// ========================== VERY VERY ALPHA PREDICTIONS =========================
+MyComponent : html {
+  children: html[]
+}
+
+// Equivalent to Elm's Counter Example
+mut APP_VALUE = 0
+[app]
+fn render() view {
+  return {
+    div {
+      id: "main-div"
+      button  { text: "+", onClick: || => APP_VALUE++ }
+      div     { text: APP_VALUE.str }
+      button  { text: "-", onClick: || => APP_VALUE-- }
+    }
+  }
 }

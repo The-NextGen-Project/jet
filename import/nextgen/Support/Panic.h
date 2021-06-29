@@ -54,6 +54,7 @@ namespace nextgen {
       std::cout << value;
     }
 
+
 # endif
 
     template<typename ... Args>

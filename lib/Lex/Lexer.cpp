@@ -222,18 +222,18 @@ static const struct JetKeyword Keywords[] {
   { "continue"_intern, KeywordContinue },
   { "defer"_intern, KeywordDefer },
   { "union"_intern, KeywordUnion },
+  { "match"_intern, KeywordMatch }
 };
 
 /// Determine the validity of parsed string being a Keyword. The assumption
 /// made in this function is that `value` is an interned string therefore only
 /// direct pointer comparison is made resulting in O(1) comparison.
-
-static auto ReturnValidKeyword(str &value, TokenKind else_) -> TokenKind {
+static auto ReturnValidKeyword(str &value) -> TokenKind {
   for (auto i = 0; i < SizeOfArray(Keywords); ++i) {
     if (value == Keywords[i].key)
       return Keywords[i].id;
   }
-  return else_;
+  return TokenKind::Identifier;
 }
 
 
@@ -520,7 +520,7 @@ auto Lexer::NextToken() -> Token {
         auto Intern = StringInterner::InsertOrGet(S);
 
         // Ensure appropriate kind is assigned
-        auto Type = ReturnValidKeyword(Intern,TokenKind::Identifier);
+        auto Type = ReturnValidKeyword(Intern);
 
         Instance = TOKEN(const char *, Intern, Type, "");
         if (Type != TokenKind::Identifier)
@@ -537,12 +537,32 @@ auto Lexer::NextToken() -> Token {
                              "<=");
             Instance.assignment = true;
             break;
-          group(TokenKind::LessThan, TokenKind::LessThan):
+          group(TokenKind::LessThan, TokenKind::LessThan): // << <--
             Kind = TokenKind::LeftShift;
             goto start;
           default:
             Instance = TOKEN(char, "<", TokenKind::LessThan, "<");
             break;
+        }
+
+        auto s2 = Peek(1);
+        match ('<', s2) {
+          group('<', '='):
+            Instance = TOKEN(const char *, "<=", TokenKind::LessThanEquals,
+                             "<=");
+            Instance.assignment = true;
+            break;
+          group('<', '<'): // << <--
+            Kind = TokenKind::LeftShift;
+            goto start;
+          default:
+            Instance = TOKEN(char, "<", TokenKind::LessThan, "<");
+            break;
+        }
+        if (s2 == '=') {
+          Instance = TOKEN(const char *, "<=", TokenKind::LessThanEquals,
+                           "<=");
+          Instance.assignment = true;
         }
         break;
       }
@@ -961,7 +981,7 @@ void Lexer::PrintNextToken() {
         auto Intern = StringInterner::InsertOrGet(S);
 
         // Ensure appropriate kind is assigned
-        auto Type = ReturnValidKeyword(Intern,TokenKind::Identifier);
+        auto Type = ReturnValidKeyword(Intern);
 
         if (Type != TokenKind::Identifier) {
           Console::Log(Colors::RED, Intern, Colors::RESET);

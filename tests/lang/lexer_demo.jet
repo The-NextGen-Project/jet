@@ -1,44 +1,6 @@
-Token : struct {
-  ID: str
-
-}
-
-LexErrorType : enum {
-
-  // Other
-  UnexpectedEOF,
-  OutOfRange,
-  Unreachable,
-
-  // Strings
-  MalformedUTF8,
-  InvalidChar,
-  InvalidStringEscape,
-  InvalidUnicodeEscapeClose,
-  HexEscapeOutOfRange,
-  MissingClosingDelim,
-
-  // Numbers
-  DigitOutOfRange,
-  InvalidDot,
-  InvalidNumberValue,
-  IntegerOverflow,
-  FloatingPointOverflow,
-}
-
-
-
-
-
-
-
-
-
-for i in range(1, 2)  {
-
-}
-
-impl<T> Clone for Something {
+[update]
+fn i_update_values() // generated as JS Callback on Web Backend
+{
 
 }
 

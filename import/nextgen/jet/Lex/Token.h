@@ -55,6 +55,7 @@ namespace nextgen { namespace jet {
     KeywordNone,
     KeywordReturn,
     KeywordUnion,
+    KeywordMatch,
     //---------------------------------------
 
     Identifier,   // [a-z] && [A-Z] && _

@@ -7,12 +7,28 @@ void Parser::Parse() {
     case TokenKind::EOFToken:
       break;
     case TokenKind::KeywordVar:
+      Skip(1);
       ParseVariableDecl();
       break;
+    case TokenKind::KeywordStruct:
+      Skip(1);
+      ParseStructDecl();
+      break;
+    case TokenKind::KeywordFunction:
+      Skip(1);
+      ParseFunctionDecl();
+      break;
     case TokenKind::KeywordIf:
+      Skip(1);
+      ParseIfStatement();
       break;
     case TokenKind::KeywordFor:
+      Skip(1);
+      ParseForStatement();
       break;
+    case TokenKind::KeywordMatch:
+      Skip(1);
+      ParseMatchStatement();
     default: // TODO: Figure out what to do here
       break;
   }
@@ -60,10 +76,8 @@ auto Parser::ParseVariableDecl() -> SyntaxExpression* {
     };
     return E;
   } else {
-
-
-    E->VariableAssignment = {
-      Name, SyntaxType{nullptr, None}, Expr
+    E->VariableAssignment = SyntaxVariableAssignment {
+      Name, None, Expr
     };
     return E;
   }
@@ -94,10 +108,6 @@ auto Parser::ParseExpression(int PreviousBinding) -> SyntaxExpression*  {
       Op, BeginToken, E
     };
   } else {
-    // TODO: Match Complex Expressions
-    // ()
-    // match_call()
-    // 323 or "sd" 23.23
     LHS = MatchExpression();
   }
 
@@ -121,6 +131,7 @@ auto Parser::ParseExpression(int PreviousBinding) -> SyntaxExpression*  {
     NewExpression->Binary = {
       SyntaxBinary::MatchOp(OpKind), LHS, RHS, Op
     };
+    NewExpression->Kind = SyntaxKind::Binary;
     // Move Pointer to LHS
     LHS = NewExpression;
   }
@@ -143,11 +154,14 @@ auto Parser::MatchExpression() -> SyntaxExpression * {
     case Integer:
     case String:
     case Char:
-    case Decimal: {
+    case Decimal:
+    case KeywordTrue:
+    case KeywordFalse: {
       auto E = Memory->Next<SyntaxExpression>(1);
       E->Literal = {
         BeginToken
       };
+      E->Kind = SyntaxKind::LiteralValue;
       return E;
     }
     case LParenthesis: {
@@ -155,9 +169,26 @@ auto Parser::MatchExpression() -> SyntaxExpression * {
       Skip(TokenKind::RParenthesis, ParseErrorType::MissingClosingParenthesis);
       return E;
     }
+    case LBracket: { // ie: [1, 2, 3]
+      auto Current = Skip(1);
+      auto Values = Vec<SyntaxExpression*>(5);
+      while (Current->getKind() != TokenKind::RBracket) {
+        if (Current->getKind() == TokenKind::EOFToken) {
+          // TODO: Add Error
+        }
+        Values.Add(ParseExpression());
+        Current = Skip(TokenKind::Comma,
+                     ParseErrorType::MissingClosingCurlyBrace);
+      }
+      auto E  = Memory->Next<SyntaxExpression>(1);
+      E->Kind = SyntaxKind::List;
+      E->List = SyntaxList { Values };
+      return E;
+    }
     default: // TODO: Unexpected Expression Token
       break;
   }
+  return nullptr;
 }
 
 
@@ -165,12 +196,111 @@ auto Parser::ParseStatement() -> SyntaxExpression* {
   return nullptr;
 }
 
-auto Parser::ParseValueType() -> SyntaxType {
-  return SyntaxType { nullptr, None };
+auto Parser::ParseValueType() -> Option<SyntaxType> {
+  if (Peek(1)->getKind() == TokenKind::Comma)
+    return None;
 }
 
 auto Parser::ParseIfStatement() -> SyntaxExpression* {
+  auto Cond = ParseExpression();
+
+  SyntaxBlock Body;
+  SyntaxExpression *Else = nullptr;
+  SyntaxExpression *Elif = nullptr;
+
+  Body = ParseBlock();
+  auto IsElse = Skip(1);
+  if (IsElse->getKind() == TokenKind::KeywordElse) {
+    SyntaxBlock ElseBody = ParseBlock();
+    Else = Memory->Next<SyntaxExpression>(1);
+    Else->Kind = SyntaxKind::Else;
+    Else->Else = {
+      ElseBody
+    };
+  }
+  else if (IsElse->getKind() == TokenKind::KeywordElif) {
+    Elif = ParseIfStatement();
+    Elif->Kind = SyntaxKind::Elif;
+  }
+
+  auto E = Memory->Next<SyntaxExpression>(1);
+  E->Kind = SyntaxKind::If;
+  E->If = {
+    Cond, Body, Else, Elif
+  };
+}
+
+auto Parser::ParseForStatement() -> SyntaxExpression * {
   return nullptr;
+}
+
+auto Parser::ParseMatchStatement() -> SyntaxExpression * {
+  return nullptr;
+}
+
+auto Parser::ParseFunctionParam() -> Vec<SyntaxFunctionParameter> {
+  Skip(TokenKind::LParenthesis, ParseErrorType::ExpectedToken);
+  auto Current = Curr();
+  auto Params  = Vec<SyntaxFunctionParameter>{};
+  while (Current->getKind() != TokenKind::RParenthesis) {
+    auto ParamName = Skip(TokenKind::Identifier,
+                          ParseErrorType::ExpectedIdentifierForFunctionParameter);
+    Params.Add({
+      ParamName, ParseValueType()
+    });
+  }
+  return Params;
+}
+
+auto Parser::ParseFunctionDecl() -> SyntaxExpression * {
+  auto E = Memory->Next<SyntaxExpression>(1);
+  auto FunctionName = Skip(TokenKind::Identifier,
+                           ParseErrorType::MissingFunctionName);
+
+  auto Params       = ParseFunctionParam();
+  auto FunctionType = ParseValueType();
+  auto FunctionBody = ParseBlock();
+
+  E->Kind = SyntaxKind::FunctionDefault;
+  E->Function = {
+    FunctionName, FunctionType, FunctionBody, Params
+  };
+  return nullptr;
+}
+
+auto Parser::ParseStructDecl() -> SyntaxExpression * {
+  return nullptr;
+}
+
+auto Parser::ParseFunctionCall() -> SyntaxExpression * {
+  auto FunctionName = Skip(1); // Guaranteed to be IDENT
+  auto Params = Vec<SyntaxExpression*>{};
+  Skip(TokenKind::LParenthesis, ParseErrorType::ExpectedToken);
+  while(Curr()->getKind() != TokenKind::RParenthesis) {
+    Params.Add(ParseExpression());
+  }
+  Skip(TokenKind::RParenthesis, ParseErrorType::ExpectedToken);
+
+  auto E = Memory->Next<SyntaxExpression>(1);
+  E->Kind = SyntaxKind::FunctionCall;
+  E->FunctionCall = {
+    FunctionName, Params
+  };
+  return E;
+}
+
+auto Parser::ParseBlock() -> SyntaxBlock {
+  Skip(TokenKind::LCurlyBrace, ParseErrorType::ExpectedToken);
+
+  auto Current = Curr();
+  auto Statements = Vec<SyntaxExpression*>{};
+  while (Current->getKind() != TokenKind::RCurlyBrace) {
+    Statements.Add(ParseStatement());
+  }
+  Skip(TokenKind::RCurlyBrace, ParseErrorType::ExpectedToken);
+  return {
+    Statements
+  };
 }
 
 

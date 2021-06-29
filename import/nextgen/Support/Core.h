@@ -31,6 +31,11 @@ namespace nextgen { namespace core {
   template<typename T>
   class Option {
   public:
+    // None value by default
+    Option() : is(false) {};
+
+    // Direct Copy
+    Option(const Option<T> &Other) : is(Other.is), Some(Other.Some) {}
 
     explicit Option(T &value) :
     Some(std::move(value)), is(true) {}

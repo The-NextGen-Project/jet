@@ -10,6 +10,8 @@ namespace nextgen { namespace jet {
     enum SyntaxKind {
       LiteralValue,
       Binary,
+      Unary,
+      List,
       If,
       Else,
       Elif,
@@ -47,6 +49,23 @@ namespace nextgen { namespace jet {
       BinaryOR
     };
 
+    enum SyntaxTypeAnnotation {
+      Optional,
+      Reference,
+      Pointer,
+      Box,
+      ListType
+    };
+
+    enum SyntaxTypeValue {
+      Integer32,
+      Integer64,
+      Float32,
+      Float64,
+      StringValue,
+      UserDefined
+    };
+
     struct SyntaxLiteral {
       Token *Literal;
     };
@@ -63,6 +82,8 @@ namespace nextgen { namespace jet {
             return SyntaxBinaryOp::Addition;
           case TokenKind::Minus:
             return SyntaxBinaryOp::Subtraction;
+          case TokenKind::Star:
+            return SyntaxBinaryOp::Multiplication;
           case TokenKind::Slash:
             return SyntaxBinaryOp::Division;
           case TokenKind::Percent:
@@ -78,21 +99,28 @@ namespace nextgen { namespace jet {
           case TokenKind::RightShift:
             return SyntaxBinaryOp::BinaryShRight;
           default:
-            UNREACHABLE;
+            Console::Log("I WAS HERE\n");
+            break;
         }
-        UNREACHABLE;
       }
 
     };
 
     struct SyntaxType {
-      Token *OrginatingType; // if nullptr infer type
-      Option<Token*> TypeModifiers; // Ex: int&, ~int, int?, int*
+      SyntaxTypeAnnotation Modifier;
+      SyntaxTypeValue Value;
+      Option<int> Indirection;
+    };
+
+    // ST { Pointer,  }
+
+    struct SyntaxList {
+      Vec<SyntaxExpression*> Values;
     };
 
     struct SyntaxVariableAssignment {
       Token *Name;
-      SyntaxType Type;
+      Option<SyntaxType> Type;
       SyntaxExpression *Expression;
     };
 
@@ -102,22 +130,22 @@ namespace nextgen { namespace jet {
     };
 
     struct SyntaxBlock {
-      SyntaxExpression **Statements;
+      Vec<SyntaxExpression*> Statements;
     };
 
     struct SyntaxElse {
-      SyntaxBlock *Body;
+      SyntaxBlock Body;
     };
 
     struct SyntaxElif {
-      SyntaxBlock *Body;
+      SyntaxBlock Body;
     };
 
     struct SyntaxIf {
       SyntaxExpression *Condition;
-      SyntaxBlock *Body;
-      Option<SyntaxElse> Else;
-      Option<SyntaxElif> Elif;
+      SyntaxBlock Body;
+      SyntaxExpression *Else;
+      SyntaxExpression *Elif;
     };
 
     struct SyntaxUnary {
@@ -144,14 +172,19 @@ namespace nextgen { namespace jet {
 
     struct SyntaxFunctionParameter {
       Token *ParameterName;
-      Option<SyntaxType*> Type; // Generic Parameter (no repr types)
+      Option<SyntaxType> Type; // Generic Parameter (no repr types)
     };
 
     struct SyntaxFunction {
       Token *FunctionName;
-      Option<SyntaxType*> FunctionType;
-      SyntaxBlock *Body;
-      SyntaxFunctionParameter *Parameters;
+      Option<SyntaxType> FunctionType;
+      SyntaxBlock Body;
+      Vec<SyntaxFunctionParameter> Parameters;
+    };
+
+    struct SyntaxFunctionCall {
+      Token *FunctionName;
+      Vec<SyntaxExpression*> Parameters;
     };
 
     struct SyntaxExpression {
@@ -160,11 +193,13 @@ namespace nextgen { namespace jet {
         SyntaxLiteral Literal;
         SyntaxBinary  Binary;
         SyntaxUnary   Unary;
+        SyntaxList    List;
         SyntaxFunction Function;
         SyntaxIf   If;
         SyntaxElse Else;
         SyntaxElif Elif;
         SyntaxVariableAssignment VariableAssignment;
+        SyntaxFunctionCall FunctionCall;
       };
     };
   }}
