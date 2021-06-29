@@ -40,7 +40,7 @@ print("Hello, World!")
 Fibonacci Implemented in the lang would be as follows:
 ```zig
 fn fib(n) {
-  return n.match {
+  return match n {
     0 or 1 => n
     . => fib(n-1) + fib(n-2)
   }
