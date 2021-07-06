@@ -4,9 +4,9 @@
 [![Mac](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/MacOS?label=MacOS&style=for-the-badge&logo=github)]()
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
 #### Fast Language for Developing Consistent Native, Mobile App, and Web Applications.
-> **NOTE:** The language is in its early development stages. Progress and goals for the language will be updated accordingly on Github, be sure to look out for updates.
-> While quite a lot of syntax and features have been planned out, they are subject to rapid change and removal, please be considerate as the feedback we receive from the
-> community may influence some of our syntax. 
+> **NOTE:** The language is in its early development stages. Don't expect syntax to be fixed until v1.0. If you are wondering why we have only finished the lexer,
+> we are currently writing the x64 backend right now, as it would help the structure of the language. When the backend is updated, you will see it in the x64-dev
+> branch of the repository.
 
 Resources
 -----------------
@@ -72,18 +72,13 @@ unless it is necessary to explain an error.
 
 Progress
 ----------
-- [x] Lexer (with edge cases handled later)
-- [ ] Parser
+- [x] Lexer 
+- [ ] Parser (**WIP**)
 - [ ] Semantic Analysis
-- [ ] Lower-AST
 - [ ] IR-Gen
 - [ ] IR-Optimization
-- [ ] Code Generation
-- [ ] C-Interop
-- [ ] Code Generation (JS)
-- [ ] Code Generation (WASM)
-- [ ] Standard Library
-- [ ] Python Integration
+- [ ] x64 Code Generation (**WIP**)
+- [ ] Link
 
 Contributing
 -------------
