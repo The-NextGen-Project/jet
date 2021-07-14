@@ -16,13 +16,13 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     Range() = default;
 
     [[nodiscard]]
-    NG_INLINE size_t range() const { // STD NAMING
+    NG_INLINE size_t range() const {
       return (size_t) (end - begin);
     }
   };
 
 
-  class str { // STD NAMING
+  class str {
   public:
     str() = default;
 
@@ -33,103 +33,87 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     };
 
     struct intern_eq {
-      NG_INLINE bool operator()(str const &LHS, str const &RHS) const {
-        return strncmp(LHS._, RHS._, LHS.len) == 0;
+      bool operator()(str const &LHS, str const &RHS) const {
+        return strncmp(LHS.pointer, RHS.pointer, LHS.len) == 0;
       }
     };
 
 
-    template<unsigned long N>
-    /*implicit*/ constexpr
-    str(const char(&data)[N]) : len(N), _(data) {}
+    template<unsigned long N> /*implicit*/
+    constexpr str(const char(&data)[N]) : len(N), pointer(data) {}
 
-    /*implicit*/ str(const char *data)
-    : len(strlen(data)), _(data) {}
+    /*implicit*/ str(const char *data) : len(strlen(data)), pointer(data) {}
+    /*implicit*/ str(char c) : len(1) { pointer = &c; }
 
-    /*implicit*/ str(std::string &data) {
-      len = data.length();
-      _ = data.c_str();
-    }
+    explicit str(const char *data, size_t len) : len(len), pointer(data) {}
+    explicit str(Range<const char *> range)
+    : len(range.range()), pointer(range.begin) {}
 
-    /*implicit*/ str(char c) {
-      len = 1;
-      _ = &c;
-    }
-
-    explicit str(const char *data, size_t len)
-    : len(len), _(data) {}
-
-
-    explicit str(Range<const char *> range, bool ALLOC = false)
-    : len(range.range())  {
-      if (ALLOC) {
-        // TODO: Allocate Range
-      } else {
-        // Set empty
-        _ = (const char *) range.begin;
-      }
+    /*implicit*/ str(std::string &data) { // NOTE: Do not use init-list for this
+      len     = data.length();
+      pointer = data.c_str();
     }
 
     [[nodiscard]]
-    NG_INLINE size_t size() const { return len; }
-
+    size_t size() const { return len; }
 
     // String FNV-1a Hashing Algorithm (Internal)
     [[nodiscard]]
     size_t hash() const {
       auto val = FNV_OFF;
       for (auto i = 0; i < len; ++i) {
-        val ^= (_[i]);
+        val ^= (pointer[i]);
         val *= FNV_PRIME;
       }
       return val;
     }
 
-    NG_INLINE bool operator==(str const &other) const {
-      return _ == other._;
+    bool operator==(str const &other) const {
+      return pointer == other.pointer;
     }
 
-    NG_INLINE char operator[](size_t index) const {
-      return (static_cast<const char *>(_))[index];
+    char operator[](size_t index) const {
+      return (static_cast<const char *>(pointer))[index];
     }
 
-    NG_INLINE /*implicit*/ operator std::string() const {
+    /*implicit*/ operator std::string() const {
       return std::string((const char *) *this);
     }
 
-    explicit NG_INLINE operator const char *() const {
-      return static_cast<const char *>(_);
+    explicit operator const char *() const {
+      return static_cast<const char *>(pointer);
     }
 
 
-    NG_INLINE str operator-(const size_t size) const {
-      return {
-        _ - size
+    str operator-(const size_t size) const {
+      return str {
+        pointer - size,
+        len - size
       };
     }
 
-    NG_INLINE str operator+(int offset) const {
-      return {
-        _ + offset
+    str operator+(int offset) const {
+      return str {
+        pointer + offset,
+        len + offset
       };
     }
 
-    NG_AINLINE char operator*() const {
-      return *_;
+    char operator*() const {
+      return *pointer;
     }
 
-    NG_AINLINE const char *begin() const {
-      return _;
+    const char *begin() const {
+      return pointer;
     }
 
-    NG_AINLINE const char *end() const {
-      return _ + len;
+    const char *end() const {
+      return pointer + len;
     }
 
-    // Only used in intern_hash. DO NOT call this
-    // function if you have not set your hash value, otherwise your hash
-    // results may be invalid.
-    NG_INLINE size_t getHashCache() const {
+    // You MUST set the hash value before interning a string,
+    // so it is not recomputed in str::intern_hash.
+    NG_AINLINE size_t getHashCache() const {
       return hash_cache;
     }
 
@@ -143,28 +127,28 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
       hash_cache = hash;
     }
 
-    NG_INLINE str operator++() {
-      _++;
+    str operator++() {
+      pointer++;
       return *this;
     }
 
-    NG_INLINE str operator--() {
-      _--;
+    str operator--() {
+      pointer--;
       return *this;
     }
 
-    NG_INLINE str operator+=(int offset) {
-      _ += (size_t) (offset);
+    str operator+=(int offset) {
+      pointer += (size_t) (offset);
       return *this;
     }
 
-    NG_INLINE str operator-=(int offset) {
-      _ -= (size_t) (offset);
+    str operator-=(int offset) {
+      pointer -= (size_t) (offset);
       return *this;
     }
 
-    const char *_{};     // char* data
-    bool is_heap_allocated = false;
+    const char *pointer{};     // char* data
+    //bool is_heap_allocated = false;
   private:
     size_t len{}; // String length
     size_t hash_cache = 0;
@@ -175,37 +159,29 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
   // Mostly O(1) Retrieval (FNV-1a is fast and good String hash).
   // Designed around the symbols retrieved for the token and not the token
   // values.
-  class StringInterner {
+  class StringCache {
   public:
-    using Allocator = mem::ArenaSegment;
+    using StringSet = std::unordered_set<str, str::intern_hash, str::intern_eq>;
 
-
-    static NG_INLINE auto Strings() -> std::unordered_set<str, str::intern_hash,
-    str::intern_eq>& {
-      static std::unordered_set<str, str::intern_hash, str::intern_eq>
-          Strings;
+    static StringSet& Strings() {
+      static StringSet Strings;
       return Strings;
     }
 
-
-    static NG_INLINE str &Get(str &Str) {
-      return const_cast<str &>(*(Strings().find(Str)));
+    static str &Get(str &s) {
+      return const_cast<str &>(*(Strings().find(s)));
     }
 
-    static NG_INLINE str InsertOrGet(str &Str) {
-      auto Find = Strings().find(Str);
-      if (Find != Strings().end()) {
-        return *Find;
+    static NG_INLINE str InsertOrGet(str &s) {
+      auto find = Strings().find(s);
+      if (find != Strings().end()) {
+        return *find;
       } else {
-
-        // Ident, no longer than 256 characters
-        auto Size = Str.size();
-        auto Insert = (str) Str;
-        Insert.setHash(Str.getHashCache());
-        return (*Strings().insert(Insert).first);
+        auto new_string = (str) s;
+        new_string.setHash(s.getHashCache());
+        return (*Strings().insert(new_string).first);
       }
     }
-
   };
 
   str operator""_intern(const char *s, size_t len);

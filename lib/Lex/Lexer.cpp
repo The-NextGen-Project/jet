@@ -222,13 +222,14 @@ static const struct JetKeyword Keywords[] {
   { "continue"_intern, KeywordContinue },
   { "defer"_intern, KeywordDefer },
   { "union"_intern, KeywordUnion },
-  { "match"_intern, KeywordMatch }
+  { "match"_intern, KeywordMatch },
+  { "in"_intern, KeywordIn }
 };
 
 /// Determine the validity of parsed string being a Keyword. The assumption
 /// made in this function is that `value` is an interned string therefore only
 /// direct pointer comparison is made resulting in O(1) comparison.
-static auto ReturnValidKeyword(str &value) -> TokenKind {
+static TokenKind ReturnValidKeyword(str &value) {
   for (auto i = 0; i < SizeOfArray(Keywords); ++i) {
     if (value == Keywords[i].key)
       return Keywords[i].id;
@@ -240,6 +241,7 @@ static auto ReturnValidKeyword(str &value) -> TokenKind {
 auto Lexer::NextToken() -> Token {
   TokenKind Kind = TokenKindClass[Curr()];
   Token Instance = Token {};
+
 
   goto start;
   start:
@@ -485,7 +487,7 @@ auto Lexer::NextToken() -> Token {
 
         auto S = str(ID, Len);
         S.setHash(val);
-        auto Intern = StringInterner::InsertOrGet(S);
+        auto Intern = StringCache::InsertOrGet(S);
 
         Instance = TOKEN(const char *, Intern, TokenKind::String, "");
         Instance.setFlag(TokenClassification::Literal);
@@ -517,7 +519,7 @@ auto Lexer::NextToken() -> Token {
 
         auto S = str(Begin, End-Begin);
         S.setHash(val);
-        auto Intern = StringInterner::InsertOrGet(S);
+        auto Intern = StringCache::InsertOrGet(S);
 
         // Ensure appropriate kind is assigned
         auto Type = ReturnValidKeyword(Intern);
@@ -858,11 +860,11 @@ auto Lexer::NextToken() -> Token {
         });
         Fatal = true;
       default:
-        Instance = TOKEN(char, Curr(), Kind, Curr());
+        //Instance = TOKEN(char, Curr(), Kind, Curr());
         break;
     }
   }
-  Next(Instance.Length());
+  Next(Instance.len());
   return Instance;
 }
 
@@ -978,7 +980,7 @@ void Lexer::PrintNextToken() {
 
         auto S = str(Begin, End-Begin);
         S.setHash(val);
-        auto Intern = StringInterner::InsertOrGet(S);
+        auto Intern = StringCache::InsertOrGet(S);
 
         // Ensure appropriate kind is assigned
         auto Type = ReturnValidKeyword(Intern);
@@ -1119,7 +1121,7 @@ void Lexer::PrintNextToken() {
             Instance.assignment = true;
             break;
           default:
-            Instance = TOKEN(const char *, '/', TokenKind::Star, '/');
+            Instance = TOKEN(const char *, "/", TokenKind::Slash, "/");
             break;
         }
         break;

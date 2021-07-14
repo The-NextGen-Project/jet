@@ -18,6 +18,8 @@ namespace nextgen { namespace jet {
       For,
       FunctionCall,
       Struct,
+      ForList,
+      ForRange,
       Enum,
       VariableAssignment,
       VariableReassignment,
@@ -103,7 +105,6 @@ namespace nextgen { namespace jet {
             break;
         }
       }
-
     };
 
     struct SyntaxType {
@@ -112,7 +113,7 @@ namespace nextgen { namespace jet {
       Option<int> Indirection;
     };
 
-    // ST { Pointer,  }
+    // ST { pointer,  }
 
     struct SyntaxList {
       Vec<SyntaxExpression*> Values;
@@ -187,6 +188,17 @@ namespace nextgen { namespace jet {
       Vec<SyntaxExpression*> Parameters;
     };
 
+    struct SyntaxForList {
+      Token *ListName;
+      Token *ListVar;
+      SyntaxBlock Body;
+    };
+
+    struct SyntaxForRange {
+      Token *ListVar;
+      SyntaxBlock Body;
+    };
+
     struct SyntaxExpression {
       SyntaxKind Kind;
       union {
@@ -198,9 +210,11 @@ namespace nextgen { namespace jet {
         SyntaxIf   If;
         SyntaxElse Else;
         SyntaxElif Elif;
+        SyntaxForList ForList;
+        SyntaxForRange ForRange;
         SyntaxVariableAssignment VariableAssignment;
         SyntaxFunctionCall FunctionCall;
       };
     };
-  }}
+}}
 #endif //JET_SYNTAXNODES_H

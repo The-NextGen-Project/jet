@@ -1,3 +1,36 @@
+//                                              ////
+//                                               ////.
+//                                               */////
+//                                                ///////
+//                                      ////       ///////
+//                                       //////////////(((((((((((((((
+//                                      /////******((((((((/////////,
+//                                                *((((((
+//                                                (((((/
+//                                               (((((
+//                                              ((((.
+//
+//
+//
+//                              ,(((((,    ((((((((((((#####   ####################
+//                              (((((((   *((((((((########## ####################%%
+//                              (((((((   *(((((###########     ##############%%%%
+//                              (((((((   *(#####///////*             ####%%,
+//                              (((((((   *################           %%%%%%,
+//                              ((((###   *################           %%%%%%,
+//                    (((((     #######   /######                     %%%%%%,
+//                   (((((((##########.   /################%          %%%%%%,
+//                    *(#############     ,############%%%%%%         %%%%%%,
+//                        /######,          #######%%%%%%%%*           %%%%
+//
+//
+//
+// Pilot: ashishbailkeri123@gmail.com
+// Parser.CPP
+// Jet's Main Parser
+
+
+
 # include <nextgen/Jet/Parse/Parser.h>
 
 using namespace nextgen::jet;
@@ -29,6 +62,24 @@ void Parser::Parse() {
     case TokenKind::KeywordMatch:
       Skip(1);
       ParseMatchStatement();
+      break;
+    case TokenKind::Identifier: {
+      auto C1 = Peek(1);
+      auto C2 = Peek(2);
+      auto C3 = Peek(3);
+
+      // TODO: What if we are in generics?
+      if (C1->getKind() == TokenKind::Dot) {
+        if (C2->getKind() == TokenKind::Identifier) {
+          if (C3->getKind() == TokenKind::Equals) {
+            // Ok, we are in special struct function
+            Skip(3);
+            ParseStructFunctionDecl(Curr(), C2);
+          }
+        } else ParseExpression();
+      } else ParseExpression();
+      break;
+    }
     default: // TODO: Figure out what to do here
       break;
   }
@@ -99,7 +150,7 @@ auto Parser::ParseExpression(int PreviousBinding) -> SyntaxExpression*  {
   // + : Positive
   // - : Negation
   // & : Memory Reference
-  // * : Pointer Dereference
+  // * : pointer Dereference
   auto UnaryBinding = Parser::UnaryOperatorBinding(BeginKind);
   if (UnaryBinding > PreviousBinding) {
     auto E = ParseExpression(UnaryBinding);
@@ -115,12 +166,6 @@ auto Parser::ParseExpression(int PreviousBinding) -> SyntaxExpression*  {
     auto Op = Skip(1);
     auto OpKind = Op->getKind();
 
-    if (OpKind == TokenKind::Dot) {
-      if (Peek(1)->getKind() != TokenKind::Identifier)  {
-        // TODO: Add Error Here
-      }
-    }
-
     const auto OpBindings = Parser::InfixOperatorBinding(OpKind);
     if (/* LeftBindingPrecedence */ OpBindings[0] <= PreviousBinding)
       break;
@@ -132,7 +177,7 @@ auto Parser::ParseExpression(int PreviousBinding) -> SyntaxExpression*  {
       SyntaxBinary::MatchOp(OpKind), LHS, RHS, Op
     };
     NewExpression->Kind = SyntaxKind::Binary;
-    // Move Pointer to LHS
+    // Move pointer to LHS
     LHS = NewExpression;
   }
   return LHS;
@@ -176,7 +221,7 @@ auto Parser::MatchExpression() -> SyntaxExpression * {
         if (Current->getKind() == TokenKind::EOFToken) {
           // TODO: Add Error
         }
-        Values.Add(ParseExpression());
+        Values.push(ParseExpression());
         Current = Skip(TokenKind::Comma,
                      ParseErrorType::MissingClosingCurlyBrace);
       }
@@ -231,7 +276,11 @@ auto Parser::ParseIfStatement() -> SyntaxExpression* {
 }
 
 auto Parser::ParseForStatement() -> SyntaxExpression * {
-  return nullptr;
+  auto LoopVar = Skip(TokenKind::Identifier,
+                      ParseErrorType::MissingForLoopVariable);
+  Skip(TokenKind::KeywordIn, ParseErrorType::ExpectedToken);
+
+  auto Begin = Skip(1);
 }
 
 auto Parser::ParseMatchStatement() -> SyntaxExpression * {
@@ -245,9 +294,9 @@ auto Parser::ParseFunctionParam() -> Vec<SyntaxFunctionParameter> {
   while (Current->getKind() != TokenKind::RParenthesis) {
     auto ParamName = Skip(TokenKind::Identifier,
                           ParseErrorType::ExpectedIdentifierForFunctionParameter);
-    Params.Add({
-      ParamName, ParseValueType()
-    });
+    Params.push({
+                  ParamName, ParseValueType()
+                });
   }
   return Params;
 }
@@ -277,7 +326,7 @@ auto Parser::ParseFunctionCall() -> SyntaxExpression * {
   auto Params = Vec<SyntaxExpression*>{};
   Skip(TokenKind::LParenthesis, ParseErrorType::ExpectedToken);
   while(Curr()->getKind() != TokenKind::RParenthesis) {
-    Params.Add(ParseExpression());
+    Params.push(ParseExpression());
   }
   Skip(TokenKind::RParenthesis, ParseErrorType::ExpectedToken);
 
@@ -295,12 +344,18 @@ auto Parser::ParseBlock() -> SyntaxBlock {
   auto Current = Curr();
   auto Statements = Vec<SyntaxExpression*>{};
   while (Current->getKind() != TokenKind::RCurlyBrace) {
-    Statements.Add(ParseStatement());
+    Statements.push(ParseStatement());
   }
   Skip(TokenKind::RCurlyBrace, ParseErrorType::ExpectedToken);
   return {
     Statements
   };
+}
+
+auto Parser::ParseStructFunctionDecl(Token *Struct, Token *FuncName) ->
+SyntaxExpression
+* {
+
 }
 
 

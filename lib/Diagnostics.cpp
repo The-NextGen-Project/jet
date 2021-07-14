@@ -6,12 +6,12 @@
 using namespace nextgen::jet;
 
 void Diagnostic::Build(LexError Error) {
-  SourceLine = GetNthLineOfBuffer(Error.Location.Line);
+  SourceLine = GetNthLineOfBuffer(Error.Location.line);
   Console::Log(Colors::RED, "Error "
                                 "---------------------------------------------------------- ", FileName, ":",
-                    Error.Location.Line, ":", Error.Location
-                      .Column, "\n",
-                    Colors::RESET);
+               Error.Location.line, ":", Error.Location
+                      .column, "\n",
+               Colors::RESET);
   switch (Error.Error) {
     case MalformedUTF8:
       break;
@@ -48,7 +48,6 @@ void Diagnostic::Build(LexError Error) {
       ErrorInvalidStringEscape(Error);
       break;
     case InvalidUnicodeEscapeClose:
-
       break;
     case HexEscapeOutOfRange:
       ErrorHexEscapeOutOfRange(Error);
@@ -113,7 +112,7 @@ nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
 
 void Diagnostic::ErrorMissingClosingDelim(nextgen::jet::LexError &Error) {
   Console::Log(Colors::RESET, "Missing Closing Delim\n\n");
-  auto Line = std::to_string(Error.Location.Line);
+  auto Line = std::to_string(Error.Location.line);
 
   ErrorLexSetup(Line, "Reached EOF Before Closing Delim", Error);
   AddHint(Line, Colors::CYAN, "= ", Colors::GREEN, "try: ",
@@ -123,7 +122,7 @@ void Diagnostic::ErrorMissingClosingDelim(nextgen::jet::LexError &Error) {
 
 void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
   Console::Log(Colors::RESET, "Integer Value Too Large\n\n");
-  auto Line = std::to_string(Error.Location.Line);
+  auto Line = std::to_string(Error.Location.line);
 
   ErrorLexSetup(Line, "Overflow Occurs Here", Error);
 
@@ -162,7 +161,7 @@ void Diagnostic::ErrorMalformedUTF8(LexError &Error) {
 void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
   Console::Log(Colors::RESET, "Digit Value Out Of Range\n\n");
 
-  auto Line = std::to_string(Error.Location.Line);
+  auto Line = std::to_string(Error.Location.line);
   ErrorLexSetup(Line, "Digit does not match Integer Radix", Error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ", Colors::RESET,
@@ -176,7 +175,7 @@ void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
       break;
     case 16:
       Console::Log(Colors::YELLOW, "0-9, a-f, and A-F", Colors::RESET,
-                   " not ", Colors::RED, "'", SourceLine[Error.Location.Column],
+                   " not ", Colors::RED, "'", SourceLine[Error.Location.column],
                    "'",Colors::RESET, '\n');
       break;
     default:
@@ -204,7 +203,7 @@ void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
 void Diagnostic::ErrorHexEscapeOutOfRange(LexError &Error) {
   Console::Log(Colors::RESET, "Escape Digit Value Out Of Range\n\n");
 
-  auto Line = std::to_string(Error.Location.Line);
+  auto Line = std::to_string(Error.Location.line);
   ErrorLexSetup(Line, "Digit is not Base 16", Error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ",
@@ -231,7 +230,7 @@ void Diagnostic::ErrorHexEscapeOutOfRange(LexError &Error) {
 void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
   Console::Log(Colors::RESET, "Not a Valid String Escape\n\n");
 
-  auto Line = std::to_string(Error.Location.Line);
+  auto Line = std::to_string(Error.Location.line);
   ErrorLexSetup(Line, "Not a String Escape", Error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
@@ -242,7 +241,7 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
   Console::Log(Colors::BLUE, "String Escapes are used to escape "
                "characters that ""are otherwise hard to display. \n",
                Colors::RED, "'\\",
-               SourceLine[Error.Location.Column - 1], "'", Colors::BLUE,
+               SourceLine[Error.Location.column - 1], "'", Colors::BLUE,
                " is not a valid string escape. "
                "View the complete list in the language documentation: \n",
                "https://github.com/The-NextGen-Project/jet/blob/main/LANG.md",
@@ -268,8 +267,8 @@ void Diagnostic::ErrorLexSetup(std::string& Line, const char *Message,
   }
   Console::Log("\t", Colors::RED);
   for (auto i = 0; i < SourceLine.size(); ++i) {
-    if (i == Error.FailedToken.getSourceLocation().Column) {
-      for (int j = 0; j < Error.FailedToken.Name().size(); ++j) {
+    if (i == Error.FailedToken.getSourceLocation().column) {
+      for (int j = 0; j < Error.FailedToken.name().size(); ++j) {
         Console::Log("^");
       }
       break;

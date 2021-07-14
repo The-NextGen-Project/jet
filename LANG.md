@@ -27,7 +27,7 @@ Current Status: **WIP**
 | `uint64`      | Unsigned 64 bit integer. |
 | `float`       | 32 bit decimal value. |
 | `float64`     | 64 bit decimal value. |
-| `bool`        | Boolean Value: true or false.  |
+| `bool`        | boolean Value: true or false.  |
 | `fn(Arg Types...) -> Ret`       | Function Lambda.   |
 | `utf8`        | A valid utf8 character. |
 | `char`        | A 1 byte character. |

@@ -16,7 +16,7 @@ TEST(ParseTest, VariableDeclLiteral) {
   auto Decl = Expr->VariableAssignment;
 
   ASSERT_EQ(Expr->Kind, jet::SyntaxKind::VariableAssignment);
-  ASSERT_EQ(Decl.Name->Name(), "hello"_intern);
+  ASSERT_EQ(Decl.Name->name(), "hello"_intern);
   ASSERT_EQ(Decl.Expression->Kind, jet::SyntaxKind::LiteralValue);
   ASSERT_EQ(Decl.Expression->Literal.Literal->getValue<size_t>(), 23);
 }
@@ -36,7 +36,7 @@ TEST(ParseTest, VariableDeclBinary) {
   auto Decl = Expr->VariableAssignment;
 
   ASSERT_EQ(Expr->Kind, jet::SyntaxKind::VariableAssignment);
-  ASSERT_EQ(Decl.Name->Name(), "wow"_intern);
+  ASSERT_EQ(Decl.Name->name(), "wow"_intern);
   ASSERT_EQ(Decl.Expression->Kind, jet::SyntaxKind::Binary);
   ASSERT_EQ(Decl.Expression->Binary.Operation, jet::SyntaxBinaryOp::Multiplication);
   ASSERT_EQ(Decl.Expression->Binary.LHS->Literal.Literal->getValue<size_t>(),

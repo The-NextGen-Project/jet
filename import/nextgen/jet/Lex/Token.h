@@ -5,11 +5,7 @@
 
 namespace nextgen { namespace jet {
 
-  // References the range in the actual source text.
-  using SourceSpan = Range<const char *>;
-
-
-  enum TokenClassification {
+  enum TokenClassification : unsigned short {
     Function     = 1 << 2,
     Assignment   = 1 << 3,
     Unsigned     = 1 << 4,
@@ -56,6 +52,7 @@ namespace nextgen { namespace jet {
     KeywordReturn,
     KeywordUnion,
     KeywordMatch,
+    KeywordIn,
     //---------------------------------------
 
     Identifier,   // [a-z] && [A-Z] && _
@@ -86,7 +83,7 @@ namespace nextgen { namespace jet {
     At,     // @
     SemiColon, // ;
     ExclamationPoint, // !
-    Comma,
+    Comma, // ,
 
     PlusEquals,
     MinusEquals,
@@ -106,7 +103,7 @@ namespace nextgen { namespace jet {
     LeftShift,    // <<
     RightShift,   // >>
     Pow,          // **
-    RangeSpan,        // ..
+    RangeSpan,    // ..
     Ellipsis,     // ...
 
     PlusPlus,     // ++
@@ -118,24 +115,23 @@ namespace nextgen { namespace jet {
 
   struct TokenTraits {
 
-    /// Definitive Source Location of a Token that is lexed, may also
-    /// apply to failed tokens as well.
+    using SourceSpan = Range<const char *>;
+
     struct SourceLocation {
-      size_t Line;
-      size_t Column;
-      Range<const char *> SourceRange;
+      size_t     line;
+      size_t     column;
+      SourceSpan source;
     };
 
-    /// Since std::variant<Args...> does not exist in C++11, we must use a
-    /// controlled union Value type in order to hold values that can be
-    /// represented in C++.
+    // We have to very careful here. We do not have access to std::variant<...>
+    // in C++11, so we must use a controlled union to get a Token's value.
     struct Value {
-      TokenKind Kind;
+      TokenKind kind;
       union {
-        decltype(UINTPTR_MAX) Integer;
-        bool Boolean;
-        double Float64;
-        char SingleByte;
+        decltype(UINTPTR_MAX) integer;
+        bool    boolean;
+        double  float64;
+        char    character;
       };
     };
 
@@ -146,90 +142,81 @@ namespace nextgen { namespace jet {
     using TokenValue     = TokenTraits::Value;
     using SourceLocation = TokenTraits::SourceLocation;
 
-    nextgen::str ID;
-    SourceLocation Location;
-    TokenValue InternalValue{};
-    unsigned Flags;
+    str id;
 
-
+    unsigned       flags = TokenClassification::Literal;
+    TokenValue     repr  = {};
+    SourceLocation loc   = {};
   public:
-
-    /// Default constructor is used to avoid any single initialization conflicts
     Token() = default;
 
     template<typename T>
-    Token(const nextgen::str &ID, SourceLocation Location, T Value,
-         TokenKind Kind,
-         TokenClassification Flags = static_cast<TokenClassification>(0))
-      : ID(ID),  Flags(Flags), Location(Location) {
-        setKind(Kind);
-        setValue(Value);
+    Token(const str &id, SourceLocation loc, T value,
+          TokenKind kind, unsigned flags = TokenClassification::Literal)
+          : id(id), flags(flags), loc(loc) {
+        setKind(kind);
+        setValue(value);
     }
 
-    Token(nextgen::str ID, SourceLocation Loc, TokenKind Kind) 
-    : ID(ID), Location(Loc) {
+    // Note: This is only for lex errors. Failed tokens are important
+    // for the diagnostic class generate valid errors.
+    Token(str ID, SourceLocation Loc, TokenKind Kind)
+    : id(ID), loc(Loc) {
       setKind(Kind);
     }
 
-    /// Get the token's length
-    NG_AINLINE size_t Length() const {
-      return ID.size();
+    size_t len() const {
+      return id.size();
     }
 
-    /// Return String instance that represents lexed Token
-    NG_AINLINE str Name() const {
-      return ID;
+    str name() const {
+      return id;
     }
 
-    /// Set the token's value depending on valid construct.
     template<typename T>
-    NG_INLINE void setValue(T v) {
-      ValueSet(v);
+    void setValue(T v) {
+      setInternalRepr(v);
     }
 
-
-    /// Set the token type (used in cases where type is determined later)
-    NG_AINLINE void setKind(TokenKind Kind) {
-      InternalValue.Kind = Kind;
+    void setKind(TokenKind kind) {
+      repr.kind = kind;
     }
 
-    /// Get the token type
-    NG_AINLINE auto getKind() const -> TokenKind {
-      return InternalValue.Kind;
+    TokenKind getKind() const {
+      return repr.kind;
     }
 
-    /// Determine whether the token is a keyword
-    NG_AINLINE bool isKeyword() const {
-      return Flags & TokenClassification::Keyword;
+    bool isKeyword() const {
+      return flags & TokenClassification::Keyword;
     }
 
-    NG_INLINE bool isLiteral() const {
-      return Flags & TokenClassification::Literal;
+    bool isLiteral() const {
+      return flags & TokenClassification::Literal;
     }
 
-    /// Retrieve Source Location of the Token (Source Range)
-    NG_AINLINE auto getSourceLocation() -> SourceLocation  {
-      return Location;
+    SourceLocation getSourceLocation() {
+      return loc;
     }
 
-    /// Set a flag for extraneous metadata for the token
-    NG_AINLINE void setFlag(TokenClassification flag) {
-      Flags |= flag;
+    void setFlag(TokenClassification flag) {
+      flags |= flag;
     }
 
-
-    /// @unsafe Get the value of the token. Does not check for correct
-    /// value retrieval, may result in UB if used incorrectly!
     template<typename T>
-    NG_INLINE T getValue()  {
-      T v;
-      ValueSetAndGet(v);
+    T getValue()  {
+      static_assert(std::is_same<T, char>::value                  ||
+                    std::is_same<T, decltype(UINTPTR_MAX)>::value ||
+                    std::is_same<T, bool>::value                  ||
+                    std::is_same<T, double>::value,
+                    "Attempting to get invalid value from Token.");
+
+      T v; setFromInternalRepr(v);
       return v;
     }
 
-    /// Pretty Print Token to the Screen. This usually works nicely for
-    /// Diagnostics, as tokens on the line need to be printed normally.
-    void PrettyPrint() {
+    /// Pretty Print individual token to the screen.
+    /// TODO: May not need this anymore ...
+    void PrettyPrint() const {
       if (isKeyword()) {
         Console::Log(Colors::RED);
       }
@@ -248,55 +235,54 @@ namespace nextgen { namespace jet {
         case Identifier:
           Console::Log(Colors::YELLOW);
           break;
-        case Error:
-          break;
         default:
           break;
       }
-
-      Console::Log(Name());
+      Console::Log(name());
       Console::Log(Colors::RESET);
     }
 
     bool assignment = false; // (ie: +=, -=, *=)
   private:
 
-    // Generic Type Inference on Inferred Value
+    // This is the restricted usage of union values.
+    // We are guaranteed to know the actual type of the value from the
+    // [Token] constructor, therefore setting and retrieving values is not UB.
 
-    NG_AINLINE void ValueSetAndGet(double &V) const {
-      V = InternalValue.Float64;
+    void setFromInternalRepr(double &V) const {
+      V = repr.float64;
     }
 
-    NG_AINLINE void ValueSetAndGet(decltype(UINTPTR_MAX) &V) const {
-      V = InternalValue.Integer;
+    void setFromInternalRepr(decltype(UINTPTR_MAX) &V) const {
+      V = repr.integer;
     }
 
-    NG_AINLINE void ValueSetAndGet(char &V) const {
-      V = InternalValue.SingleByte;
+    void setFromInternalRepr(char &V) const {
+      V = repr.character;
     }
 
-    NG_AINLINE void ValueSetAndGet(bool &V) const {
-      V = InternalValue.Boolean;
+    void setFromInternalRepr(bool &V) const {
+      V = repr.boolean;
     }
 
-    NG_AINLINE void ValueSet(double V)  {
-      InternalValue.Float64 = V;
+    void setInternalRepr(double V)  {
+      repr.float64 = V;
     }
 
-    NG_AINLINE void ValueSet(bool V)  {
-      InternalValue.Boolean = V;
+    void setInternalRepr(bool V)  {
+      repr.boolean = V;
     }
 
-    NG_AINLINE void ValueSet(char V)  {
-      InternalValue.SingleByte = V;
+    void setInternalRepr(char V)  {
+      repr.character = V;
     }
 
-    NG_AINLINE void ValueSet(decltype(UINTPTR_MAX) V)  {
-      InternalValue.Integer = V;
+    void setInternalRepr(decltype(UINTPTR_MAX) V)  {
+      repr.integer = V;
     }
 
-    NG_AINLINE void ValueSet(const char *V)  {
-      InternalValue.Integer = (unsigned long long) V;
+    void setInternalRepr(const char *V)  {
+      repr.integer = (unsigned long long) V;
     }
 
   };

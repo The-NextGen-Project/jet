@@ -5,14 +5,12 @@
 
 namespace nextgen { namespace mem { using namespace nextgen::core;
 
-  // STD NAMING
   namespace os { // System allocators/libc
-
 
     void *calloc(size_t, size_t);
     void *malloc(size_t);
-    void *realloc(void *buf, size_t size);
-    void free(void *buf);
+    void *realloc(void *, size_t);
+    void free(void *);
 
   } // namespace nextgen::mem::os
 
@@ -22,76 +20,67 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
         os::free(ptr);
       }
     };
-
   }
 
   template<typename T>
   using Box = std::unique_ptr<T, detail::c_deleter>;
-
   template<typename T>
   using Rc = std::shared_ptr<T>;
 
 
   template<typename T>
   class Vec {
-
-    // Default
-    T *Pointer  = ((T*) os::calloc(1, sizeof(T)));
-    size_t Length   = 0;
-    size_t Capacity = 1;
-
+    T     *pointer  = ((T*) os::calloc(1, sizeof(T)));
+    size_t length   = 0;
+    size_t capacity = 1;
   public:
     Vec() = default;
-    explicit Vec(size_t Cap) : Capacity(Cap) {
-      Pointer = ((T*) os::calloc(Cap, sizeof(T)));
+    explicit Vec(size_t cap) : capacity(cap) {
+      pointer = ((T*) os::calloc(cap, sizeof(T)));
     }
 
-    NG_INLINE T *IntoRaw() {
-      return Pointer;
+    NG_AINLINE T *raw_ptr() {
+      return pointer;
     }
 
-    void Add(T elem) {
-      if (Length + 1 > Capacity) {
-        Capacity *= 2;
-        Pointer = (T*) os::realloc(IntoRaw(), sizeof(T) * Capacity);
+    void push(T elem) {
+      if (length + 1 > capacity) {
+        capacity *= 2;
+        pointer = (T*) os::realloc(raw_ptr(), sizeof(T) * capacity);
       }
-      Pointer[Length++] = elem;
+      pointer[length++] = elem;
     }
 
-    void Pop() {
-      ASSERT(Length >= 1, "Invalid List Pop.");
-      return Pointer[--Length];
+    void pop() {
+      ASSERT(length >= 1, "Invalid List Pop.");
+      return pointer[--length];
     }
 
-    bool Empty() {
-      return Length == 0;
+    bool empty() {
+      return length == 0;
     }
 
-    NG_INLINE void Clear() {
-      Length = 0;
-      os::free(Pointer);
+    void clear() {
+      length = 0;
+      os::free(pointer);
     }
 
-    NG_AINLINE auto Size() -> size_t const {
-      return Length;
+    size_t size()  {
+      return length;
     }
 
-    NG_AINLINE auto Cap() -> size_t const {
-      return Capacity;
+    size_t cap()  {
+      return capacity;
     }
 
-    NG_AINLINE auto GetPointer() -> T* const {
-      return Pointer;
+    T *operator[](size_t index)  {
+      ASSERT(index < UINTPTR_MAX, "Outside Index Range");
+      return pointer + index;
     }
 
-    NG_AINLINE auto operator[](size_t Index) -> T* {
-      ASSERT(Index < UINTPTR_MAX, "Outside Index Range");
-      return Pointer + Index;
-    }
-
-    NG_AINLINE auto At(size_t Index) -> T {
-      ASSERT(Index < UINTPTR_MAX, "Outside Index Range");
-      return Pointer[Index];
+    T At(size_t index) {
+      ASSERT(index < UINTPTR_MAX, "Outside Index Range");
+      return pointer[index];
     }
   };
 

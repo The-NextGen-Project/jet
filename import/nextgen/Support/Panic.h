@@ -54,9 +54,7 @@ namespace nextgen {
       std::cout << value;
     }
 
-
 # endif
-
     template<typename ... Args>
     static void Log(Args ... args) {
       using fold = int[];
@@ -78,21 +76,16 @@ namespace nextgen {
 (__FILE__), sizeof("ASSERT("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, \
 "ASSERT("#cond", "#msg");")
 
-  // Panic at a specific point in the code. This is simulated as an exception
-// throw caught by
-// main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,
-// and text of the panic message to have the user locate the failed point in the code.
-
 // Panic at a specific point in the code. This is simulated as an exception
-// throw caught by
-// main and returns a failure as to avoid misuse of "std::exit". It prints out the line number,
-// and text of the panic message to have the user locate the failed point in the code.
+// throw caught by main and returns a failure as to avoid misuse of
+// "std::exit". It prints out the line number,and text of the panic message
+// to have the user locate the failed point in the code.
   template<
     std::size_t N1, std::size_t N2, std::size_t N3,
     int LINE, bool Assert>
   static void PanicAt(
     const char (&msg)[N1],  /* Panic Message */
-    const char (&FILE)[N2], /* File Name of Error */
+    const char (&FILE)[N2], /* File name of Error */
     const char (&dup)[N3]) { /* Line text of Panic */
 
     Console::Log(FILE, ":", LINE, " ", Colors::RED, "error: ",

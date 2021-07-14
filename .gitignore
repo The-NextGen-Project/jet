@@ -16,6 +16,10 @@ _deps
 /cmake-build-release
 /cmake-build-debug-coverage
 /cmake-build-release-coverage
+/cmake-build-debug-mingw
+/cmake-build-release-mingw
+/cmake-build-debug-sys2
+/cmake-build-release-sys2
 /.vscode
 .ninja
 Makefile

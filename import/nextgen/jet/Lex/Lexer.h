@@ -86,12 +86,12 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       auto Tokens = Vec<Token>{};
       do {
         auto Instance = NextToken();
-        Tokens.Add(Instance);
+        Tokens.push(Instance);
       } while (!Fatal && BufferPosition < BufferSize);
 
       // Insert EOFToken for Out of Range Values
-      Tokens.Add(Token("\n", {CurrentLine, CurrentColumn},
-                       TokenKind::EOFToken));
+      Tokens.push(Token("\n", {CurrentLine, CurrentColumn},
+                        TokenKind::EOFToken));
       return Tokens;
     }
 
@@ -105,12 +105,12 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
 
     /// Peek `NChars` characters in the file buffer.
-    NG_INLINE auto Peek(size_t NChars) -> char {
+    NG_INLINE char Peek(size_t NChars)  {
       return *(Buffer + NChars);
     }
 
     /// Get the latest character in the file buffer
-    NG_AINLINE auto Curr() -> char const {
+    NG_AINLINE char Curr()  {
       return *Buffer;
     }
 
@@ -135,21 +135,16 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     /// them appropriately depending on \n or \r.
     NG_INLINE void SkipNewLine() {
       CurrentLine++;
-      Next(1);
       CurrentColumn = 1;
+
+      Next(1);
 
       char Current = *Buffer;
       char NextCh  = Peek(1);
-      match(Current, NextCh) {
-        group('\n', '\r'):
-        group ('\r', '\n'): {
-          if (Mode == LexMode::PrintingMode) { // Handle Print Case
-            Console::Log(NextCh);
-          }
-          ++CurrentLine, Next(1);
-        }
-        default:
-          break;
+
+      if (NextCh != Current && (NextCh == '\n' || NextCh == '\r')) {
+        if (Mode == LexMode::PrintingMode) Console::Log(NextCh);
+        ++CurrentLine, Next(1);
       }
     }
 

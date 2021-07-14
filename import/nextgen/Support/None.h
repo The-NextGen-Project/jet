@@ -40,8 +40,6 @@ namespace nextgen { // Putting this in the global namespace
   constexpr int pair(Enum1 k1, Enum2 k2, Enum3 k3, Enum4 k4) {
     return ((k1 + k2 + k3 + k4) << SHIFT_PAIR) | (k2 * k3 * k4);
   }
-
-
 }
 
 # endif //NEXTGEN_NONE_H
