@@ -3,7 +3,7 @@ project(jet)
 
 
 # Import
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/import)
+include_directories(${CMAKE_SOURCE_DIR}/import)
 
 
 # Force C++ 11 Standard

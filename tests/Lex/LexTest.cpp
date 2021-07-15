@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <nextgen/jet/Lex/lexer.h>
+#include <nextgen/jet/Lex/Lexer.h>
 #include <nextgen/jet/Diagnostics.h>
 
 TEST(LexTest, NonFMTNumbers) {
