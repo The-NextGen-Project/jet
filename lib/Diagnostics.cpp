@@ -18,12 +18,13 @@ using nextgen::jet::Diagnostic;
 template<typename... Args>
 static void AddHint(std::string &line, Args&& ... hint) {
 
+
   // Align space
   FOR(i, line.length() + 1) {
     Console::Log(" ");
   }
 
-  Console::Log(hint..., Colors::RESET);
+  Console::Log(hint..., nextgen::Colors::RESET);
 }
 
 void Diagnostic::build(LexError Error) {
