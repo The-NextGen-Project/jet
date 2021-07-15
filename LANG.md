@@ -40,7 +40,7 @@ Current Status: **WIP**
 | `^`            | Designates a type as a smart pointer (a little more into that later).  |
 | `*`            | Type is a pointer. |
 | `?`            | Optional type. Either None or the value. |
-| `&`            | Memory reference to the location of an object (or a pass by reference). |
+| `&`            | allocator reference to the location of an object (or a pass by reference). |
 
 Operators
 -----------
@@ -59,7 +59,7 @@ Current Status: **WIP**
 | `~`            | Bitwise Not and Concat. |
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
-| `??`           | Value / Operation action. |
+| `??`           | Value / operation action. |
 > **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
 > in the future, but the list is not likely to change much at all.
 
@@ -128,7 +128,7 @@ len(list);
 ```
 Length is checked in a similar global length function that can find the length of various types, including lists.
 
-### Variable initialization
+### variable initialization
 Current Status: **Planned**
 ```python
 var (a, b, c) = [1, 2, 3];
@@ -158,7 +158,7 @@ fn my_func(a int, b int, c str) {
 ...
 }
 ```
-Parameters are ordered in the format of VariableName -> Typename. A variable of type `str` with a name of `name` would be 
+parameters are ordered in the format of VariableName -> Typename. A variable of type `str` with a name of `name` would be 
 written as `name str`. For those familiar with Golang, it follows a similar naming convention. Generic functions are also 
 supported:
 ```zig
@@ -219,7 +219,7 @@ This is especially a very interesting part of the programming language. We will 
 will need to be Jet projects that can be recognizable and imported directly into your project. This may be a good way to consistantly 
 ensure that you have the latest stable version of the git repository imported into your programming language. 
 
-### Exporting Values
+### Exporting values
 Current Status: **Planned**
 
 Functions:
@@ -237,7 +237,7 @@ Variables:
 export var MyGlobalVariable = 32;
 ```
 
-Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
+values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
 of the `export` before the declaration.
 
 End

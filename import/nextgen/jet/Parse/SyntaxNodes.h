@@ -5,7 +5,7 @@
 namespace nextgen { namespace jet {
 
     // Needed for reference to all other syntax expressions
-    class SyntaxExpression;
+    struct SyntaxNode;
 
     enum SyntaxKind {
       LiteralValue,
@@ -69,16 +69,17 @@ namespace nextgen { namespace jet {
     };
 
     struct SyntaxLiteral {
-      Token *Literal;
+      Token *literal;
     };
 
-    struct SyntaxBinary {
-      SyntaxBinaryOp Operation;
-      SyntaxExpression *LHS;
-      SyntaxExpression *RHS;
-      Token *Op;
 
-      static NG_INLINE auto MatchOp(TokenKind Kind) -> SyntaxBinaryOp {
+    struct SyntaxBinary {
+      SyntaxBinaryOp operation;
+      SyntaxNode *lhs;
+      SyntaxNode *rhs;
+      Token *op;
+
+      static NG_INLINE SyntaxBinaryOp MatchOp(TokenKind Kind) {
         switch(Kind) {
           case TokenKind::Plus:
             return SyntaxBinaryOp::Addition;
@@ -101,60 +102,59 @@ namespace nextgen { namespace jet {
           case TokenKind::RightShift:
             return SyntaxBinaryOp::BinaryShRight;
           default:
-            Console::Log("I WAS HERE\n");
-            break;
+            UNREACHABLE;
         }
       }
     };
 
     struct SyntaxType {
-      SyntaxTypeAnnotation Modifier;
-      SyntaxTypeValue Value;
-      Option<int> Indirection;
+      SyntaxTypeAnnotation modifier;
+      SyntaxTypeValue value;
+      Option<int> indirection;
     };
 
-    // ST { pointer,  }
-
     struct SyntaxList {
-      Vec<SyntaxExpression*> Values;
+      Vec<SyntaxNode*> values;
     };
 
     struct SyntaxVariableAssignment {
-      Token *Name;
-      Option<SyntaxType> Type;
-      SyntaxExpression *Expression;
+      Token *name;
+      Option<SyntaxType> type;
+      SyntaxNode *expression;
     };
 
+
     struct SyntaxVariableReassignment {
-      Token *Variable;
-      SyntaxExpression *Expression;
+      Token *variable;
+      SyntaxNode *expression;
     };
 
     struct SyntaxBlock {
-      Vec<SyntaxExpression*> Statements;
+      Vec<SyntaxNode*> statements;
     };
 
+
     struct SyntaxElse {
-      SyntaxBlock Body;
+      SyntaxBlock body;
     };
 
     struct SyntaxElif {
-      SyntaxBlock Body;
+      SyntaxBlock body;
     };
 
     struct SyntaxIf {
-      SyntaxExpression *Condition;
-      SyntaxBlock Body;
-      SyntaxExpression *Else;
-      SyntaxExpression *Elif;
+      SyntaxNode *condition;
+      SyntaxBlock body;
+      SyntaxNode *else_;
+      SyntaxNode *elif;
     };
 
     struct SyntaxUnary {
-      SyntaxUnaryOp Operation;
-      Token *Op;
-      SyntaxExpression *Expression;
+      SyntaxUnaryOp operation;
+      Token *op;
+      SyntaxNode *expression;
 
-      static NG_INLINE auto MatchOp(TokenKind Kind) -> SyntaxUnaryOp {
+      static NG_INLINE SyntaxUnaryOp MatchOp(TokenKind Kind) {
         switch(Kind) {
           case TokenKind::Plus:
             return SyntaxUnaryOp::Positive;
@@ -172,35 +172,35 @@ namespace nextgen { namespace jet {
     };
 
     struct SyntaxFunctionParameter {
-      Token *ParameterName;
-      Option<SyntaxType> Type; // Generic Parameter (no repr types)
+      Token *param_name;
+      Option<SyntaxType> type; // Generic Parameter (no repr types)
     };
 
     struct SyntaxFunction {
-      Token *FunctionName;
-      Option<SyntaxType> FunctionType;
-      SyntaxBlock Body;
-      Vec<SyntaxFunctionParameter> Parameters;
+      Token *function_name;
+      Option<SyntaxType> function_type;
+      SyntaxBlock body;
+      Vec<SyntaxFunctionParameter> parameters;
     };
 
     struct SyntaxFunctionCall {
-      Token *FunctionName;
-      Vec<SyntaxExpression*> Parameters;
+      Token *function_name;
+      Vec<SyntaxNode*> parameters;
     };
 
     struct SyntaxForList {
-      Token *ListName;
-      Token *ListVar;
-      SyntaxBlock Body;
+      Token *list_name;
+      Token *list_var;
+      SyntaxBlock body;
     };
 
     struct SyntaxForRange {
-      Token *ListVar;
-      SyntaxBlock Body;
+      Token *list_var;
+      SyntaxBlock body;
     };
 
-    struct SyntaxExpression {
-      SyntaxKind Kind;
+    struct SyntaxNode {
+      SyntaxKind kind;
       union {
         SyntaxLiteral Literal;
         SyntaxBinary  Binary;

@@ -3,16 +3,31 @@
 #include <nextgen/jet/Parse/Parser.h>
 
 
-using namespace nextgen::jet;
 
-void Diagnostic::Build(LexError Error) {
-  SourceLine = GetNthLineOfBuffer(Error.Location.line);
+using nextgen::Console;
+using nextgen::Colors;
+using nextgen::jet::Diagnostic;
+
+
+template<typename... Args>
+static void AddHint(std::string &line, Args&& ... hint) {
+
+  // Align space
+  FOR(i, line.length() + 1) {
+    Console::Log(" ");
+  }
+
+  Console::Log(hint..., Colors::RESET);
+}
+
+void Diagnostic::build(LexError Error) {
+  SourceLine = GetNthLineOfBuffer(Error.location.line);
   Console::Log(Colors::RED, "Error "
                                 "---------------------------------------------------------- ", FileName, ":",
-               Error.Location.line, ":", Error.Location
+               Error.location.line, ":", Error.location
                       .column, "\n",
                Colors::RESET);
-  switch (Error.Error) {
+  switch (Error.error) {
     case MalformedUTF8:
       break;
     case InvalidChar:
@@ -58,7 +73,8 @@ void Diagnostic::Build(LexError Error) {
   Console::Log(Colors::RESET, "\n");
 }
 
-void Diagnostic::Build(ParseError Error) {
+
+void Diagnostic::build(ParseError Error) {
   switch (Error.Error) {
     case ReservedIdentifierAsVariableName:
       break;
@@ -75,13 +91,13 @@ void Diagnostic::Build(ParseError Error) {
   }
 }
 
-nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
+nextgen::str Diagnostic::GetNthLineOfBuffer(size_t nth) {
   bool Found = false;
   int Count = 1;
   const char *Copy = FileBuffer;
   const char *FoundPoint;
 
-  if (Nth == 1) {
+  if (nth == 1) {
     return str {FileBuffer, BufferLength};
   }
 
@@ -92,7 +108,7 @@ nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
       }
       Count++;
     }
-    if (Count == Nth) {
+    if (Count == nth) {
       if (!Found) {
         FoundPoint = Copy + 1;
         Found = true;
@@ -110,19 +126,19 @@ nextgen::str Diagnostic::GetNthLineOfBuffer(size_t Nth) {
 /// ------------- Lexing Errors -------------
 
 
-void Diagnostic::ErrorMissingClosingDelim(nextgen::jet::LexError &Error) {
+void Diagnostic::ErrorMissingClosingDelim(nextgen::jet::LexError &error) {
   Console::Log(Colors::RESET, "Missing Closing Delim\n\n");
-  auto Line = std::to_string(Error.Location.line);
+  auto Line = std::to_string(error.location.line);
 
-  ErrorLexSetup(Line, "Reached EOF Before Closing Delim", Error);
+  ErrorLexSetup(Line, "Reached EOF Before Closing Delim", error);
   AddHint(Line, Colors::CYAN, "= ", Colors::GREEN, "try: ",
-          Colors::RESET, "Add `", (char) Error.Metadata[0], "` to the end of "
+          Colors::RESET, "Add `", (char) error.metadata[0], "` to the end of "
                                                             "the statement");
 }
 
 void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
   Console::Log(Colors::RESET, "Integer Value Too Large\n\n");
-  auto Line = std::to_string(Error.Location.line);
+  auto Line = std::to_string(Error.location.line);
 
   ErrorLexSetup(Line, "Overflow Occurs Here", Error);
 
@@ -158,24 +174,24 @@ void Diagnostic::ErrorMalformedUTF8(LexError &Error) {
 }
 
 
-void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
+void Diagnostic::ErrorDigitOutOfRange(LexError &error) {
   Console::Log(Colors::RESET, "Digit Value Out Of Range\n\n");
 
-  auto Line = std::to_string(Error.Location.line);
-  ErrorLexSetup(Line, "Digit does not match Integer Radix", Error);
+  auto Line = std::to_string(error.location.line);
+  ErrorLexSetup(Line, "Digit does not match Integer Radix", error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ", Colors::RESET,
           "The integer value you wrote was ",
-          Colors::YELLOW, "Base ", Error.Metadata[0], Colors::RESET,
+          Colors::YELLOW, "Base ", error.metadata[0], Colors::RESET,
           " which accepts digits ");
 
-  switch (Error.Metadata[0]) {
+  switch (error.metadata[0]) {
     case 10:
       Console::Log("[", Colors::YELLOW, "0-9", Colors::RESET, "]");
       break;
     case 16:
       Console::Log(Colors::YELLOW, "0-9, a-f, and A-F", Colors::RESET,
-                   " not ", Colors::RED, "'", SourceLine[Error.Location.column],
+                   " not ", Colors::RED, "'", SourceLine[error.location.column],
                    "'",Colors::RESET, '\n');
       break;
     default:
@@ -183,9 +199,9 @@ void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
   }
   AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
           Colors::RESET, "Insert ");
-  Error.FailedToken.PrettyPrint();
+  error.failed_token.PrettyPrint();
 
-  switch (Error.Metadata[0]) {
+  switch (error.metadata[0]) {
     case 10:
       Console::Log(Colors::RED, "_ <-- ", Colors::RESET, "[",
                    Colors::YELLOW, "0-9", Colors::RESET, "]\n");
@@ -200,20 +216,20 @@ void Diagnostic::ErrorDigitOutOfRange(LexError &Error) {
 
 }
 
-void Diagnostic::ErrorHexEscapeOutOfRange(LexError &Error) {
+void Diagnostic::ErrorHexEscapeOutOfRange(LexError &error) {
   Console::Log(Colors::RESET, "Escape Digit Value Out Of Range\n\n");
 
-  auto Line = std::to_string(Error.Location.line);
-  ErrorLexSetup(Line, "Digit is not Base 16", Error);
+  auto Line = std::to_string(error.location.line);
+  ErrorLexSetup(Line, "Digit is not Base 16", error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ",
           Colors::RESET, "Value started as Base 16"
                          " but value encountered was Base ",
-          Error.Metadata[0], '\n');
+          error.metadata[0], '\n');
 
   AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
           Colors::RESET, "Insert ");
-  Error.FailedToken.PrettyPrint();
+  error.failed_token.PrettyPrint();
   Console::Log(Colors::RED, "_ <-- ", Colors::RESET, "[",
                Colors::YELLOW, "0-9a-fA-F", Colors::RESET, "]\n\n");
 
@@ -227,11 +243,11 @@ void Diagnostic::ErrorHexEscapeOutOfRange(LexError &Error) {
                                                     "these.");
 }
 
-void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
+void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
   Console::Log(Colors::RESET, "Not a Valid String Escape\n\n");
 
-  auto Line = std::to_string(Error.Location.line);
-  ErrorLexSetup(Line, "Not a String Escape", Error);
+  auto Line = std::to_string(error.location.line);
+  ErrorLexSetup(Line, "Not a String Escape", error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
           Colors::GREEN,
@@ -241,7 +257,7 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
   Console::Log(Colors::BLUE, "String Escapes are used to escape "
                "characters that ""are otherwise hard to display. \n",
                Colors::RED, "'\\",
-               SourceLine[Error.Location.column - 1], "'", Colors::BLUE,
+               SourceLine[error.location.column - 1], "'", Colors::BLUE,
                " is not a valid string escape. "
                "View the complete list in the language documentation: \n",
                "https://github.com/The-NextGen-Project/jet/blob/main/LANG.md",
@@ -249,45 +265,35 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &Error) {
 
 }
 
-void Diagnostic::ErrorLexSetup(std::string& Line, const char *Message,
-                               LexError &Error) {
+void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
+                               LexError &error) {
 
-  auto LexPrint = Lexer(Memory, (const char *) SourceLine, FileName,
-                             SourceLine.size(),
-                             LexMode::PrintingMode);
+  auto printer = Lexer(Memory, (const char *) SourceLine, FileName,
+                       SourceLine.size(),
+                       LexMode::PrintingMode);
 
-  // Log Error Line
-  Console::Log(Colors::RESET, Line, " |\t ");
-  LexPrint.LexPrint(); // Print Failed Token
+  // Log error line
+  Console::Log(Colors::RESET, line, " |\t ");
+  printer.LexPrint(); // Print Failed Token
 
   Console::Log("\n");
+
   // Align space
-  for (int i = 0; i < Line.length() + 1; ++i) {
-    Console::Log(" ");
-  }
+  FOR(i, line.length() + 1)  Console::Log(" ");
+
   Console::Log("\t", Colors::RED);
-  for (auto i = 0; i < SourceLine.size(); ++i) {
-    if (i == Error.FailedToken.getSourceLocation().column) {
-      for (int j = 0; j < Error.FailedToken.name().size(); ++j) {
+  FOR(column, SourceLine.size()) {
+    if (column == error.failed_token.getSourceLocation().column) {
+      FOR(ch, error.failed_token.name().size()) {
         Console::Log("^");
       }
       break;
     }
     Console::Log(" ");
   }
-  Console::Log("_ <-- ", Message);
+
+  Console::Log("_ <-- ", message);
   Console::Log("\n\n");
-}
-
-template<typename... Args>
-NG_INLINE void Diagnostic::AddHint(std::string &Line, Args&& ... Hint) {
-
-  // Align space
-  for (int i = 0; i < Line.length() + 1; ++i) {
-    Console::Log(" ");
-  }
-
-  Console::Log(Hint..., Colors::RESET);
 }
 
 

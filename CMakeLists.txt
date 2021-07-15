@@ -29,6 +29,5 @@ add_executable(jet main.cpp
         lib/Diagnostics.cpp
 
         # Parsing
-        lib/Parse/Parser.cpp
 
         )

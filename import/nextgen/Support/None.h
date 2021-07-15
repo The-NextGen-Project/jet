@@ -6,6 +6,10 @@ namespace nextgen { // Putting this in the global namespace
   enum class NoneValue { None = 1 };
   static constexpr NoneValue None = NoneValue::None;
 
+  template<typename T, size_t N>
+  struct Array {
+    T array[N];
+  };
 
   template<typename T, size_t N>
   constexpr size_t SizeOfArray(const T(&arr)[N]) {

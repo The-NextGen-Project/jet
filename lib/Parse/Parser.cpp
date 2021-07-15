@@ -35,49 +35,51 @@
 
 using namespace nextgen::jet;
 
-void Parser::Parse() {
-  switch (Curr()->getKind()) {
+using nextgen::Vec;
+
+void Parser::parse() {
+  switch (curr()->getKind()) {
     case TokenKind::EOFToken:
       break;
     case TokenKind::KeywordVar:
-      Skip(1);
-      ParseVariableDecl();
+      skip(1);
+      parse_variable_decl();
       break;
     case TokenKind::KeywordStruct:
-      Skip(1);
-      ParseStructDecl();
+      skip(1);
+      parse_struct();
       break;
     case TokenKind::KeywordFunction:
-      Skip(1);
-      ParseFunctionDecl();
+      skip(1);
+      parse_function();
       break;
     case TokenKind::KeywordIf:
-      Skip(1);
-      ParseIfStatement();
+      skip(1);
+      parse_if();
       break;
     case TokenKind::KeywordFor:
-      Skip(1);
-      ParseForStatement();
+      skip(1);
+      parse_for();
       break;
     case TokenKind::KeywordMatch:
-      Skip(1);
-      ParseMatchStatement();
+      skip(1);
+      parse_match();
       break;
     case TokenKind::Identifier: {
-      auto C1 = Peek(1);
-      auto C2 = Peek(2);
-      auto C3 = Peek(3);
+      auto C1 = peek(1);
+      auto C2 = peek(2);
+      auto C3 = peek(3);
 
       // TODO: What if we are in generics?
       if (C1->getKind() == TokenKind::Dot) {
         if (C2->getKind() == TokenKind::Identifier) {
           if (C3->getKind() == TokenKind::Equals) {
             // Ok, we are in special struct function
-            Skip(3);
-            ParseStructFunctionDecl(Curr(), C2);
+            skip(3);
+            parse_struct_function(curr(), C2);
           }
-        } else ParseExpression();
-      } else ParseExpression();
+        } else parse_expr();
+      } else parse_expr();
       break;
     }
     default: // TODO: Figure out what to do here
@@ -85,112 +87,146 @@ void Parser::Parse() {
   }
 }
 
-auto NG_AINLINE Parser::Peek(size_t NTok) -> Token* {
-  return Tokens[Position + NTok];
+Token *Parser::peek(size_t n)  {
+  return tokens.get_pointer_at(position + n);
 }
 
-auto Parser::Skip(TokenKind Kind, ParseErrorType ErrorKind) -> Token* {
-  auto Next = Tokens[Position++];
-  if (Next->getKind() != Kind) {
+Token *Parser::skip(TokenKind kind, ParseErrorType error_kind) {
+  auto next = tokens.get_pointer_at(position++);
+  if (next->getKind() != kind) {
     // TODO: Add Error Handling Here
     //PANIC("OH NO");
+
+    return nullptr;
   }
-  return Next;
+  return next;
 }
 
-auto Parser::Skip(size_t NTok) -> Token*  {
-  Position += NTok;
-  return Tokens[Position];
+Token *Parser::skip(size_t n)  {
+  auto *ret = tokens.get_pointer_at(position);
+  position += n;
+  return ret;
 }
 
+Token *Parser::next(size_t n) {
+  skip(n);
+  return curr();
+}
 
-auto Parser::ParseVariableDecl() -> SyntaxExpression* {
-  auto Name = Skip(TokenKind::Identifier, ParseErrorType::MissingVariableName);
+int Parser::expect(TokenKind kind) {
+  Token next = tokens[position++];
+  if (next.getKind() != kind) {
+    this->diagnostics.build(ParseError(
+      ParseErrorType::ExpectedToken, 
+      next.getSourceLocation(),
+      {
+        ParseError::Metadata { kind, next.getKind() }
+      }
+    ));
+    return 0;
+  }
+  return 1;
+}
 
-  if (Name->isKeyword()) {
-    // TODO: Add Error Here
+SyntaxNode *Parser::parse_variable_decl()  {
+  auto name = skip(1);
+
+  if (name->isKeyword()) {
+    this->diagnostics.build(ParseError{
+      ParseErrorType::ReservedIdentifierAsVariableName,
+      name->getSourceLocation()
+    });
   }
 
-  Skip(TokenKind::Equals, ParseErrorType::ExpectedToken);
-  auto Expr = ParseExpression();
+  if (name->getKind() != TokenKind::Identifier) {
+    this->diagnostics.build(ParseError{
+      ParseErrorType::MissingVariableName,
+      name->getSourceLocation()
+    });
+  }
+
+  auto res = expect(TokenKind::Equals);
+  if (!res) { this->fatal = true; return nullptr; }
+
+  auto expr = parse_expr();
 
   // var my_var = 23
   // var my_var: int = 23
 
-  auto E = Memory->Next<SyntaxExpression>(1);
-  E->Kind = SyntaxKind::VariableAssignment;
+  auto E = allocator->allocate<SyntaxNode>();
+  E->kind = SyntaxKind::VariableAssignment;
 
-  if (Peek(1)->getKind() == TokenKind::Colon) {
-    auto Type = ParseValueType();
+  if (peek(1)->getKind() == TokenKind::Colon) {
+    auto type = parse_type();
     E->VariableAssignment = {
-      Name, Type, Expr
+      name, type, expr
     };
     return E;
   } else {
     E->VariableAssignment = SyntaxVariableAssignment {
-      Name, None, Expr
+      name, None, expr
     };
     return E;
   }
 }
 
-auto Parser::ParseDecl() -> SyntaxExpression* {
+auto Parser::parse_decl() -> SyntaxNode* {
   return nullptr;
 }
 
 
 /// Pratt Parsing Expression Technique (Precedence Matching)
 /// References: https://en.wikipedia.org/wiki/Operator-precedence_parser
-auto Parser::ParseExpression(int PreviousBinding) -> SyntaxExpression*  {
-  auto LHS = Memory->Next<SyntaxExpression>(1);
-  auto BeginToken = Curr();
-  auto BeginKind = BeginToken->getKind();
+SyntaxNode *Parser::parse_expr(int previous_binding)  {
+  auto lhs = allocator->allocate<SyntaxNode>(1);
+  auto first_token = curr();
+  auto first_kind = first_token->getKind();
 
   // ~ : Bitwise NOT
   // + : Positive
   // - : Negation
-  // & : Memory Reference
+  // & : allocator Reference
   // * : pointer Dereference
-  auto UnaryBinding = Parser::UnaryOperatorBinding(BeginKind);
-  if (UnaryBinding > PreviousBinding) {
-    auto E = ParseExpression(UnaryBinding);
-    const auto Op = SyntaxUnary::MatchOp(BeginKind);
-    LHS->Unary = {
-      Op, BeginToken, E
+  auto unary_binding = Parser::UnaryOperatorBinding(first_kind);
+  if (unary_binding > previous_binding) {
+    auto E = parse_expr(unary_binding);
+    const auto op = SyntaxUnary::MatchOp(first_kind);
+    lhs->Unary = {
+      op, first_token, E
     };
   } else {
-    LHS = MatchExpression();
+    lhs = match_expr();
   }
 
-  for (;;) {
-    auto Op = Skip(1);
-    auto OpKind = Op->getKind();
+  while (curr()->getKind() != EOFToken) {
+    auto op = next(1);
+    auto op_kind = op->getKind();
 
-    const auto OpBindings = Parser::InfixOperatorBinding(OpKind);
-    if (/* LeftBindingPrecedence */ OpBindings[0] <= PreviousBinding)
+    const auto op_bindings = Parser::InfixOperatorBinding(op_kind);
+    if (/* LeftBindingPrecedence */ op_bindings[0] <= previous_binding)
       break;
-    Skip(1);
-    const auto RHS = ParseExpression(/* RightBindingPrecedence */
-      OpBindings[1]);
-    auto NewExpression = Memory->Next<SyntaxExpression>(1);
-    NewExpression->Binary = {
-      SyntaxBinary::MatchOp(OpKind), LHS, RHS, Op
+    skip(1);
+    const auto rhs = parse_expr(/* RightBindingPrecedence */
+      op_bindings[1]);
+    auto new_expr = allocator->allocate<SyntaxNode>(1);
+    new_expr->Binary = {
+      SyntaxBinary::MatchOp(op_kind), lhs, rhs, op
     };
-    NewExpression->Kind = SyntaxKind::Binary;
-    // Move pointer to LHS
-    LHS = NewExpression;
+    new_expr->kind = SyntaxKind::Binary;
+    // Move pointer to lhs
+    lhs = new_expr;
   }
-  return LHS;
+  return lhs;
 }
 
-auto Parser::MatchExpression() -> SyntaxExpression * {
-  auto BeginToken = Curr();
-  switch (BeginToken->getKind()) {
+SyntaxNode *Parser::match_expr() {
+  auto first_token = curr();
+  switch (first_token->getKind()) {
     case EOFToken:
       // TODO: Handle Error Case
       break;
-    case Identifier: {// Unresolved Variable or Function Call
-      if (Peek(1)->getKind() == TokenKind::LParenthesis) {
+    case Identifier: {// Unresolved variable or Function Call
+      if (peek(1)->getKind() == TokenKind::LParenthesis) {
         // This is a function call
         // auto E = ParseFunctionCallExpression()
         // return E;
@@ -202,32 +238,31 @@ auto Parser::MatchExpression() -> SyntaxExpression * {
     case Decimal:
     case KeywordTrue:
     case KeywordFalse: {
-      auto E = Memory->Next<SyntaxExpression>(1);
+      auto E = allocator->allocate<SyntaxNode>(1);
       E->Literal = {
-        BeginToken
+        first_token
       };
-      E->Kind = SyntaxKind::LiteralValue;
+      E->kind = SyntaxKind::LiteralValue;
       return E;
     }
     case LParenthesis: {
-      auto E = ParseExpression();
-      Skip(TokenKind::RParenthesis, ParseErrorType::MissingClosingParenthesis);
+      auto E = parse_expr();
+      skip(TokenKind::RParenthesis, ParseErrorType::MissingClosingParenthesis);
       return E;
     }
     case LBracket: { // ie: [1, 2, 3]
-      auto Current = Skip(1);
-      auto Values = Vec<SyntaxExpression*>(5);
-      while (Current->getKind() != TokenKind::RBracket) {
-        if (Current->getKind() == TokenKind::EOFToken) {
+      auto current = next(1);
+      auto values = Vec<SyntaxNode*>(5);
+      while (current->getKind() != TokenKind::RBracket) {
+        if (current->getKind() == TokenKind::EOFToken) {
           // TODO: Add Error
         }
-        Values.push(ParseExpression());
-        Current = Skip(TokenKind::Comma,
-                     ParseErrorType::MissingClosingCurlyBrace);
+        values.push(parse_expr());
+        current = skip(1);
       }
-      auto E  = Memory->Next<SyntaxExpression>(1);
-      E->Kind = SyntaxKind::List;
-      E->List = SyntaxList { Values };
+      auto E  = allocator->allocate<SyntaxNode>();
+      E->kind = SyntaxKind::List;
+      E->List = SyntaxList { values };
       return E;
     }
     default: // TODO: Unexpected Expression Token
@@ -237,126 +272,121 @@ auto Parser::MatchExpression() -> SyntaxExpression * {
 }
 
 
-auto Parser::ParseStatement() -> SyntaxExpression* {
+SyntaxNode *Parser::parse_stmt()  {
   return nullptr;
 }
 
-auto Parser::ParseValueType() -> Option<SyntaxType> {
-  if (Peek(1)->getKind() == TokenKind::Comma)
+Option<SyntaxType> Parser::parse_type()  {
+  if (peek(1)->getKind() == TokenKind::Comma)
     return None;
+  return None;
 }
 
-auto Parser::ParseIfStatement() -> SyntaxExpression* {
-  auto Cond = ParseExpression();
+SyntaxNode *Parser::parse_if()  {
+  auto cond = parse_expr();
 
-  SyntaxBlock Body;
-  SyntaxExpression *Else = nullptr;
-  SyntaxExpression *Elif = nullptr;
+  SyntaxBlock body;
+  SyntaxNode *else_ = nullptr;
+  SyntaxNode *elif_ = nullptr;
 
-  Body = ParseBlock();
-  auto IsElse = Skip(1);
-  if (IsElse->getKind() == TokenKind::KeywordElse) {
-    SyntaxBlock ElseBody = ParseBlock();
-    Else = Memory->Next<SyntaxExpression>(1);
-    Else->Kind = SyntaxKind::Else;
-    Else->Else = {
-      ElseBody
+  body = parse_block();
+  auto is_else = skip(1);
+  if (is_else->getKind() == TokenKind::KeywordElse) {
+    SyntaxBlock else_body = parse_block();
+    else_ = allocator->allocate<SyntaxNode>(1);
+    else_->kind = SyntaxKind::Else;
+    else_->Else = {
+      else_body
     };
   }
-  else if (IsElse->getKind() == TokenKind::KeywordElif) {
-    Elif = ParseIfStatement();
-    Elif->Kind = SyntaxKind::Elif;
+  else if (is_else->getKind() == TokenKind::KeywordElif) {
+    elif_ = parse_if();
+    elif_->kind = SyntaxKind::Elif;
   }
 
-  auto E = Memory->Next<SyntaxExpression>(1);
-  E->Kind = SyntaxKind::If;
+  auto E = allocator->allocate<SyntaxNode>(1);
+  E->kind = SyntaxKind::If;
   E->If = {
-    Cond, Body, Else, Elif
-  };
-}
-
-auto Parser::ParseForStatement() -> SyntaxExpression * {
-  auto LoopVar = Skip(TokenKind::Identifier,
-                      ParseErrorType::MissingForLoopVariable);
-  Skip(TokenKind::KeywordIn, ParseErrorType::ExpectedToken);
-
-  auto Begin = Skip(1);
-}
-
-auto Parser::ParseMatchStatement() -> SyntaxExpression * {
-  return nullptr;
-}
-
-auto Parser::ParseFunctionParam() -> Vec<SyntaxFunctionParameter> {
-  Skip(TokenKind::LParenthesis, ParseErrorType::ExpectedToken);
-  auto Current = Curr();
-  auto Params  = Vec<SyntaxFunctionParameter>{};
-  while (Current->getKind() != TokenKind::RParenthesis) {
-    auto ParamName = Skip(TokenKind::Identifier,
-                          ParseErrorType::ExpectedIdentifierForFunctionParameter);
-    Params.push({
-                  ParamName, ParseValueType()
-                });
-  }
-  return Params;
-}
-
-auto Parser::ParseFunctionDecl() -> SyntaxExpression * {
-  auto E = Memory->Next<SyntaxExpression>(1);
-  auto FunctionName = Skip(TokenKind::Identifier,
-                           ParseErrorType::MissingFunctionName);
-
-  auto Params       = ParseFunctionParam();
-  auto FunctionType = ParseValueType();
-  auto FunctionBody = ParseBlock();
-
-  E->Kind = SyntaxKind::FunctionDefault;
-  E->Function = {
-    FunctionName, FunctionType, FunctionBody, Params
-  };
-  return nullptr;
-}
-
-auto Parser::ParseStructDecl() -> SyntaxExpression * {
-  return nullptr;
-}
-
-auto Parser::ParseFunctionCall() -> SyntaxExpression * {
-  auto FunctionName = Skip(1); // Guaranteed to be IDENT
-  auto Params = Vec<SyntaxExpression*>{};
-  Skip(TokenKind::LParenthesis, ParseErrorType::ExpectedToken);
-  while(Curr()->getKind() != TokenKind::RParenthesis) {
-    Params.push(ParseExpression());
-  }
-  Skip(TokenKind::RParenthesis, ParseErrorType::ExpectedToken);
-
-  auto E = Memory->Next<SyntaxExpression>(1);
-  E->Kind = SyntaxKind::FunctionCall;
-  E->FunctionCall = {
-    FunctionName, Params
+    cond, body, else_, elif_
   };
   return E;
 }
 
-auto Parser::ParseBlock() -> SyntaxBlock {
-  Skip(TokenKind::LCurlyBrace, ParseErrorType::ExpectedToken);
+SyntaxNode *Parser::parse_for()  {
+  auto LoopVar = skip(TokenKind::Identifier,
+                      ParseErrorType::MissingForLoopVariable);
+  skip(TokenKind::KeywordIn, ParseErrorType::ExpectedToken);
 
-  auto Current = Curr();
-  auto Statements = Vec<SyntaxExpression*>{};
-  while (Current->getKind() != TokenKind::RCurlyBrace) {
-    Statements.push(ParseStatement());
+  auto Begin = skip(1);
+  return nullptr;
+}
+
+auto Parser::parse_match() -> SyntaxNode * {
+  return nullptr;
+}
+
+Vec<SyntaxFunctionParameter> Parser::parse_function_param() {
+  skip(TokenKind::LParenthesis, ParseErrorType::ExpectedToken);
+  auto current = curr();
+  auto params  = Vec <SyntaxFunctionParameter> {};
+  while (current->getKind() != TokenKind::RParenthesis) {
+    auto param_name = skip(TokenKind::Identifier,
+                           ParseErrorType::ExpectedIdentifierForFunctionParameter);
+    expect(TokenKind::Colon);
+    params.push({param_name, parse_type()});
   }
-  Skip(TokenKind::RCurlyBrace, ParseErrorType::ExpectedToken);
+  return params;
+}
+
+SyntaxNode *Parser::parse_function() {
+  auto E = allocator->allocate<SyntaxNode>(1);
+  auto function_name = skip(TokenKind::Identifier,
+                            ParseErrorType::MissingFunctionName);
+
+  auto params        = parse_function_param();
+  auto function_ty   = parse_type();
+  auto function_body = parse_block();
+
+  E->kind = SyntaxKind::FunctionDefault;
+  E->Function = {
+    function_name, function_ty, function_body, params
+  };
+  return E;
+}
+
+SyntaxNode *Parser::parse_function_call() {
+  auto function_name = skip(1); // Guaranteed to be IDENT
+  auto params = Vec<SyntaxNode*>{};
+  expect(TokenKind::LParenthesis);
+  while(curr()->getKind() != TokenKind::RParenthesis) {
+    params.push(parse_expr());
+  }
+  expect(TokenKind::RParenthesis);
+  auto E = allocator->allocate<SyntaxNode>(1);
+  E->kind = SyntaxKind::FunctionCall;
+  E->FunctionCall = {
+    function_name, params
+  };
+  return E;
+}
+
+SyntaxBlock Parser::parse_block()  {
+  expect(TokenKind::LCurlyBrace);
+  auto current = curr();
+  auto statements = Vec<SyntaxNode*>{};
+  while (current->getKind() != TokenKind::RCurlyBrace) {
+    statements.push(parse_stmt());
+  }
+  expect(TokenKind::RCurlyBrace);
   return {
-    Statements
+    statements
   };
 }
 
-auto Parser::ParseStructFunctionDecl(Token *Struct, Token *FuncName) ->
-SyntaxExpression
-* {
-
+SyntaxNode *Parser::parse_struct()  {
+  return nullptr;
 }
 
-
-
+SyntaxNode *Parser::parse_struct_function(Token *s, Token *func_name) {
+  return nullptr;
+}

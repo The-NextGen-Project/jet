@@ -14,8 +14,8 @@ TEST(Lists, ListTest) {
   list.push(3554);
   list.push(3554);
 
-  ASSERT_EQ(list.At(0), 23);
-  ASSERT_EQ(list.At(1), 24);
-  ASSERT_EQ(list.At(2), 53554);
-  ASSERT_EQ(list.At(3), 3554);
+  ASSERT_EQ(list[0], 23);
+  ASSERT_EQ(list[1], 24);
+  ASSERT_EQ(list[2], 53554);
+  ASSERT_EQ(list[3], 3554);
 }

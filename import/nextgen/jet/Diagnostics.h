@@ -30,28 +30,24 @@ namespace nextgen { namespace jet {
       : FileBuffer(Buffer), FileName(FileName), Memory(Mem), BufferLength(BufLen) {}
       
     /// Build Error Message for a Lexing Error
-    void Build(LexError Error);
+    void build(LexError Error);
 
     /// Build Error Message for a Lexing Error
-    void Build(ParseError Error);
+    void build(ParseError Error);
 
   private:
     // Helpers
-    str GetNthLineOfBuffer(size_t Nth);
-    void ErrorLexSetup(std::string &Line, const char *Message, LexError &Error);
-
-    template<typename ... Args> void AddHint
-                    (std::string &Line, Args&& ...Hint);
-
+    str GetNthLineOfBuffer(size_t nth);
+    void ErrorLexSetup(std::string &line, const char *message, LexError &error);
 
     // Lex Errors
     void ErrorIntegerOverflow(LexError &Error);
-    void ErrorDigitOutOfRange(LexError &Error);
+    void ErrorDigitOutOfRange(LexError &error);
     void ErrorInvalidChar(LexError &Error);
     void ErrorMalformedUTF8(LexError &Error);
-    void ErrorMissingClosingDelim(LexError &Error);
-    void ErrorHexEscapeOutOfRange(LexError &Error);
-    void ErrorInvalidStringEscape(LexError &Error);
+    void ErrorMissingClosingDelim(LexError &error);
+    void ErrorHexEscapeOutOfRange(LexError &error);
+    void ErrorInvalidStringEscape(LexError &error);
   };
 
 }}

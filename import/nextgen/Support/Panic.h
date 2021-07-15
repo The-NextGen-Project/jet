@@ -10,7 +10,12 @@ namespace nextgen {
   // ANSI Terminal Colors for Linux and MacOS. The colors are strictly
   // pre-defined to be White, Red, Green, Yellow, Blue, and Cyan and nothing
   // more that is needed to highlight something in the terminal.
-  struct Colors {
+
+  // NOTE: This is namespace because of weird debug issue with GCC. For some
+  // reason in debug mode, the symbols are not resolved by the linker but works
+  // in release mode. The effect is the same either way with a namespace so we
+  // leave it as such.
+  namespace Colors {
     static constexpr auto WHITE   = COLOR_WHITE;
     static constexpr auto RED     = COLOR_RED;
     static constexpr auto GREEN   = COLOR_GREEN;
@@ -34,6 +39,16 @@ namespace nextgen {
     RESET  = COLOR_RESET
   };
 
+# else
+  namespace Colors {
+    static constexpr auto WHITE   = "";
+    static constexpr auto RED     = "";
+    static constexpr auto GREEN   = "";
+    static constexpr auto YELLOW  = "";
+    static constexpr auto BLUE    = "";
+    static constexpr auto CYAN    = "";
+    static constexpr auto RESET   = "";
+  };
 # endif
 
   struct Console {

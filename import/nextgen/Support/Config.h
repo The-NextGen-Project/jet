@@ -111,6 +111,6 @@ typedef __int8 int8_t;
 = typename std::enable_if<std::is_convertible<Lambda, std::function<Ret \
 (__VA_ARGS__)\
 >>::value>::type
-// Class Init
+# define FOR(var, range) for (auto var = 0; var < range; ++var)
 
 #endif //NEXTGEN_CONFIG_H

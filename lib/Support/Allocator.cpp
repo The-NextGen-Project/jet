@@ -1,5 +1,7 @@
 #include <nextgen/Support/Allocator.h>
 
+using nextgen::mem::Arena;
+
 void *nextgen::mem::os::calloc(size_t mem, size_t size) {
   if (mem == 0) return nullptr;
   auto *p = ::calloc(mem, size);

@@ -7,7 +7,6 @@ project(tests)
 add_executable(tests
 
         # Link Support
-        ../lib/Diagnostics.cpp
         ../lib/Support/Panic.cpp
         ../lib/Support/Allocator.cpp
         ../lib/Support/String.cpp
@@ -15,6 +14,7 @@ add_executable(tests
 
         # Lexical Analysis
         ../lib/Lex/Lexer.cpp
+        ../lib/Diagnostics.cpp
 
         # Parsing
         ../lib/Parse/Parser.cpp

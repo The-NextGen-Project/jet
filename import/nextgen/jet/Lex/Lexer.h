@@ -30,6 +30,10 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
   };
 
+
+  // Printing Mode re-analyzes the file, while printing out tokens with
+  // syntax-highlighting to the console. This allows for pretty-error messages
+  // with colored output.
   enum LexMode {
     TokenMode,
     PrintingMode
@@ -37,114 +41,123 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
 
   struct LexError {
-    LexErrorType Error;
-    TokenTraits::SourceLocation Location;
-    Token FailedToken;
 
-    int Metadata[5];
+    // The type of error
+    LexErrorType error;
+
+    // Error location
+    TokenTraits::SourceLocation location;
+
+    // Token value lexed until error
+    Token failed_token;
+
+    // Error metadata
+    int metadata[5];
   };
 
+
+  // TODO: Make this a templated class
   class Lexer {
     using Allocator = mem::ArenaSegment;
     using File = char;
 
-    Allocator   *Memory;
-    const File  *Buffer;
-    const size_t BufferSize;
+    Allocator   *allocator;
+    const File  *buffer;
+    const size_t buf_size;
 
-    size_t CurrentLine    = 1;
-    size_t CurrentColumn  = 1;
-    size_t BufferPosition = 0;
+    size_t line    = 1;
+    size_t column  = 1;
+    size_t buf_pos = 0;
 
     LexMode Mode;
 
-    Diagnostic ErrorBuilder;
+    Diagnostic diagnostics;
 
-    bool Fatal = false; // Error Thrown
+    bool fatal = false; // Error Thrown
 
   public:
 
     friend class Parser;
 
-    Lexer(Allocator *Mem, const File *Buffer, const char *FileName, 
-                                              const size_t BufSize,
-                                              LexMode Mode = LexMode::TokenMode)
-    : Memory(Mem), Buffer(Buffer), BufferSize(BufSize), Mode(Mode) {
-      ErrorBuilder = Diagnostic(Mem, Buffer, BufSize, FileName);
+    Lexer(Allocator *mem, const File *buffer, const char *file_name,
+          const size_t buffer_size,
+          LexMode Mode = LexMode::TokenMode)
+    : allocator(mem), buffer(buffer), buf_size(buffer_size), Mode(Mode) {
+
+      diagnostics = Diagnostic(mem, buffer, buffer_size, file_name);
     }
 
     /// Get the next valid Token in the File stream
-    auto NextToken() -> Token;
+    auto next_token() -> Token;
 
     /// Print the values of token with Syntax Highlighting
     void PrintNextToken();
 
-    /// Lex all tokens. If an error is encountered, report it
-    /// and count it as fatal. Compiler cannot proceed without
-    /// lexing phase being valid.
-    NG_INLINE auto Lex() -> Vec<Token> {
-      auto Tokens = Vec<Token>{};
+    /// Lex all tokens from the file buffer, and if fatal is checked,
+    /// it means that an error has been thrown, and will exit the program.
+    auto lex() -> Vec<Token> {
+      auto tokens = Vec<Token>{};
       do {
-        auto Instance = NextToken();
-        Tokens.push(Instance);
-      } while (!Fatal && BufferPosition < BufferSize);
+        auto instance = next_token();
+        tokens.push(instance);
+      } while (!fatal && buf_pos < buf_size);
 
-      // Insert EOFToken for Out of Range Values
-      Tokens.push(Token("\n", {CurrentLine, CurrentColumn},
+      // Insert EOFToken for Out of Range values
+      tokens.push(Token("\n", {line, column},
                         TokenKind::EOFToken));
-      return Tokens;
+      return tokens;
     }
 
     /// Print the tokens using syntax highlighting with the given
     /// buffer. Used for Re-lexing in error reporting.
-    NG_INLINE void LexPrint() noexcept {
+   void LexPrint() noexcept {
       do {
         PrintNextToken();
-      } while (BufferPosition < BufferSize && Buffer);
+      } while (buf_pos < buf_size && buffer);
     }
 
 
     /// Peek `NChars` characters in the file buffer.
-    NG_INLINE char Peek(size_t NChars)  {
-      return *(Buffer + NChars);
+    char Peek(size_t NChars)  {
+      return *(buffer + NChars);
     }
 
     /// Get the latest character in the file buffer
-    NG_AINLINE char Curr()  {
-      return *Buffer;
+    char Curr()  {
+      return *buffer;
     }
 
     /// Move the lexer forward by `NChars` and fill in `Error` for
     /// unexpected EOF or Out of Range Error that may be encountered.
-    NG_INLINE auto Next(size_t NChars) -> char {
+    char Next(size_t NChars) {
 
-      if (BufferPosition >= BufferSize) {
-        Fatal = true;
+      if (buf_pos >= buf_size) {
+        fatal = true;
         return '\0';
       }
 
-      CurrentColumn += NChars;
-      BufferPosition += NChars;
-      Buffer += NChars;
-      return *Buffer;
+      column += NChars;
+      buf_pos += NChars;
+      buffer += NChars;
+      return *buffer;
     }
 
   private:
 
     /// Matches a new line encountered in the buffer and handles
     /// them appropriately depending on \n or \r.
-    NG_INLINE void SkipNewLine() {
-      CurrentLine++;
-      CurrentColumn = 1;
+    void SkipNewLine() {
+      line++;
+      column = 1;
 
       Next(1);
 
-      char Current = *Buffer;
+      char Current = *buffer;
       char NextCh  = Peek(1);
 
       if (NextCh != Current && (NextCh == '\n' || NextCh == '\r')) {
         if (Mode == LexMode::PrintingMode) Console::Log(NextCh);
-        ++CurrentLine, Next(1);
+        ++line, Next(1);
       }
     }
 
