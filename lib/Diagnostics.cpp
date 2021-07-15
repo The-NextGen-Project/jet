@@ -5,8 +5,14 @@
 
 
 using nextgen::Console;
-using nextgen::Colors;
 using nextgen::jet::Diagnostic;
+
+// Color namespacing
+#ifdef NG_OS_WINDOWS
+  using nextgen::Colors;
+#else
+  using namespace nextgen::Colors;
+#endif
 
 
 template<typename... Args>

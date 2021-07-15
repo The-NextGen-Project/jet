@@ -47,22 +47,6 @@ TEST(ParseTest, VariableDeclBinary) {
               .literal->getValue<size_t>(), 2);
 }
 
-TEST(ParseTest, VariableArrayDecl) {
-  using namespace nextgen;
-  using namespace nextgen::core;
 
-  Arena<2> arena;
-  auto buf = "var my_list = [1, 2, 5]";
-  auto buf_len = strlen(buf);
-  auto lexer = jet::Lexer(arena.begin, buf, "src/test.jet", buf_len);
-  auto parser = jet::Parser(&lexer);
-
-  parser.skip(1);
-  auto expr = parser.parse_variable_decl();
-  auto decl = expr->List;
-
-
-  ASSERT_EQ(expr->kind, jet::SyntaxKind::List);
-}
 
 
