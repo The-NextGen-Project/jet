@@ -5,8 +5,7 @@
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
 #### Fast Language for Developing Consistent Native, Mobile App, and Web Applications.
 > **NOTE:** The language is in its early development stages. Don't expect syntax to be fixed until v1.0. If you are wondering why we have only finished the lexer,
-> we are currently writing the x64 backend right now, as it would help the structure of the language. When the backend is updated, you will see it in the x64-dev
-> branch of the repository.
+> we are currently writing the x64 backend right now. You can view its source [here](https://github.com/The-NextGen-Project/wasm2bin).
 
 Resources
 -----------------
