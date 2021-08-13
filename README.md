@@ -76,7 +76,9 @@ Progress
 - [ ] Semantic Analysis
 - [ ] IR-Gen
 - [ ] IR-Optimization
-- [ ] x64 Code Generation (**WIP**)
+- [x] x64 Code Generation (**Testing Phase In Progress**)
+- [ ] ARM64 Code Generation (**WIP**)
+- [ ] WASMMacroAssembler
 - [ ] Link
 
 Contributing
