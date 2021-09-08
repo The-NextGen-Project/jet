@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
+
 #include <nextgen/jet/jet-lexer.h>
 #include <nextgen/jet/jet-diagnostics.h>
+
 
 TEST(LexTest, NonFMTNumbers) {
   using namespace nextgen;
