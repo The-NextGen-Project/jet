@@ -38,11 +38,12 @@ print("Hello, World!")
 ```
 Fibonacci Implemented in the lang would be as follows:
 ```zig
-fn fib(n) {
+fib => (n: i32) i32 {
   return match n {
-    0 or 1 => n
-    . => fib(n-1) + fib(n-2)
-  }
+    0 -> 0,
+    1 -> 1,
+    n -> fib(n - 1) + fib(n - 2)
+  };
 }
 ```
 The language will be using advanced type-inference in order to limit the amount of static typing that is needed. Jet is by default, statically-typed, however, types are
