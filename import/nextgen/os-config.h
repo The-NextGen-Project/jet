@@ -112,5 +112,7 @@ typedef __int8 int8_t;
 (__VA_ARGS__)\
 >>::value>::type
 # define FOR(var, range) for (auto var = 0; var < range; ++var)
+# define CAST(ty, value) ((ty)(value))
+
 
 #endif //NEXTGEN_CONFIG_H

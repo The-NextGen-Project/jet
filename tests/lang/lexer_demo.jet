@@ -1,8 +1,22 @@
-[update]
-fn i_update_values() // generated as JS Callback on Web Backend
-{
-
+Another => struct {
+    pub value: i32
 }
 
+print => (static fmt: str, static args: ...) {
+    for arg in args {
+        assert(arg > 2);
+    }
+    a: str = "23";
+    b := 123;
+}
 
+generic_params => ($val, $another, some: i32, another_val: f64) {
+    
+}
 
+call_parameter => (func: (i32, i32) -> i32) {
+
+}
+call_parameter((a, b) => {
+    return a * b + b * b + (b & a);
+});

@@ -1,30 +1,17 @@
-#include <nextgen/jet/Lex/Lexer.h>
-#include <nextgen/Support/IO.h>
-#include <nextgen/Support/Panic.h>
-#include <iostream>
-#include <iomanip>
-#include <memory>
+#include <nextgen/allocator.h>
+#include <nextgen/jet/jet-diagnostics.h>
+#include <nextgen/jet/jet-lexer.h>
 
 
-typedef int integer_type;
-
-using namespace nextgen;
-using namespace nextgen::core;
+using namespace nextgen::mem;
 using namespace nextgen::jet;
+using namespace nextgen;
+int main(int argc, char **argv, char **envP) {
 
+  auto lexer = nextgen::jet::Lexer<TokenMode>( R"("Hello" ace "There")",
+                                      "src/test.jet", 19);
 
-
-int main(integer_type argc, char **argv, char **envP) {
-
-  try {
-
-    Vec<int> wow;
-    wow.push(123);
-
-
-  } catch (std::exception &) {
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
+  auto tokens = lexer.lex();
+  auto token = tokens[0];
+  nextgen::Console::Log(token.name(), tokens[1].name(), tokens[2].name());
 }

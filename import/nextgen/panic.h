@@ -1,11 +1,11 @@
-# ifndef NEXTGEN_PANIC_H
-# define NEXTGEN_PANIC_H
-# include "Config.h"
+#ifndef NEXTGEN_PANIC_H
+#define NEXTGEN_PANIC_H
+#include "os-config.h"
 
 
 namespace nextgen {
 
-# if defined(NG_OS_LINUX) || defined(NG_OS_APPLE)
+#if defined(NG_OS_LINUX) || defined(NG_OS_APPLE)
 
   // ANSI Terminal Colors for Linux and MacOS. The colors are strictly
   // pre-defined to be White, Red, Green, Yellow, Blue, and Cyan and nothing
@@ -129,4 +129,4 @@ namespace nextgen {
 }
 
 
-# endif //NEXTGEN_PANIC_H
+#endif //NEXTGEN_PANIC_H

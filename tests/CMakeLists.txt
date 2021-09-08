@@ -7,17 +7,19 @@ project(tests)
 add_executable(tests
 
         # Link Support
-        ../lib/Support/Panic.cpp
-        ../lib/Support/Allocator.cpp
-        ../lib/Support/String.cpp
-        ../lib/Support/IO.cpp
+        ../lib/panic.cpp
+        ../lib/allocator.cpp
+        ../lib/str.cpp
+        ../lib/io.cpp
 
         # Lexical Analysis
-        ../lib/Lex/Lexer.cpp
-        ../lib/Diagnostics.cpp
+        #../lib/Lex/Lexer.cpp
+        ../lib/jet-diagnostics.cpp
+        ../lib/jet-lexer-v2.cpp
+
 
         # Parsing
-        ../lib/Parse/Parser.cpp
+        ../lib/jet-parser.cpp
 
         ################################
 

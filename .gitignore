@@ -20,6 +20,9 @@ _deps
 /cmake-build-release-mingw
 /cmake-build-debug-sys2
 /cmake-build-release-sys2
+/cmake-build-default
+/cmake-build-minsizerel
+/cmake-build-relwithdebinfo
 /.vscode
 .ninja
 Makefile

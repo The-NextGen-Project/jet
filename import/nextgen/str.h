@@ -1,7 +1,7 @@
 # ifndef NEXTGEN_STR_H
 # define NEXTGEN_STR_H
-# include "Core.h"
-# include "Allocator.h"
+# include "core-util.h"
+# include "allocator.h"
 
 namespace nextgen { using namespace core; using namespace nextgen::mem;
 
@@ -46,7 +46,7 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     /*implicit*/ str(char c) : len(1) { pointer = &c; }
 
     explicit str(const char *data, size_t len) : len(len), pointer(data) {}
-    explicit str(Range<const char *> range)
+    /*implicit*/ str(Range<const char *> range)
     : len(range.range()), pointer(range.begin) {}
 
     /*implicit*/ str(std::string &data) { // NOTE: Do not use init-list for this

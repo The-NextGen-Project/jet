@@ -1,13 +1,12 @@
 # ifndef NEXTGEN_LEXER_H
 # define NEXTGEN_LEXER_H
 
-# include "Token.h"
-# include "../Diagnostics.h"
+# include "jet-token.h"
+# include "jet-diagnostics.h"
 
 namespace nextgen { namespace jet { using namespace nextgen::core;
 
   enum LexErrorType {
-
     // Other
     UnexpectedEOF,
     OutOfRange,
@@ -27,21 +26,9 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     InvalidNumberValue,
     IntegerOverflow,
     FloatingPointOverflow,
-
   };
-
-
-  // Printing Mode re-analyzes the file, while printing out tokens with
-  // syntax-highlighting to the console. This allows for pretty-error messages
-  // with colored output.
-  enum LexMode {
-    TokenMode,
-    PrintingMode
-  };
-
 
   struct LexError {
-
     // The type of error
     LexErrorType error;
 
@@ -55,13 +42,16 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     int metadata[5];
   };
 
-
-  // TODO: Make this a templated class
+  // Lexical analysis has two different modes for two purposes. Depending on
+  // the case, the lexer will either register tokens or it will simply, print
+  // tokens to the terminal.
+  //
+  // TokenMode: Specifies the mode in which tokens are lexed and output is
+  // returned.
+  template<LexMode Mode = TokenMode>
   class Lexer {
-    using Allocator = mem::ArenaSegment;
     using File = char;
 
-    Allocator   *allocator;
     const File  *buffer;
     const size_t buf_size;
 
@@ -69,22 +59,25 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     size_t column  = 1;
     size_t buf_pos = 0;
 
-    LexMode Mode;
-
     Diagnostic diagnostics;
 
-    bool fatal = false; // Error Thrown
+    // When fatal is set, the lexer knows that is has encountered an invalid
+    // token. All lexer errors are fatal and stop compilation.
+    bool fatal = false;
+
+    // Ensure that branches are taken away during compile-time with guaranteed
+    // compile-time value if statements. This is used so that both printing mode
+    // and normal mode do not have to be separate functions.
+    static constexpr bool OUTPUT_MODE = Mode == LexMode::PrintingMode;
+    static constexpr bool NORMAL_MODE = Mode == LexMode::TokenMode;
 
   public:
-
     friend class Parser;
 
-    Lexer(Allocator *mem, const File *buffer, const char *file_name,
-          const size_t buffer_size,
-          LexMode Mode = LexMode::TokenMode)
-    : allocator(mem), buffer(buffer), buf_size(buffer_size), Mode(Mode) {
-
-      diagnostics = Diagnostic(mem, buffer, buffer_size, file_name);
+    Lexer(const File *buffer, const char *file_name,
+          const size_t buffer_size)
+    : buffer(buffer), buf_size(buffer_size) {
+      diagnostics = Diagnostic(buffer, buffer_size, file_name);
     }
 
     /// Get the next valid Token in the File stream
@@ -93,9 +86,22 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     /// Print the values of token with Syntax Highlighting
     void PrintNextToken();
 
-    /// Lex all tokens from the file buffer, and if fatal is checked,
-    /// it means that an error has been thrown, and will exit the program.
-    auto lex() -> Vec<Token> {
+    // Integers
+    Token lex_int();
+
+    template<int radix, int skip>
+    Token lex_int();
+
+    Token lex_str();
+    Token lex_float(int skip, int start=0);
+    Token lex_ident();
+
+    /// Given the file buffer as input, lex all the tokens or output valid
+    // ones to the terminal.
+
+    Token *lex();
+
+/*    auto lex() -> Vec<Token> {
       auto tokens = Vec<Token>{};
       do {
         auto instance = next_token();
@@ -106,39 +112,44 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       tokens.push(Token("\n", {line, column},
                         TokenKind::EOFToken));
       return tokens;
-    }
+    }*/
 
     /// Print the tokens using syntax highlighting with the given
     /// buffer. Used for Re-lexing in error reporting.
-   void LexPrint() noexcept {
+/*   void LexPrint() noexcept {
       do {
         PrintNextToken();
       } while (buf_pos < buf_size && buffer);
-    }
+    }*/
 
 
-    /// Peek `NChars` characters in the file buffer.
-    char Peek(size_t NChars)  {
+    /// peek `NChars` characters in the file buffer.
+    char peek(size_t NChars)  {
       return *(buffer + NChars);
     }
 
     /// Get the latest character in the file buffer
-    char Curr()  {
+    char curr()  {
       return *buffer;
     }
 
-    /// Move the lexer forward by `NChars` and fill in `Error` for
+    /// Move the lexer forward by `n` and fill in `Error` for
     /// unexpected EOF or Out of Range Error that may be encountered.
-    char Next(size_t NChars) {
+    char next(size_t n) {
 
       if (buf_pos >= buf_size) {
+        diagnostics.build(LexError {
+          LexErrorType::OutOfRange,
+          { line, column },
+          Token("\0", {line, column}, TokenKind::EOFToken)
+        });
         fatal = true;
         return '\0';
       }
 
-      column += NChars;
-      buf_pos += NChars;
-      buffer += NChars;
+      column += n;
+      buf_pos += n;
+      buffer += n;
       return *buffer;
     }
 
@@ -146,18 +157,18 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
     /// Matches a new line encountered in the buffer and handles
     /// them appropriately depending on \n or \r.
-    void SkipNewLine() {
+    void skip_new_line() {
       line++;
       column = 1;
 
-      Next(1);
+      next(1);
 
-      char Current = *buffer;
-      char NextCh  = Peek(1);
+      char current = *buffer;
+      char next_ch  = peek(1);
 
-      if (NextCh != Current && (NextCh == '\n' || NextCh == '\r')) {
-        if (Mode == LexMode::PrintingMode) Console::Log(NextCh);
-        ++line, Next(1);
+      if (next_ch != current && (next_ch == '\n' || next_ch == '\r')) {
+        if (Mode == LexMode::PrintingMode) Console::Log(next_ch);
+        ++line, next(1);
       }
     }
 

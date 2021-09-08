@@ -1,7 +1,7 @@
 # ifndef NEXTGEN_TOKEN_H
 # define NEXTGEN_TOKEN_H
-# include <nextgen/Support/String.h>
-# include <nextgen/Support/Allocator.h>
+# include <nextgen/str.h>
+# include <nextgen/allocator.h>
 
 namespace nextgen { namespace jet {
 
@@ -16,10 +16,11 @@ namespace nextgen { namespace jet {
   enum TokenKind {
 
     // Primitives ---------------------------
-    Integer = 1,  // + sizeof(decltype(UINTPTR_MAX))
-    String,   // + sizeof(const char *)
-    Decimal,  // + sizeof(double)
-    Boolean,  // + sizeof(bool)
+    Integer = 1,
+    Zero    = 1,
+    String,
+    Decimal,
+    Boolean,
     //---------------------------------------
 
     // File Control ---------------------------
@@ -53,6 +54,21 @@ namespace nextgen { namespace jet {
     KeywordUnion,
     KeywordMatch,
     KeywordIn,
+    //---------------------------------------
+
+    // Typename  ---------------------------
+    Typename_str,
+    Typename_i8,
+    Typename_i16,
+    Typename_i32,
+    Typename_i64,
+    Typename_u8,
+    Typename_u16,
+    Typename_u32,
+    Typename_u64,
+    Typename_box,
+    Typename_f32,
+    Typename_f64,
     //---------------------------------------
 
     Identifier,   // [a-z] && [A-Z] && _
@@ -97,6 +113,7 @@ namespace nextgen { namespace jet {
     ANDEquals,
     XOREquals,
     OREquals,
+    PercentEquals,
 
 
     EqualsEquals, // ==
@@ -108,9 +125,10 @@ namespace nextgen { namespace jet {
 
     PlusPlus,     // ++
     MinusMinus,   // --
+    FunctionArrow,// =>
 
     Error,
-    EOFToken
+    EOFToken,
   };
 
   struct TokenTraits {
@@ -152,7 +170,7 @@ namespace nextgen { namespace jet {
 
     template<typename T>
     Token(const str &id, SourceLocation loc, T value,
-          TokenKind kind, unsigned flags = TokenClassification::Literal)
+          TokenKind kind, unsigned flags = -1)
           : id(id), flags(flags), loc(loc) {
         setKind(kind);
         setValue(value);

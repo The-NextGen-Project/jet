@@ -1,7 +1,7 @@
-# ifndef JET_PARSER_H
-# define JET_PARSER_H
-# include "../Lex/Lexer.h"
-# include "SyntaxNodes.h"
+# ifndef JET_JET_PARSER_H
+# define JET_JET_PARSER_H
+# include "jet-lexer.h"
+# include "jet-syntax-nodes.h"
 
 namespace nextgen { namespace jet { using namespace nextgen::core;
 
@@ -18,8 +18,9 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       ExpectedIdentifierForFunctionParameter,
       ExpectedIdentifierForStructProperty,
 
-      MissingClosingParenthesis,
-      MissingClosingCurlyBrace
+      MissingClosingPair,
+
+      UnexpectedEndOfFile
     };
 
     enum ParseContext {
@@ -32,10 +33,9 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     };
 
 
-
     struct ParseError {
-      ParseErrorType Error;
-      TokenTraits::SourceLocation Location;
+      ParseErrorType error;
+      TokenTraits::SourceLocation location;
 
       // Error specifics that are handled by
       // the [Diagnostic] class.
@@ -43,24 +43,28 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         struct {
           TokenKind expected;
           TokenKind got;
+          const char *message;
         } expected_error;
+        TokenTraits::SourceLocation location;
         TokenKind reserved_ident;
 
+        Metadata(TokenTraits::SourceLocation loc) : location(loc) {}
         Metadata(TokenKind reserved_ident) : reserved_ident(reserved_ident) {}
-        Metadata(TokenKind expected, TokenKind got) {
+        Metadata(TokenKind expected, TokenKind got, const char *message) {
           expected_error.expected = expected;
           expected_error.got = got;
+          expected_error.message = message;
         }
       };
 
       std::initializer_list<Metadata> metadata;
 
       ParseError(ParseErrorType error, TokenTraits::SourceLocation loc)
-      : Error(error), Location(loc) {}
+        : error(error), location(loc) {}
 
       ParseError(ParseErrorType error, TokenTraits::SourceLocation loc,
                  const std::initializer_list<Metadata> &metadata)
-                 : Error(error), Location(loc) {}
+        : error(error), location(loc) {}
     };
 
     class Parser {
@@ -74,37 +78,36 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       // Parsing errors
       Diagnostic      diagnostics;
 
-      // Parser allocator
-      ArenaSegment    *allocator;
-
       // Encountered error that results in stopped compilation
-      bool fatal = false;
+      char fatal = 0;
     public:
-
-
-      mem::Vec<Token> tokens;
+      Token *tokens;
       Parser() = default;
 
-      explicit Parser(Lexer *lexer)
+      explicit Parser(Lexer<TokenMode> *lexer)
         : tokens(lexer->lex()), diagnostics(lexer->diagnostics),
-          allocator(lexer->allocator), fatal(false) {}
+          fatal(0) {}
 
+      ~Parser() {
+        vec::clear(tokens);
+      }
 
 
       /// Parse all statements
       void parse();
 
+      // ========= Parsing Language Generalizations ==========
 
       auto parse_decl() -> SyntaxNode*;
       auto parse_stmt() -> SyntaxNode*;
       auto parse_expr(int previous_binding = -1) -> SyntaxNode*;
       auto match_expr() -> SyntaxNode*;
 
-      // ========= Parsing Specifics ==========
+      // ========= Parsing Language Constructs ==========
 
       auto parse_block()           -> SyntaxBlock;
-      auto parse_type()            -> Option<SyntaxType>;
-      auto parse_function_param()  -> Vec<SyntaxFunctionParameter>;
+      auto parse_type()            -> SyntaxType;
+      auto parse_function_param(SyntaxFunction *func)  -> void;
       auto parse_variable_decl()   -> SyntaxNode*;
       auto parse_function()        -> SyntaxNode*;
       auto parse_struct()          -> SyntaxNode*;
@@ -116,12 +119,10 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         (Token *s, Token *function_name) -> SyntaxNode*;
 
 
+      // ========= Parsing Utils ==========
+
       /// Lookahead 'n' amount of times in the list
       auto peek(size_t n) -> Token*;
-
-      /// Asserts that the value in 'kind' is the value of the next token
-      /// and otherwise builds a diagnostic instead for the 'error_kind'.
-      auto skip(TokenKind kind, ParseErrorType error_kind) -> Token*;
 
       /// Returns the current token and skips 'n' tokens ahead
       auto skip(size_t n) -> Token*;
@@ -129,14 +130,23 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       /// Skips the 'n' and returns the latest token after the skip
       auto next(size_t n) -> Token*;
 
+      /// Asserts that the value in 'kind' is the value of the next token
+      /// and otherwise builds a diagnostic instead for the 'error_kind'.
+      template<TokenKind TK, ParseErrorType PE>
+      auto skip() -> Token*;
+
       /// Expect the next token to be 'kind', if not, build an error. A lot of
       /// tokens are expected, and individual errors cannot be based on every
       /// situation.
-      int expect(TokenKind kind);
+      template<TokenKind TK, size_t N>
+      auto expect(char const (&msg)[N]) -> Token*;
+
+      template<TokenKind TK>
+      void delim(const TokenTraits::SourceLocation &start);
 
       /// Get the current token value
       NG_INLINE Token *curr()  {
-        return tokens.get_pointer_at(position);
+        return tokens + position;
       }
 
       /// Get Unary Operator Precedence
@@ -189,4 +199,4 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
   }}
 
 
-# endif //JET_PARSER_H
+# endif //JET_JET_PARSER_H

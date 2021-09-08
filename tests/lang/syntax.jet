@@ -1,102 +1,12 @@
-import 'https://github.com/aboss123/JetProject.git' // Github Module
-import math // Direct Module
-import "C": "stdio.h"
-
-var heap_allocated: box str = box "Wow, I'm allocated"
-var nice: any[] = [1, 2, "hi", 2.23, 21u, &heap_allocated]
-mut nice_mutable: any[] = [1, 223, heap_allocated, "WEW", (box 21)]
-nice += 23 // Illegal (Error Here!)
-nice_mutable += "wow \n I didn't know I was cool\n\r\b\t" // Ok
-
-if nice_mutable[1] is 223 {
-  print("Hello\n")
-}
-elif heap_allocated[0] == 'W' {
-  print("Never runs ...\n")
-}
-else {
-  // Error Here! (value must be mutable, no exception)
-  print("Oh no! This is illegal: ", (heap_allocated + "Wow"))
-
-  mut i_can_have_string_concat = box "Omg"
-  i_can_have_string_concat += '1'
-  print(i_can_have_string_concat) // Would be "Omg1"
+static {
+  GLOBAL_CONSTANT_VARIABLE = 23;
 }
 
-for 0..10 { // Prints Hi\n 10 Times
-  print("Hi\n")
-}
-for value in nice { // Outputs entire list
-  print(value)
-}
-for nice_mutable[1] is 223 { // May also take in boolean expressions
-  // do something ...
-}
-for {
-  // Runs forever ...
+fib => (n: i32) i32 {
+  return match n {
+    0 -> 0,
+    1 -> 1,
+    n -> fib(n - 1) + fib(n - 2)
+  };
 }
 
-export var HOLY_CONSTANT_VARIABLE = 2.124143242343243234
-var optional: ?float64 = HOLY_CONSTANT_VARIABLE
-match optional { // Match values
-  None => print("No value\n"),
-  value => print(value, '\n')
-}
-
-fn my_function(param1: int, param2: str) { // Inferred as no-return
-  print(param2 * param1) // String multiplication is allowed
-}
-fn my_function_generic(param1, param2) { // Ok
-  // This operation must be valid at compile time
-  print(param1 * param2)
-}
-
-export fn i_can_be_viewed() str { // Export value to other modules
-  return "OMG!"
-}
-
-LinkedList : struct[T](value: T, next: ?LinkedList = None) // Default Args
-LinkedList[T].prepend = fn(self, value: T) {
-  return LinkedList(value, self)
-}
-LinkedList[T].size = fn(self) {
-  match self.next {
-    None => 1,
-    node => node.size() + 1
-  }
-}
-LinkedList[T].stringify = fn(self) str {
-  var fmt = match self.next {
-    None => str(self.value),
-    node => str(self.value) + node.stringify()
-  }
-  print(fmt)
-}
-
-SevenDeadlySins : enum {
-  Escanor,
-  Meliodas,
-  Diane,
-  King,
-  Ban,
-  Merlin
-}
-
-/// ========================== VERY VERY ALPHA PREDICTIONS =========================
-MyComponent : html {
-  children: html[]
-}
-
-// Equivalent to Elm's Counter Example
-mut APP_VALUE = 0
-[app]
-fn render() view {
-  return {
-    div {
-      id: "main-div"
-      button  { text: "+", onClick: || => APP_VALUE++ }
-      div     { text: APP_VALUE.str }
-      button  { text: "-", onClick: || => APP_VALUE-- }
-    }
-  }
-}

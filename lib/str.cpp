@@ -1,4 +1,4 @@
-# include <nextgen/Support/String.h>
+# include <nextgen/str.h>
 
 using nextgen::str;
 using nextgen::StringCache;

@@ -1,11 +1,10 @@
-#include <nextgen/jet/Diagnostics.h>
-#include <nextgen/jet/Lex/Lexer.h>
-#include <nextgen/jet/Parse/Parser.h>
-
-
+#include <nextgen/jet/jet-diagnostics.h>
+#include <nextgen/jet/jet-parser.h>
 
 using nextgen::Console;
 using nextgen::jet::Diagnostic;
+using nextgen::str;
+using nextgen::Range;
 
 // Color namespacing
 #ifdef NG_OS_WINDOWS
@@ -14,6 +13,36 @@ using nextgen::jet::Diagnostic;
   using namespace nextgen::Colors;
 #endif
 
+static str GetNthLineOfBuffer(size_t nth,
+                              const char *file_buf,
+                              size_t buf_len) {
+  bool found = false;
+  int count = 1;
+  const char *copy = file_buf;
+  const char *found_point;
+
+  if (nth == 1) {
+    return str {file_buf, buf_len};
+  }
+
+  for (auto I = 0; I < buf_len; ++I) {
+    if (*copy == '\n') {
+      if (found) {
+        return str(Range<const char *>(found_point, copy));
+      }
+      count++;
+    }
+    if (count == nth) {
+      if (!found) {
+        found_point = copy + 1;
+        found = true;
+      }
+    }
+    copy++;
+  }
+
+  return str {found_point, buf_len};
+}
 
 template<typename... Args>
 static void AddHint(std::string &line, Args&& ... hint) {
@@ -27,14 +56,14 @@ static void AddHint(std::string &line, Args&& ... hint) {
   Console::Log(hint..., nextgen::Colors::RESET);
 }
 
-void Diagnostic::build(LexError Error) {
-  SourceLine = GetNthLineOfBuffer(Error.location.line);
-  Console::Log(Colors::RED, "Error "
-                                "---------------------------------------------------------- ", FileName, ":",
-               Error.location.line, ":", Error.location
-                      .column, "\n",
-               Colors::RESET);
-  switch (Error.error) {
+void Diagnostic::build(LexError error) {
+  source_line = GetNthLineOfBuffer(error.location.line, file_buf, buf_len);
+  Console::Log(Colors::RED,
+         "Error ---------------------------------------------------------- ",
+         file_name, ":", error.location.line, ":", error.location.column, "\n",
+         Colors::RESET);
+
+  switch (error.error) {
     case MalformedUTF8:
       break;
     case InvalidChar:
@@ -50,15 +79,15 @@ void Diagnostic::build(LexError Error) {
       Console::Log("Unreachable");
       break;
     case IntegerOverflow:
-      ErrorIntegerOverflow(Error);
+      ErrorIntegerOverflow(error);
       break;
     case FloatingPointOverflow:
       break;
     case DigitOutOfRange:
-      ErrorDigitOutOfRange(Error);
+      ErrorDigitOutOfRange(error);
       break;
     case MissingClosingDelim:
-      ErrorMissingClosingDelim(Error);
+      ErrorMissingClosingDelim(error);
       break;
     case InvalidDot:
       Console::Log("Invalid Dot");
@@ -67,12 +96,12 @@ void Diagnostic::build(LexError Error) {
       Console::Log("Invalid Number");
       break;
     case InvalidStringEscape:
-      ErrorInvalidStringEscape(Error);
+      ErrorInvalidStringEscape(error);
       break;
     case InvalidUnicodeEscapeClose:
       break;
     case HexEscapeOutOfRange:
-      ErrorHexEscapeOutOfRange(Error);
+      ErrorHexEscapeOutOfRange(error);
       break;
     default:
       UNREACHABLE;
@@ -81,8 +110,8 @@ void Diagnostic::build(LexError Error) {
 }
 
 
-void Diagnostic::build(ParseError Error) {
-  switch (Error.Error) {
+void Diagnostic::build(ParseError error) {
+  switch (error.error) {
     case ReservedIdentifierAsVariableName:
       break;
     case UnexpectedExpression:
@@ -96,37 +125,6 @@ void Diagnostic::build(ParseError Error) {
     case MissingVariableName:
       break;
   }
-}
-
-nextgen::str Diagnostic::GetNthLineOfBuffer(size_t nth) {
-  bool Found = false;
-  int Count = 1;
-  const char *Copy = FileBuffer;
-  const char *FoundPoint;
-
-  if (nth == 1) {
-    return str {FileBuffer, BufferLength};
-  }
-
-  for (auto I = 0; I < BufferLength; ++I) {
-    if (*Copy == '\n') {
-      if (Found) {
-        return str(Range<const char *>(FoundPoint, Copy));
-      }
-      Count++;
-    }
-    if (Count == nth) {
-      if (!Found) {
-        FoundPoint = Copy + 1;
-        Found = true;
-      }
-    }
-    Copy++;
-  }
-
-  return str {FoundPoint, BufferLength};
-
-
 }
 
 
@@ -143,11 +141,11 @@ void Diagnostic::ErrorMissingClosingDelim(nextgen::jet::LexError &error) {
                                                             "the statement");
 }
 
-void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
+void Diagnostic::ErrorIntegerOverflow(LexError &error) {
   Console::Log(Colors::RESET, "Integer Value Too Large\n\n");
-  auto Line = std::to_string(Error.location.line);
+  auto Line = std::to_string(error.location.line);
 
-  ErrorLexSetup(Line, "Overflow Occurs Here", Error);
+  ErrorLexSetup(Line, "Overflow Occurs Here", error);
 
   AddHint(Line, Colors::BLUE, "= ", Colors::GREEN, "hint: ",
                Colors::RESET, "Integer values must be less than ", UINTPTR_MAX,
@@ -172,11 +170,11 @@ void Diagnostic::ErrorIntegerOverflow(LexError &Error) {
 # endif
 }
 
-void Diagnostic::ErrorInvalidChar(LexError &Error) {
+void Diagnostic::ErrorInvalidChar(LexError &error) {
 
 }
 
-void Diagnostic::ErrorMalformedUTF8(LexError &Error) {
+void Diagnostic::ErrorMalformedUTF8(LexError &error) {
 
 }
 
@@ -198,8 +196,8 @@ void Diagnostic::ErrorDigitOutOfRange(LexError &error) {
       break;
     case 16:
       Console::Log(Colors::YELLOW, "0-9, a-f, and A-F", Colors::RESET,
-                   " not ", Colors::RED, "'", SourceLine[error.location.column],
-                   "'",Colors::RESET, '\n');
+                   " not ", Colors::RED, "'", source_line[error.location.column],
+                   "'", Colors::RESET, '\n');
       break;
     default:
       UNREACHABLE;
@@ -264,7 +262,7 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
   Console::Log(Colors::BLUE, "String Escapes are used to escape "
                "characters that ""are otherwise hard to display. \n",
                Colors::RED, "'\\",
-               SourceLine[error.location.column - 1], "'", Colors::BLUE,
+               source_line[error.location.column - 1], "'", Colors::BLUE,
                " is not a valid string escape. "
                "View the complete list in the language documentation: \n",
                "https://github.com/The-NextGen-Project/jet/blob/main/LANG.md",
@@ -275,13 +273,12 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
 void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
                                LexError &error) {
 
-  auto printer = Lexer(Memory, (const char *) SourceLine, FileName,
-                       SourceLine.size(),
-                       LexMode::PrintingMode);
-
+  auto printer = Lexer<PrintingMode>((const char *) source_line,
+                                file_name,
+                       source_line.size());
   // Log error line
   Console::Log(Colors::RESET, line, " |\t ");
-  printer.LexPrint(); // Print Failed Token
+  printer.lex(); // Print Failed Token
 
   Console::Log("\n");
 
@@ -289,7 +286,7 @@ void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
   FOR(i, line.length() + 1)  Console::Log(" ");
 
   Console::Log("\t", Colors::RED);
-  FOR(column, SourceLine.size()) {
+  FOR(column, source_line.size()) {
     if (column == error.failed_token.getSourceLocation().column) {
       FOR(ch, error.failed_token.name().size()) {
         Console::Log("^");

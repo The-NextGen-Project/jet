@@ -1,6 +1,6 @@
 # ifndef NEXTGEN_IO_H
 # define NEXTGEN_IO_H
-# include "Allocator.h"
+# include "allocator.h"
 
 namespace nextgen { namespace io {
 
