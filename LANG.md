@@ -73,13 +73,13 @@ Current Status: **Almost Done**
 
 The programming language is gradually typed. Static typing is only required when the compiler cannot infer the type.
 Variables may be declared in two different ways:
-```go
+```v
 my_variable := 23;
 another_variable: bool = false;
 ```
 All variables are immutable by default (except for lists), and require the `mut` keyword in order to change the way you
 interact with that variable.
-```zig
+```v
 cant_change_me := 2324;
 cant_change_me = 24354; // Compiler error!
 mut change_me := 3342;
@@ -95,9 +95,9 @@ Current Status: **WIP**
 
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
-```zig
+```v
 mut list := [1, 2, 3, 4, 5]; // Can now add values to the list
-fixed: [5,int] = [1, 2, 3, 4, 5];
+fixed: [5,i32] = [1, 2, 3, 4, 5];
 ```
 
 ### Designated Initializers
@@ -107,8 +107,8 @@ Lists are mutable by default (unlike most of the other data types) because they 
 commonly dynamic and require mutability. Since we like to acknowledge the strengths of some
 languages and weaknesses of others, one may consider a similar example of initalizing an array
 using designated initalizers in Jet.
-```c
-list: [256,int] = [
+```v
+list: [256,i32] = [
   ['>'] = 2323, ['3'] = 343,
   ...
 ]
@@ -125,12 +125,6 @@ len(list);
 ```
 Length is checked in a similar global length function that can find the length of various types, including lists.
 
-### Variable initialization
-Current Status: **Planned**
-```python
-var (a, b, c) = [1, 2, 3];
-```
-Similar to Python, this tuple like initialization is valid in Jet for convience and pretty clean and readable syntax.
 
 ### Slices
 Current Status: **Planned**
