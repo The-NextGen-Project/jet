@@ -21,12 +21,12 @@ Primitives
 Current Status: **WIP**
 | Core Type     | Description |
 | ------------- | ------------- |
-| `int`         | By default, all integer types are designated to 32 bits unless specified differently.  |
-| `int64`       | 64 bit integer is separate and is using for longer integer values.  |
-| `uint`        | Unsigned 32 bit integer.  |
-| `uint64`      | Unsigned 64 bit integer. |
-| `float`       | 32 bit decimal value. |
-| `float64`     | 64 bit decimal value. |
+| `i32`         | By default, all integer types are designated to 32 bits unless specified differently.  |
+| `i64`       | 64 bit integer is separate and is using for longer integer values.  |
+| `u32`        | Unsigned 32 bit integer.  |
+| `u64`      | Unsigned 64 bit integer. |
+| `f32`       | 32 bit decimal value. |
+| `f64`     | 64 bit decimal value. |
 | `bool`        | Boolean Value: true or false.  |
 | `fn(Arg Types...) -> Ret`       | Function Lambda.   |
 | `char`        | A 1 byte character. |
@@ -73,16 +73,16 @@ Current Status: **Almost Done**
 
 The programming language is gradually typed. Static typing is only required when the compiler cannot infer the type.
 Variables may be declared in two different ways:
-```zig
-var my_variable = 23;
-var another_variable: bool = false;
+```go
+my_variable := 23;
+another_variable: bool = false;
 ```
 All variables are immutable by default (except for lists), and require the `mut` keyword in order to change the way you
 interact with that variable.
 ```zig
-var cant_change_me = 2324;
+cant_change_me := 2324;
 cant_change_me = 24354; // Compiler error!
-mut change_me = 3342;
+mut change_me := 3342;
 change_me = 23424; // Ok
 ```
 Custom initialization is specified in with different primitive datatypes (ie: lists and tuples). Other than these two, the
@@ -96,8 +96,8 @@ Current Status: **WIP**
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
 ```zig
-mut list = [1, 2, 3, 4, 5]; // Can now add values to the list
-var fixed: [5,int] = [1, 2, 3, 4, 5];
+mut list := [1, 2, 3, 4, 5]; // Can now add values to the list
+fixed: [5,int] = [1, 2, 3, 4, 5];
 ```
 
 ### Designated Initializers
@@ -108,7 +108,7 @@ commonly dynamic and require mutability. Since we like to acknowledge the streng
 languages and weaknesses of others, one may consider a similar example of initalizing an array
 using designated initalizers in Jet.
 ```c
-var list: [256,int] = [
+list: [256,int] = [
   ['>'] = 2323, ['3'] = 343,
   ...
 ]
@@ -151,7 +151,7 @@ languages.
 ### Function Declaration
 Current Status: **WIP**
 ```zig
-fn my_func(a: int, b: int, c: str) {
+my_func => (a: i32, b: i32, c: str) {
 ...
 }
 ```
@@ -159,7 +159,7 @@ Parameters are ordered in the format of VariableName -> Typename. A variable of 
 written as `name str`. For those familiar with Golang, it follows a similar naming convention. Generic functions are also 
 supported:
 ```zig
-fn generics(a, b) {
+generics => ($a, $b) {
  ...
 }
 ```
@@ -170,7 +170,7 @@ to make it easier for the compiler.
 
 ### Default Values
 ```zig
-fn default_values(a: int = 0xffff, b: str) {
+default_values := (a: int = 0xffff, b: str) {
 ...
 }
 ```
@@ -183,7 +183,7 @@ Current Status: **Planned**
 Lambdas are small anonymous functions that can be passed in as callbacks into functions to be called. They are generally declared as a parameters
 by the following method:
 ```zig
-fn func(lambda: fn(int) -> int) {
+func => (lambda: fn(i32) -> i32) {
   lambda(23); // Calling the function
 }
 ```
@@ -227,17 +227,17 @@ Current Status: **Planned**
 
 Functions:
 ```zig
-export fn my_func(...) { ... } 
+export my_func => (...) { ... } 
 ```
 Types:
 ```zig
-export MyStruct : struct {
+export MyStruct => struct {
   ...
 }
 ```
 Variables:
 ```js
-export var MyGlobalVariable = 32;
+export static MyGlobalVariable := 32;
 ```
 
 Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
