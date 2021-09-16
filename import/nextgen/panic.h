@@ -57,7 +57,7 @@ namespace nextgen {
 
     // A little guessing trick that has the compiler infer which function gets
     // called. It chooses default template unless we use a color.
-    static void Write(Colors color) {
+    static NG_INLINE void Write(Colors color) {
       static HANDLE GenericConsole = GetStdHandle(STD_OUTPUT_HANDLE);
       SetConsoleTextAttribute(GenericConsole, color);
     }
@@ -65,10 +65,9 @@ namespace nextgen {
     // Wrapper around std::cout to mask terminal color settings
     // in the other `Write` function.
     template <typename Arg>
-    static void Write(Arg value) {
+    static NG_INLINE void Write(Arg value) {
       std::cout << value;
     }
-
 # endif
     template<typename ... Args>
     static void Log(Args ... args) {
@@ -90,18 +89,27 @@ namespace nextgen {
 # define ASSERT(cond, msg) if (!(cond)) nextgen::PanicAt<sizeof(msg), sizeof \
 (__FILE__), sizeof("ASSERT("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, \
 "ASSERT("#cond", "#msg");")
+# define ASSERT_EQ(cond, value) if (!(cond == value)) nextgen::PanicAt<sizeof \
+("Expected equality"), sizeof (__FILE__), sizeof("ASSERT("#cond", "#value");"), __LINE__, \
+true>("Expected equality", __FILE__, \
+"ASSERT("#cond", "#value");")
+# define ASSERT_TRUE(cond) if (!(cond)) \
+nextgen::PanicAt<sizeof \
+("Expected value to be true"), sizeof (__FILE__), sizeof("ASSERT_TRUE("#cond");"), __LINE__, \
+true>("Expected value to be true", __FILE__, \
+"ASSERT_TRUE("#cond");")
 
-// Panic at a specific point in the code. This is simulated as an exception
-// throw caught by main and returns a failure as to avoid misuse of
-// "std::exit". It prints out the line number,and text of the panic message
-// to have the user locate the failed point in the code.
+  // Panic at a specific point in the code. This is simulated as an exception
+  // throw caught by main and returns a failure as to avoid misuse of
+  // "std::exit". It prints out the line number,and text of the panic message
+  // to have the user locate the failed point in the code.
   template<
     std::size_t N1, std::size_t N2, std::size_t N3,
     int LINE, bool Assert>
   static void PanicAt(
-    const char (&msg)[N1],  /* Panic Message */
-    const char (&FILE)[N2], /* File name of Error */
-    const char (&dup)[N3]) { /* Line text of Panic */
+    const char (&msg)[N1],  /** @brief Panic Message */
+    const char (&FILE)[N2], /** @brief File name of Error */
+    const char (&dup)[N3]) /** @brief Line text of Panic */ {
 
     Console::Log(FILE, ":", LINE, " ", Colors::RED, "error: ",
                  Colors::WHITE,
@@ -120,9 +128,9 @@ namespace nextgen {
                    Colors::BLUE);
     }
     /* Leading Whitespace */
-    for (auto i = 0; i < whitespace; ++i) Console::Log(" ");
+    FOR(i, whitespace) Console::Log(" ");;
     /* Highlighting region */
-    for (auto i = 0; i < N3 - 1; ++i) Console::Log('~');
+    FOR(i, N3 - 1) Console::Log('~');
     Console::Log(Colors::RESET, '\n');
     throw std::exception();
   }

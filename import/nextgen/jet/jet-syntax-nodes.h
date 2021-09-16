@@ -13,6 +13,7 @@ namespace nextgen { namespace jet {
       Else,
       Elif,
       For,
+      While,
       FunctionCall,
       Struct,
       ForList,
@@ -213,7 +214,7 @@ namespace nextgen { namespace jet {
     };
 
     struct SyntaxList : public SyntaxNode {
-      SyntaxNode **values = nullptr;
+      ObjectVector<SyntaxNode*> values;
     };
 
     struct SyntaxVariableAssignment : public SyntaxNode {
@@ -268,14 +269,12 @@ namespace nextgen { namespace jet {
       // Note: There is an exception to parsing of this node, in statements such
       // as 'while', 'if', 'elif', 'else', 'for' may contain a single statement
       // after them without a set of corresponding '{}'.
+      ObjectVector<SyntaxNode*> statements;
 
-      SyntaxNode **statements = nullptr;
 
       // Special statement for function / lambda return check. Allows for void
       // function type inference.
       bool contains_return = false;
-
-      
     };
 
     struct SyntaxElse : public SyntaxNode {
@@ -304,6 +303,29 @@ namespace nextgen { namespace jet {
       // ^^^^ Declared here. Note that the curly braces may be omitted for one
       // statement bodies.
       SyntaxBlock body;
+    };
+
+    struct SyntaxWhile : public SyntaxNode {
+      // Boolean expression representing the while condition.
+      // Ex: while cond
+      //        ^^^^ Declared here
+      SyntaxNode *condition;
+      // Statement list of commands executed upon the condition above being true
+      // Ex: while cond {
+      //    variable := "Hello"
+      // }
+      SyntaxBlock body;
+    };
+
+    struct SyntaxMatch : public SyntaxNode {
+
+      struct MatchPair {
+        SyntaxNode *value;
+        SyntaxBlock action;
+      };
+
+      SyntaxNode *value;
+      ArenaVec<MatchPair> pairs;
     };
 
     struct SyntaxIf : public SyntaxNode {
@@ -369,7 +391,7 @@ namespace nextgen { namespace jet {
 
     struct SyntaxFunctionParameter : public SyntaxNode {
       
-      SyntaxFunctionParameter(Token *pn, Option<SyntaxType> ty)
+      SyntaxFunctionParameter(Token *pn, SyntaxType ty)
       : param_name(pn), type(ty) {}
 
       // Function parameter name
@@ -378,9 +400,9 @@ namespace nextgen { namespace jet {
       // Function Parameter type. If no type is given, then it is inferred to
       // be a generic parameter.
       // Ex:
-      // fn some_func(param_1: int, param_2: str, param_3)
-      //                                          ^^^^^^^ Generic Parameter
-      Option<SyntaxType> type = None;
+      // fn some_func(param_1: int, param_2: str, $param_3)
+      //                                          ^^^^^^^^ Generic Parameter
+      SyntaxType type;
     };
 
     struct SyntaxFunction : public SyntaxNode {
@@ -395,7 +417,7 @@ namespace nextgen { namespace jet {
       SyntaxBlock body;
 
       // Function parameters
-      SyntaxFunctionParameter *parameters = nullptr;
+      ArenaVec<SyntaxFunctionParameter> parameters{nullptr, nullptr};
     };
 
     struct SyntaxFunctionCall : public SyntaxNode {
@@ -406,10 +428,7 @@ namespace nextgen { namespace jet {
       // Ex:
       // some_function(1, 2, 2, 3, 5)
       Token      *function_name = nullptr;
-      SyntaxNode **parameters   = nullptr;
-
-
-      
+      ObjectVector<SyntaxNode*> parameters;
     };
 
     struct SyntaxForList : public SyntaxNode {

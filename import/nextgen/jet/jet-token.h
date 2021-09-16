@@ -127,6 +127,9 @@ namespace nextgen { namespace jet {
     MinusMinus,   // --
     FunctionArrow,// =>
 
+    ColonEquals,   // :=
+    Arrow,         // ->
+
     Error,
     EOFToken,
   };
@@ -144,7 +147,6 @@ namespace nextgen { namespace jet {
     // We have to very careful here. We do not have access to std::variant<...>
     // in C++11, so we must use a controlled union to get a Token's value.
     struct Value {
-      TokenKind kind;
       union {
         decltype(UINTPTR_MAX) integer;
         bool    boolean;
@@ -165,22 +167,23 @@ namespace nextgen { namespace jet {
     unsigned       flags = TokenClassification::Literal;
     TokenValue     repr  = {};
     SourceLocation loc   = {};
+
+    TokenKind kind;
   public:
     Token() = default;
 
     template<typename T>
     Token(const str &id, SourceLocation loc, T value,
           TokenKind kind, unsigned flags = -1)
-          : id(id), flags(flags), loc(loc) {
-        setKind(kind);
+          : id(id), flags(flags), loc(loc), kind(kind) {
         setValue(value);
     }
 
     // Note: This is only for lex errors. Failed tokens are important
     // for the diagnostic class generate valid errors.
-    Token(str ID, SourceLocation Loc, TokenKind Kind)
-    : id(ID), loc(Loc) {
-      setKind(Kind);
+    Token(str id, SourceLocation loc, TokenKind kind)
+    : id(id), loc(loc) {
+      setKind(kind);
     }
 
     size_t len() const {
@@ -196,12 +199,12 @@ namespace nextgen { namespace jet {
       setInternalRepr(v);
     }
 
-    void setKind(TokenKind kind) {
-      repr.kind = kind;
+    void setKind(TokenKind k) {
+      this->kind = k;
     }
 
     TokenKind getKind() const {
-      return repr.kind;
+      return this->kind;
     }
 
     bool isKeyword() const {

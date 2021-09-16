@@ -19,7 +19,6 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       ExpectedIdentifierForStructProperty,
 
       MissingClosingPair,
-
       UnexpectedEndOfFile
     };
 
@@ -34,11 +33,16 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
 
     struct ParseError {
+      union Metadata;
+
       ParseErrorType error;
       TokenTraits::SourceLocation location;
+      std::initializer_list<Metadata> metadata;
 
-      // Error specifics that are handled by
-      // the [Diagnostic] class.
+      /** @brief Contains specific error information pertaining to the error
+       * message. Only a few parser errors have specific items, while most are
+       * invalid or missing tokens
+       * */
       union Metadata {
         struct {
           TokenKind expected;
@@ -48,6 +52,8 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         TokenTraits::SourceLocation location;
         TokenKind reserved_ident;
 
+        // GCC and CLANG let us get away with not using union constructors,
+        // but we need them for MSVC, and it's probably more clear anyway
         Metadata(TokenTraits::SourceLocation loc) : location(loc) {}
         Metadata(TokenKind reserved_ident) : reserved_ident(reserved_ident) {}
         Metadata(TokenKind expected, TokenKind got, const char *message) {
@@ -56,8 +62,6 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
           expected_error.message = message;
         }
       };
-
-      std::initializer_list<Metadata> metadata;
 
       ParseError(ParseErrorType error, TokenTraits::SourceLocation loc)
         : error(error), location(loc) {}
@@ -73,6 +77,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       size_t position = 0;
 
       // Parsing context (valid statements per context scope)
+      // TODO: Set this up so stuff actually works with this...
       ParseContext    context = GeneralScope;
 
       // Parsing errors
@@ -80,18 +85,18 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       // Encountered error that results in stopped compilation
       char fatal = 0;
+
+
     public:
-      Token *tokens;
+      ArenaVec<Token> tokens;
       Parser() = default;
 
+      // Why are we passing a pointer here? Each pass in the frontend is done
+      // through the main function, thus, when we go ahead and pass the lexer,
+      // we know that it has the lifetime of the program.
       explicit Parser(Lexer<TokenMode> *lexer)
         : tokens(lexer->lex()), diagnostics(lexer->diagnostics),
           fatal(0) {}
-
-      ~Parser() {
-        vec::clear(tokens);
-      }
-
 
       /// Parse all statements
       void parse();
@@ -105,53 +110,51 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       // ========= Parsing Language Constructs ==========
 
-      auto parse_block()           -> SyntaxBlock;
-      auto parse_type()            -> SyntaxType;
-      auto parse_function_param(SyntaxFunction *func)  -> void;
-      auto parse_variable_decl()   -> SyntaxNode*;
-      auto parse_function()        -> SyntaxNode*;
-      auto parse_struct()          -> SyntaxNode*;
-      auto parse_if()              -> SyntaxNode*;
-      auto parse_for()             -> SyntaxNode*;
-      auto parse_match()           -> SyntaxNode*;
-      auto parse_function_call()   -> SyntaxNode*;
+      auto parse_block() -> SyntaxBlock;
+      auto parse_type() -> SyntaxType;
+      void parse_function_param(SyntaxFunction *func);
+      auto parse_variable_assignment(Token *name) -> SyntaxNode*;
+      auto parse_function(Token *name) -> SyntaxNode*;
+      auto parse_struct(Token *name) -> SyntaxNode*;
+      auto parse_function_call(Token *name, Token *delim) -> SyntaxNode*;
+      auto parse_if() -> SyntaxNode*;
+      auto parse_for() -> SyntaxNode*;
+      auto parse_match() -> SyntaxNode*;
+      auto parse_match_pair_value() -> SyntaxNode*;
+      auto parse_while() -> SyntaxNode*;
+
+      // TODO: Update in design choices, do we need this still?
       auto parse_struct_function
         (Token *s, Token *function_name) -> SyntaxNode*;
 
 
       // ========= Parsing Utils ==========
 
-      /// Lookahead 'n' amount of times in the list
+      /** @brief Lookahead 'n' amount of times in the list */
       auto peek(size_t n) -> Token*;
 
-      /// Returns the current token and skips 'n' tokens ahead
+      /** @brief Returns the current token and skips 'n' tokens ahead */
       auto skip(size_t n) -> Token*;
 
-      /// Skips the 'n' and returns the latest token after the skip
+      /** @brief Skips 'n' tokens and returns the latest token after the skip */
       auto next(size_t n) -> Token*;
 
-      /// Asserts that the value in 'kind' is the value of the next token
-      /// and otherwise builds a diagnostic instead for the 'error_kind'.
+      /** @brief Asserts next token kind is 'TK' or errors with type 'PE' */
       template<TokenKind TK, ParseErrorType PE>
       auto skip() -> Token*;
 
-      /// Expect the next token to be 'kind', if not, build an error. A lot of
-      /// tokens are expected, and individual errors cannot be based on every
-      /// situation.
+      /** @brief Expect the next token to be 'kind', if not, build an error. */
       template<TokenKind TK, size_t N>
       auto expect(char const (&msg)[N]) -> Token*;
 
+      /** @brief Expected a closing delim in a statement or expression */
       template<TokenKind TK>
-      void delim(const TokenTraits::SourceLocation &start);
+      void expect_delim(const TokenTraits::SourceLocation &loc);
 
-      /// Get the current token value
-      NG_INLINE Token *curr()  {
-        return tokens + position;
-      }
 
-      /// Get Unary Operator Precedence
-      static NG_INLINE int UnaryOperatorBinding(TokenKind Kind) {
-        switch (Kind) {
+      /** @brief Unary operator precedence */
+      static NG_INLINE int UnaryOperatorBinding(TokenKind kind) {
+        switch (kind) {
           case TokenKind::Plus:
           case TokenKind::Minus:
           case TokenKind::ExclamationPoint:
@@ -162,11 +165,10 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         }
       }
 
-      /// Generates Binary Expression Infix Operator Binding.
-      /// Note Format: {LBP, RBP} for Operator Expression Binding.
+      /** @brief Infix operator binding for expressions */
       static NG_INLINE
-      auto InfixOperatorBinding(TokenKind Kind) -> std::array<int, 2>  {
-        switch (Kind) {
+      std::array<int, 2> InfixOperatorBinding(TokenKind kind) {
+        switch (kind) {
           case TokenKind::Dot:
             return {16, 15}; // Property value operator
           case TokenKind::Star:
@@ -195,6 +197,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         }
       }
 
+      auto NG_AINLINE curr()  { return tokens[position]; }
     };
   }}
 

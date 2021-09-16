@@ -63,8 +63,10 @@ void Parser::parse() {
         if (C1->getKind() == TokenKind::FunctionArrow) {
           switch (C2->getKind()) {
             case TokenKind::LParenthesis: // Function
+              parse_function(curr());
               break;
             case TokenKind::KeywordStruct: // Struct
+              parse_struct(curr());
               break;
             case TokenKind::KeywordEnum: // Enum
               break;
@@ -72,6 +74,11 @@ void Parser::parse() {
               UNREACHABLE;
               break;
           }
+        }
+        else if (C1->getKind() == TokenKind::ColonEquals) {
+          auto name = curr();
+          skip(2);
+          parse_variable_assignment(name);
         }
         break;
       }
@@ -82,23 +89,23 @@ void Parser::parse() {
 }
 
 Token *Parser::peek(size_t n)  {
-  return tokens + position + n;
+  return tokens[position + n];
 }
 
 Token *Parser::skip(size_t n)  {
-  auto *ret = tokens + position;
+  auto *ret = tokens[position];
   position += n;
   return ret;
 }
 
 Token *Parser::next(size_t n) {
   position += n;
-  return tokens + position;
+  return tokens[position];
 }
 
 template<TokenKind TK, ParseErrorType PE>
 Token *Parser::skip() {
-  auto next = tokens + (position++);
+  auto next = tokens[(position++)];
   if (next->getKind() != TK) {
     this->diagnostics.build(ParseError(
       PE,
@@ -110,7 +117,7 @@ Token *Parser::skip() {
 
 template<TokenKind TK, size_t N>
 Token *Parser::expect(char const (&msg)[N]) {
-  auto next = tokens + (position++);
+  auto next = tokens[(position++)];
   if (next->getKind() != TK) {
     this->diagnostics.build(ParseError(
       ParseErrorType::ExpectedToken, 
@@ -125,20 +132,19 @@ Token *Parser::expect(char const (&msg)[N]) {
 }
 
 template<TokenKind TK>
-void Parser::delim(const TokenTraits::SourceLocation &loc) {
-  Token next = tokens[position++];
-  if (next.getKind() != TK) {
+void Parser::expect_delim(const TokenTraits::SourceLocation &loc) {
+  Token *next = tokens[position++];
+  if (next->getKind() != TK) {
     this->diagnostics.build(ParseError (
       ParseErrorType::MissingClosingPair,
-      next.getSourceLocation(),
+      next->getSourceLocation(),
       { ParseError::Metadata { TK }, ParseError::Metadata { loc } }
     ));
   }
 }
 
-SyntaxNode *Parser::parse_variable_decl()  {
-  auto E = arena::allocate<SyntaxVariableAssignment>(1);
-  auto name = skip(1);
+SyntaxNode *Parser::parse_variable_assignment(Token *name)  {
+  SyntaxVariableAssignment *E;
 
   if (name->isKeyword()) {
     this->diagnostics.build(ParseError{
@@ -155,24 +161,18 @@ SyntaxNode *Parser::parse_variable_decl()  {
     fatal++;
   }
 
-  expect<TokenKind::Equals>("Missing '=' before variable "
-                                       "expression");
   auto expr = parse_expr();
+  expect<TokenKind::SemiColon>("Expected ';' after declaration");
 
   // Check 1: var name: type = expr
   // Check 2: var name = expr
   if (peek(1)->getKind() == TokenKind::Colon) {
-    E->name = name;
-    E->type = Some(parse_type());
-    E->expression = expr;
+    E = new SyntaxVariableAssignment(name, Some(parse_type()), expr);
     goto ret;
   } else {
-    E->name = name;
-    E->type = None;
-    E->expression = expr;
+    E = new SyntaxVariableAssignment(name, None, expr);
     goto ret;
   }
-
 ret:
   auto node = static_cast<SyntaxNode*>(E);
   node->kind = SyntaxKind::VariableAssignment;
@@ -183,10 +183,11 @@ SyntaxNode *Parser::parse_decl() {
   switch (curr()->getKind()) {
     case TokenKind::KeywordVar:
       skip(1);
-      return parse_variable_decl();
+      break;
     default:
       break;
   }
+  return nullptr;
 }
 
 
@@ -209,80 +210,81 @@ SyntaxNode *Parser::parse_expr(int previous_binding)  {
     const auto expr  = parse_expr(unary_binding);
     const auto op = SyntaxUnary::MatchOp(first_kind);
 
-    const auto E = arena::allocate<SyntaxUnary>();
+    const auto E = (SyntaxNode*)(new SyntaxUnary(op, first_token, expr));
     E->kind = SyntaxKind::Unary;
-    *E = {
-      op, first_token, expr
-    };
     return expr;
   } else {
     lhs = match_expr();
   }
 
-  while (curr()->getKind() != EOFToken) {
-    auto op = next(1);
+   do {
+    auto op = next(1); // Note: We peek here in case it is an incorrect op
     auto op_kind = op->getKind();
 
     const auto op_bindings = Parser::InfixOperatorBinding(op_kind);
-    if (/* LeftBindingPrecedence */ op_bindings[0] <= previous_binding)
+    if (/* LeftBindingPrecedence */ op_bindings[0] <= previous_binding) {
+      //skip(1);
       break;
+    }
+    // Force skip here so that token is consumed.
     skip(1);
     const auto rhs = parse_expr(/* RightBindingPrecedence */
       op_bindings[1]);
-    auto new_expr = arena::allocate<SyntaxBinary>(1);
-    *new_expr = SyntaxBinary {
+    auto new_expr = new SyntaxBinary {
       SyntaxBinary::MatchOp(op_kind), op, lhs, rhs
     };
     lhs = new_expr;
     lhs->kind = SyntaxKind::Binary;
-  }
+   } while (curr()->getKind() != EOFToken);
   return lhs;
 }
 
 SyntaxNode *Parser::match_expr() {
-  auto first_token = curr();
-  switch (first_token->getKind()) {
+  auto matched_token = curr();
+  switch (matched_token->getKind()) {
     case EOFToken:
       this->diagnostics.build(ParseError {
         ParseErrorType::UnexpectedEndOfFile,
-        first_token->getSourceLocation()
+        matched_token->getSourceLocation()
       });
       break;
-    case Identifier: {// Unresolved variable or Function Call
+    case Identifier: { // Unresolved variable or Function Call
+      auto C1 = peek(1);
       if (peek(1)->getKind() == TokenKind::LParenthesis) {
-        return parse_function_call();
+        return parse_function_call(matched_token, C1);
       }
-      auto E = arena::allocate<SyntaxLiteral>(1);
-      *E = SyntaxLiteral { first_token };
+      auto E = (SyntaxNode*) new SyntaxLiteral(matched_token);
       E->kind = SyntaxKind::LiteralValue;
       return E;
     }
     case Integer: case String: case Char: case Decimal: case KeywordTrue:
     case KeywordFalse: {
-      auto E = arena::allocate<SyntaxLiteral>(1);
-      E->literal = first_token;
-      auto ret = static_cast<SyntaxNode*>(E);
-      ret->kind = SyntaxKind::LiteralValue;
-      return ret;
+      auto E = (SyntaxNode*) new SyntaxLiteral(matched_token);
+      E->kind = SyntaxKind::LiteralValue;
+      return E;
     }
     case LParenthesis: {
       auto E = parse_expr();
-      delim<TokenKind::RParenthesis>(first_token->getSourceLocation());
+      expect_delim<TokenKind::RParenthesis>(matched_token->getSourceLocation());
       return E;
     }
     case LBracket: { // ex: [1, 2, 3]
       auto current = next(1);
-      auto E  = arena::allocate<SyntaxList>();
-      while (current->getKind() != TokenKind::RBracket && current->getKind()
-      != TokenKind::EOFToken) {
+      auto E  = new SyntaxList;
+
+      // Loop through with reaching the EOF or closing expect_delim
+      while (current->getKind() != TokenKind::RBracket
+            && current->getKind() != TokenKind::EOFToken) {
+
+        // Skip separating expect_delim
         if (current->getKind() == TokenKind::Comma) {
           skip(1);
         }
-        auto expr = parse_expr();
-        vec::push(E->values, expr);
+
+        E->values << parse_expr();
         current = curr();
       }
-      delim<TokenKind::RBracket>(first_token->getSourceLocation());
+      expect_delim<TokenKind::RBracket>(matched_token->getSourceLocation());
       auto node = (SyntaxNode*)E;
       node->kind = SyntaxKind::List;
       return node;
@@ -308,17 +310,21 @@ SyntaxNode *Parser::parse_stmt()  {
       break;
     case KeywordDefer:
       break;
-    case KeywordVar:
-      skip(1);
-      return parse_variable_decl();
     case KeywordNone:
       break;
     case KeywordReturn:
       break;
     case KeywordMatch:
       break;
-    case Identifier:
+    case Identifier: {
+      auto C1 = peek(1);
+      if (C1->getKind() == TokenKind::ColonEquals) {
+        auto name = curr();
+        skip(2);
+        return parse_variable_assignment(name);
+      }
       break;
+    }
     case LCurlyBrace:
       break;
     case Then:
@@ -340,19 +346,14 @@ SyntaxType Parser::parse_type()  {
 
 
 SyntaxNode *Parser::parse_if()  {
-  auto E = arena::allocate<SyntaxIf>(1);
+  auto E = new SyntaxIf;
+
   E->condition = parse_expr();
   E->body = parse_block();
 
-
-  auto node1 = E->body.statements[0];
-  auto node2 = ((SyntaxVariableAssignment*)(node1))->expression;
-  ASSERT(node1->kind == SyntaxKind::VariableAssignment, "NOO");
-  ASSERT(node2->kind == SyntaxKind::LiteralValue,"NOO");
   auto is_else = next(1);
   if (is_else->getKind() == TokenKind::KeywordElse) {
-    E->else_ = arena::allocate<SyntaxElse>();
-    E->else_->body = parse_block();
+    E->else_ = new SyntaxElse(parse_block());
   }
   else if (is_else->getKind() == TokenKind::KeywordElif) {
     E->elif = parse_if();
@@ -364,11 +365,20 @@ SyntaxNode *Parser::parse_if()  {
   return node;
 }
 
+SyntaxNode *Parser::parse_while() {
+  auto E = new SyntaxWhile;
+
+  // Yes ... It really is this easy to parse a while loop.
+  E->condition = parse_expr();
+  E->body = parse_block();
+  return E;
+}
+
+
 SyntaxNode *Parser::parse_for()  {
   auto loop_variable = skip<TokenKind::Identifier,
                             ParseErrorType::MissingForLoopVariable>();
   skip<TokenKind::KeywordIn, ParseErrorType::ExpectedToken>();
-
   auto Begin = skip(1);
   return nullptr;
 }
@@ -377,24 +387,28 @@ SyntaxNode *Parser::parse_match()  {
   return nullptr;
 }
 
+SyntaxNode *Parser::parse_match_pair_value()  {
+  return nullptr;
+}
+
 void Parser::parse_function_param(SyntaxFunction *fn) {
   skip<TokenKind::LParenthesis, ParseErrorType::ExpectedToken>();
   auto current = curr();
+
+  fn->parameters.begin = (SyntaxFunctionParameter*)(GLOBAL_OBJECT_ALLOC.current());
   while (current->getKind() != TokenKind::RParenthesis) {
     auto param_name = skip<TokenKind::Identifier,
                      ParseErrorType::ExpectedIdentifierForFunctionParameter>();
     expect<TokenKind::Colon>("Expected ':' before parameter type (this is not"
                              " go!)");
-    vec::push(fn->parameters, SyntaxFunctionParameter {
-      param_name, parse_type()
-    });
+
+    fn->parameters.end = new SyntaxFunctionParameter(param_name, parse_type());
   }
 }
 
-SyntaxNode *Parser::parse_function() {
-  auto E = arena::allocate<SyntaxFunction>(1);
-  E->function_name = skip<TokenKind::Identifier,
-                            ParseErrorType::MissingFunctionName>();
+SyntaxNode *Parser::parse_function(Token *function_name) {
+  auto E = new SyntaxFunction;
+  E->function_name = function_name;
   parse_function_param(E);
 
   E->function_type   = parse_type();
@@ -403,15 +417,20 @@ SyntaxNode *Parser::parse_function() {
   return E;
 }
 
-SyntaxNode *Parser::parse_function_call() {
-  auto E = arena::allocate<SyntaxFunctionCall>(1);
-  E->function_name = skip(1); // Guaranteed to be IDENT
-  auto open = skip<TokenKind::LParenthesis,
-  ParseErrorType::ExpectedToken>();
+SyntaxNode *Parser::parse_function_call(Token *function_name, Token *delim) {
+  auto E = new SyntaxFunctionCall;
+  E->function_name = function_name;
   while(curr()->getKind() != TokenKind::RParenthesis) {
-    vec::push(E->parameters, parse_expr());
+
+    // Looks odd, right? What's happening here is that the arena will allocate
+    // nodes in its continuous memory block and the function will write to that
+    // memory, so we don't need to worry about pushing values to the arena.
+    //
+    // TODO: Refactor some parsing functions to be void because of the arena
+    //  allocation.
+    E->parameters << parse_expr();
   }
-  delim<TokenKind::RParenthesis>(open->getSourceLocation());
+  expect_delim<TokenKind::RParenthesis>(delim->getSourceLocation());
   return E;
 }
 
@@ -419,18 +438,14 @@ SyntaxBlock Parser::parse_block()  {
   auto open = expect<TokenKind::LCurlyBrace>("Expected '{' before beginning of "
                                        "current");
   auto block   = SyntaxBlock {};
-
-  auto current = curr();
-  while (current->getKind() != TokenKind::RCurlyBrace) {
-    vec::push(block.statements, parse_stmt());
-    current = curr();
+  while (curr()->getKind() != TokenKind::RCurlyBrace) {
+    block.statements << parse_stmt();
   }
-
-  delim<TokenKind::RParenthesis>(open->getSourceLocation());
+  expect_delim<TokenKind::RParenthesis>(open->getSourceLocation());
   return block;
 }
 
-SyntaxNode *Parser::parse_struct()  {
+SyntaxNode *Parser::parse_struct(Token *struct_name)  {
   return nullptr;
 }
 

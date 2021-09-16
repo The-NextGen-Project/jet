@@ -4,7 +4,7 @@ using namespace nextgen;
 using namespace nextgen::jet;
 
 #define TOKEN_SHORT(value, kind) \
-Token { \
+new Token { \
   value, \
   {line, column}, \
   value, \
@@ -12,7 +12,7 @@ Token { \
 }
 #define TOKEN_ADD_SHORT(value, kind) \
 if (OUTPUT_MODE) Console::Log(value), next((sizeof value) - 1); \
-else vec::push(tokens, TOKEN_SHORT(value, kind)), next((sizeof value) - 1) \
+else TOKEN_SHORT(value, kind), next((sizeof value) - 1)            \
 
 static constexpr TokenKind MatchTokenKind[256] {
 
@@ -255,7 +255,7 @@ static const TokenKind MatchIdentToReserved(const char *ident, size_t len) {
 
 
 template<LexMode Mode>
-Token Lexer<Mode>::lex_float(int skip, int start) {
+void Lexer<Mode>::lex_float(int skip, int start) {
   // Initialize start of token
   auto token_start = buffer;
   auto token_start_col = column;
@@ -274,7 +274,8 @@ Token Lexer<Mode>::lex_float(int skip, int start) {
   } while(next(1));
 
   decimal = (value / divisor);
-  return Token {
+
+  new Token {
     Range<const char *>(token_start, buffer),
     {line, column},
     (double)(start + decimal),
@@ -284,25 +285,25 @@ Token Lexer<Mode>::lex_float(int skip, int start) {
 }
 
 template<LexMode Mode>
-Token Lexer<Mode>::lex_int() {
+void Lexer<Mode>::lex_int() {
   switch (curr()) {
     case '0':
       switch(peek(1)) {
-        case 'b': return lex_int<2, 2>();
-        case 'x': return lex_int<16, 2>();
-        case '#': return lex_int<36, 2>();
+        case 'b': lex_int<2, 2>();  return;
+        case 'x': lex_int<16, 2>(); return;
+        case '#': lex_int<36, 2>(); return;
         case '0': case '1': case '2': case '3': case '4': case '5':
-        case '6': case '7': case '8': case '9': return lex_int<8, 1>();
-        case '.': return lex_float(2);
-        default: return lex_int<10, 0>();
+        case '6': case '7': case '8': case '9': lex_int<8, 1>(); return;
+        case '.': lex_float(2); return;
+        default: lex_int<10, 0>(); return;
       }
-      default: return lex_int<10, 0>();
+      default: lex_int<10, 0>();
   }
 }
 
 template<LexMode Mode>
 template<int radix, int skip>
-Token Lexer<Mode>::lex_int() {
+void Lexer<Mode>::lex_int() {
 
   // Initialize start of token
   auto token_start = buffer;
@@ -331,8 +332,6 @@ Token Lexer<Mode>::lex_int() {
             },
             {radix, digit + 1}
         });
-        fatal = true;
-        return Token{};
       }
     }
     // Check whether value is about to overflow the maximum integer value.
@@ -348,25 +347,24 @@ Token Lexer<Mode>::lex_int() {
             TokenKind::Integer
           }
         });
-        fatal = true;
-        return Token{};
       }
     }
     lexed_int = lexed_int * radix + digit;
   } while(next(1));
 
-  if (curr() == '.')
-    return lex_float(buffer - token_start, lexed_int);
+  if (curr() == '.')  {
+    lex_float(buffer - token_start, lexed_int);
+    return;
+  }
 
   auto token_end = buffer;
   auto id = Range<const char *>(token_start, token_end);
 
   if (OUTPUT_MODE) {
     Console::Log(Colors::BLUE, str(id), Colors::RESET);
-    return Token{};
   }
 
-  return Token {
+  new Token {
     id,
     {line, column},
     (decltype(UINTPTR_MAX)) lexed_int,
@@ -376,7 +374,7 @@ Token Lexer<Mode>::lex_int() {
 }
 
 template<LexMode Mode>
-Token Lexer<Mode>::lex_ident() {
+void Lexer<Mode>::lex_ident() {
   auto token_start = buffer;
   do {} while(MatchTokenKind[next(1)] == TokenKind::Identifier);
   auto token_end   = buffer;
@@ -388,10 +386,9 @@ Token Lexer<Mode>::lex_ident() {
     reserved != TokenKind::Identifier ?
     Console::Log(Colors::RED, str(id), Colors::RESET) :
     Console::Log(Colors::YELLOW, str(id), Colors::RESET);
-    return Token {};
   }
 
-  return Token {
+  new Token {
     id,
     {line, column},
     "",
@@ -401,15 +398,15 @@ Token Lexer<Mode>::lex_ident() {
 }
 
 template<LexMode Mode>
-Token Lexer<Mode>::lex_str() {
+void Lexer<Mode>::lex_str() {
   auto token_start = buffer;
   auto token_start_col = column;
-
   auto offset = 1;
 
   if (OUTPUT_MODE) Console::Log(Colors::GREEN);
 
-  auto id = (char*) (arena::current());
+  // @NOTE: Remember that this is DATA not OBJECT for allocation
+  auto id = (char*) (GLOBAL_DATA_ALLOC.current() + 1);
   auto len = 0;
 
   char current = next(1);
@@ -433,10 +430,9 @@ Token Lexer<Mode>::lex_str() {
             {line, token_start_col},
             TokenKind::String
             },
-            {(int)('"')}
+            {(int)('"'
+            )}
           });
-        fatal = true;
-        return Token{};
       }
 
       if (current == '\\') {
@@ -460,8 +456,6 @@ Token Lexer<Mode>::lex_str() {
                 },
                 {value + 1} // Pass in the invalid digit for the escape
               });
-              fatal = true;
-              return Token{};
             }
             auto value2 = IntegerBits[next(1)];
             if (value2 >= 16) {
@@ -475,8 +469,6 @@ Token Lexer<Mode>::lex_str() {
                   },
                   {value2 + 1} // Pass in the invalid digit for the escape
               });
-              fatal = true;
-              return Token{};
             }
             int val = value;
             val = val * 16 + value2;
@@ -494,52 +486,48 @@ Token Lexer<Mode>::lex_str() {
                 TokenKind::String
               }
             });
-            fatal = true;
-            return Token{};
         }
       }
-      //id[len++] = current;
-      arena::push((len++, current));
+      id[len++] = current;
     }
   } while(next(1) != '"');
 
   next(1); // Skip '"'
 
-  // For missing closing delim this needs to be here
+  // For missing closing expect_delim this needs to be here
   if (OUTPUT_MODE && offset != 0) Console::Log("\"");
   if (NORMAL_MODE) {
     id[len] = '\0';
-    return Token {
+    GLOBAL_DATA_ALLOC.reserve(len);
+    new Token {
       str {id, static_cast<size_t>(len)},
       {line, column},
       "",
       TokenKind::String,
       TokenClassification::Literal
     };
-  } else return Token{};
+  }
 }
 
 template<LexMode Mode>
-Token *Lexer<Mode>::lex() {
-  Token *tokens = nullptr;
-  TokenKind kind;
+ArenaVec<Token> Lexer<Mode>::lex() {
+  tokens.begin = (Token *) GLOBAL_OBJECT_ALLOC.current();
 
+  TokenKind kind;
   while(true) {
     auto current = curr();
     kind = MatchTokenKind[current];
     switch (kind) {
       case EOFToken: {
-        vec::push(tokens, Token("\n", {line, column}, TokenKind::EOFToken));
+        tokens.end = new Token("\n", {line, column}, TokenKind::EOFToken);
         return tokens;
       }
-      case Integer: {
-        vec::push(tokens, lex_int());
-        break;
-      }
-      case String: vec::push(tokens, lex_str()); break;
-      case Identifier: vec::push(tokens, lex_ident()); break;
+      case Integer: lex_int(); break;
+      case String: lex_str(); break;
+      case Identifier: lex_ident(); break;
       case Whitespace: {
-        if (OUTPUT_MODE) Console::Log(current);
+        if (OUTPUT_MODE)
+          Console::Log(current);
         next(1);
         break;
       }
@@ -551,7 +539,7 @@ Token *Lexer<Mode>::lex() {
           Console::Log(next(1));
         }
         else {
-          vec::push(tokens, TOKEN_SHORT(next(1), TokenKind::Char));
+          TOKEN_SHORT(next(1), TokenKind::Char);
         }
         if (peek(1) != '\'') {
           if (NORMAL_MODE) {
@@ -653,6 +641,9 @@ Token *Lexer<Mode>::lex() {
           else if (n == '=') {
             TOKEN_ADD_SHORT("-=", TokenKind::MinusMinus);
           }
+          else if (n == '>') {
+            TOKEN_ADD_SHORT("->", TokenKind::Arrow);
+          }
           else {
             TOKEN_ADD_SHORT("+", TokenKind::Minus);
           }
@@ -752,7 +743,10 @@ Token *Lexer<Mode>::lex() {
           TOKEN_ADD_SHORT("?", TokenKind::QuestionMark);
           break;
         case Colon:
-          TOKEN_ADD_SHORT(":", TokenKind::Colon);
+          if (peek(1) == '=')
+            TOKEN_ADD_SHORT(":=", TokenKind::ColonEquals);
+          else
+            TOKEN_ADD_SHORT(":", TokenKind::Colon);
           break;
         case Comma:
           TOKEN_ADD_SHORT(",", TokenKind::Comma);
@@ -760,11 +754,13 @@ Token *Lexer<Mode>::lex() {
         default:
           break;
     }
-    if (fatal) return tokens;
   }
   return tokens;
 }
 
+// Forces compilation of the two lexer classes
+// so that we can have definitions in a cpp file without
+// crowding the header file.
 namespace nextgen { namespace jet {
   template class Lexer<TokenMode>;
   template class Lexer<PrintingMode>;

@@ -60,10 +60,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     size_t buf_pos = 0;
 
     Diagnostic diagnostics;
-
-    // When fatal is set, the lexer knows that is has encountered an invalid
-    // token. All lexer errors are fatal and stop compilation.
-    bool fatal = false;
+    ArenaVec<Token> tokens;
 
     // Ensure that branches are taken away during compile-time with guaranteed
     // compile-time value if statements. This is used so that both printing mode
@@ -80,47 +77,15 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       diagnostics = Diagnostic(buffer, buffer_size, file_name);
     }
 
-    /// Get the next valid Token in the File stream
-    auto next_token() -> Token;
-
-    /// Print the values of token with Syntax Highlighting
-    void PrintNextToken();
-
-    // Integers
-    Token lex_int();
-
+    void lex_int();
     template<int radix, int skip>
-    Token lex_int();
+    void lex_int();
+    void lex_float(int skip, int start=0);
 
-    Token lex_str();
-    Token lex_float(int skip, int start=0);
-    Token lex_ident();
+    void lex_str();
+    void lex_ident();
 
-    /// Given the file buffer as input, lex all the tokens or output valid
-    // ones to the terminal.
-
-    Token *lex();
-
-/*    auto lex() -> Vec<Token> {
-      auto tokens = Vec<Token>{};
-      do {
-        auto instance = next_token();
-        tokens.push(instance);
-      } while (!fatal && buf_pos < buf_size);
-
-      // Insert EOFToken for Out of Range values
-      tokens.push(Token("\n", {line, column},
-                        TokenKind::EOFToken));
-      return tokens;
-    }*/
-
-    /// Print the tokens using syntax highlighting with the given
-    /// buffer. Used for Re-lexing in error reporting.
-/*   void LexPrint() noexcept {
-      do {
-        PrintNextToken();
-      } while (buf_pos < buf_size && buffer);
-    }*/
+    ArenaVec<Token> lex();
 
 
     /// peek `NChars` characters in the file buffer.
@@ -143,8 +108,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
           { line, column },
           Token("\0", {line, column}, TokenKind::EOFToken)
         });
-        fatal = true;
-        return '\0';
+        UNREACHABLE;
       }
 
       column += n;

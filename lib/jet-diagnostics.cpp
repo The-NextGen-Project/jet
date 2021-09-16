@@ -25,7 +25,7 @@ static str GetNthLineOfBuffer(size_t nth,
     return str {file_buf, buf_len};
   }
 
-  for (auto I = 0; I < buf_len; ++I) {
+  FOR(i, buf_len) {
     if (*copy == '\n') {
       if (found) {
         return str(Range<const char *>(found_point, copy));
@@ -107,6 +107,9 @@ void Diagnostic::build(LexError error) {
       UNREACHABLE;
   }
   Console::Log(Colors::RESET, "\n");
+
+  // Lexer errors are always fatal to a program's continuation.
+  send_exception();
 }
 
 

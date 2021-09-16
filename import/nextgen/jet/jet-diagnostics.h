@@ -49,7 +49,7 @@ namespace nextgen { namespace jet {
 
     void send_exception() {
       Console::Log(Colors::RED, "error: ", Colors::RESET, "Aborting due to "
-                                                          "previous errors");
+                                                          "previous errors\n");
       throw std::exception();
     }
   private:

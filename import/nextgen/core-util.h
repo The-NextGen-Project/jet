@@ -9,6 +9,12 @@ namespace nextgen {
   enum class NoneValue { None = 1 };
   static constexpr NoneValue None = NoneValue::None;
 
+  template<typename T>
+  struct Array {
+    size_t len;
+    const T arr[];
+  };
+
   template<typename T, size_t N>
   constexpr size_t SizeOfArray(const T(&arr)[N]) {
     return N;
@@ -25,9 +31,9 @@ namespace nextgen {
       Option() : is(false) {};
 
       // Direct Copy
-      Option(const Option<T> &other) : is(other.is), Some(other.Some) {}
+      Option(Option<T> const &other) : is(other.is), Some(other.Some) {}
 
-      Option(const T &value) :
+      Option(T const &value) :
         Some(std::move(value)), is(true) {}
 
       /*implicit*/ Option(NoneValue) :
@@ -47,13 +53,13 @@ namespace nextgen {
         return false;
       }
 
-      T unwrap() const {
+      auto unwrap() const {
         ASSERT(is, "Unwrapped on None Value");
         return std::move(Some);
       }
 
       template<typename Lambda, LAMBDA(Lambda, T, void)>
-      T unwrap_or_else(Lambda f) {
+      auto unwrap_or_else(Lambda f) {
         if (is) return std::move(Some);
         return f();
       }
@@ -64,8 +70,8 @@ namespace nextgen {
     };
 
     template<typename T>
-    static NG_AINLINE auto Some(T value) -> Option<T> {
-      return Option<T>(value); // Make explicit
+    static NG_AINLINE auto Some(T value) {
+      return Option<T>(value); // NOTE: Make explicit
     }
   }
 } // namespace nextgen::core
