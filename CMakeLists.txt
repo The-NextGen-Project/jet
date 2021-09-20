@@ -30,6 +30,9 @@ add_executable(jet main.cpp
 
         # Parsing
         lib/jet-parser.cpp
+
+        # Codegen
+        lib/jet-x64-assembler.cpp
         )
 
 # Link against LLVM libraries

@@ -46,17 +46,18 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       union Metadata {
         struct {
           TokenKind expected;
-          TokenKind got;
+          Token const *got;
           const char *message;
         } expected_error;
         TokenTraits::SourceLocation location;
-        TokenKind reserved_ident;
+        TokenKind const misc_kind;
 
         // GCC and CLANG let us get away with not using union constructors,
         // but we need them for MSVC, and it's probably more clear anyway
         Metadata(TokenTraits::SourceLocation loc) : location(loc) {}
-        Metadata(TokenKind reserved_ident) : reserved_ident(reserved_ident) {}
-        Metadata(TokenKind expected, TokenKind got, const char *message) {
+        Metadata(TokenKind const kind) : misc_kind(kind) {}
+        Metadata(TokenKind const expected, Token const *got, const char
+        *message) {
           expected_error.expected = expected;
           expected_error.got = got;
           expected_error.message = message;
@@ -68,7 +69,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       ParseError(ParseErrorType error, TokenTraits::SourceLocation loc,
                  const std::initializer_list<Metadata> &metadata)
-        : error(error), location(loc) {}
+        : error(error), location(loc), metadata(metadata) {}
     };
 
     class Parser {

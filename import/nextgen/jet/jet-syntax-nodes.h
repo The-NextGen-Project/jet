@@ -44,6 +44,12 @@ namespace nextgen { namespace jet {
       Division,
       Multiplication,
       Modulus,
+      Greater,
+      Less,
+      GreaterEqualTo,
+      LessEqualTo,
+      BooleanOr,
+      BooleanAnd,
       BinaryShLeft,
       BinaryShRight,
       BinaryXOR,
@@ -129,8 +135,8 @@ namespace nextgen { namespace jet {
       SyntaxNode *rhs;
 
       /// Convert a `TokenKind` to `SyntaxBinaryOp` kind
-      static NG_INLINE SyntaxBinaryOp MatchOp(TokenKind Kind) {
-        switch(Kind) {
+      static NG_INLINE SyntaxBinaryOp MatchOp(TokenKind kind) {
+        switch(kind) {
           case TokenKind::Plus:
             return SyntaxBinaryOp::Addition;
           case TokenKind::Minus:
@@ -151,6 +157,18 @@ namespace nextgen { namespace jet {
             return SyntaxBinaryOp::BinaryShLeft;
           case TokenKind::RightShift:
             return SyntaxBinaryOp::BinaryShRight;
+          case TokenKind::GreaterThan:
+            return SyntaxBinaryOp::Greater;
+          case TokenKind::GreaterThanEquals:
+            return SyntaxBinaryOp::GreaterEqualTo;
+          case TokenKind::LessThan:
+            return SyntaxBinaryOp::Less;
+          case TokenKind::LessThanEquals:
+            return SyntaxBinaryOp::LessEqualTo;
+          case TokenKind::KeywordOr:
+            return SyntaxBinaryOp::BooleanOr;
+          case TokenKind::KeywordAnd:
+            return SyntaxBinaryOp::BooleanAnd;
           default:
             UNREACHABLE;
         }

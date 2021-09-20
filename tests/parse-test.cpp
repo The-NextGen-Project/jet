@@ -129,32 +129,61 @@ TEST(ParseTest, WhileLoop) {
   using namespace nextgen::jet;
 
 
-  auto buf = "while some_value > 2 { another := 23; }";
+  auto buf = "while some_value > 223 { another := 43; }";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
   auto parser = jet::Parser(&lexer);
   parser.skip(1);
 
-  auto node = parser.parse_if();
-  auto stmt = (SyntaxIf*) node;
+  auto node = parser.parse_while();
+  auto stmt = (SyntaxWhile*) node;
 
-  auto if_cond_node = stmt->condition;
-  auto if_cond      = (SyntaxLiteral*) stmt->condition;
+  auto while_cond_node = stmt->condition;
+
+  auto while_cond      = (SyntaxBinary*) stmt->condition;
+  auto lhs_cond = (SyntaxLiteral*) while_cond->lhs;
+  auto bin_op   = while_cond->operation;
+  auto rhs_cond = (SyntaxLiteral*) while_cond->rhs;
 
   auto variable_decl = (SyntaxVariableAssignment*) stmt->body.statements[0];
 
 
-  ASSERT_EQ(if_cond_node->kind, SyntaxKind::LiteralValue);
-  ASSERT_TRUE(::strncmp(if_cond->literal->name().begin(), "value",
-                        if_cond->literal->len()) == 0);
+  ASSERT_EQ(while_cond_node->kind, SyntaxKind::Binary);
+  ASSERT_TRUE(::strncmp(lhs_cond->literal->name().begin(), "some_value",
+                        lhs_cond->literal->len()) == 0);
+  ASSERT_EQ(bin_op, SyntaxBinaryOp::Greater);
+  ASSERT_EQ(rhs_cond->literal->getValue<size_t>(), 223);
 
-  ASSERT_TRUE(::strncmp(variable_decl->name->name().begin(), "nice", variable_decl->name->len()) == 0);
-  ASSERT_EQ(CAST(SyntaxLiteral*, variable_decl->expression)->literal->getValue<size_t>(), 23);
+  ASSERT_TRUE(::strncmp(variable_decl->name->name().begin(), "another",
+                        variable_decl->name->len()) == 0);
+  ASSERT_EQ(CAST(SyntaxLiteral*, variable_decl->expression)
+  ->literal->getValue<size_t>(), 43);
+}
+
+TEST(ParseTest, SyntaxSemiColonError) {
+  using namespace nextgen;
+  using namespace nextgen::core;
+  using namespace nextgen::jet;
+
+  auto buf = "cool := 23;\nanother_var := \"Hello, World!\" {";
+  auto buf_len = strlen(buf);
+  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
+  auto parser = jet::Parser(&lexer);
+
+  auto name = parser.curr(); parser.skip(2);
+  auto expr = parser.parse_variable_assignment(name);
+  name = parser.curr(); parser.skip(2);
+  expr = parser.parse_variable_assignment(name);
+
+
+  arena::deinit();
 }
 
 TEST_SUITE_MAIN(ParseTest) {
-  TEST_CALL(ParseTest, VariableDeclLiteral);
-  TEST_CALL(ParseTest, VariableArrayDecl);
-  TEST_CALL(ParseTest, VariableDeclBinary);
-  TEST_CALL(ParseTest, IfStatement);
+//  TEST_CALL(ParseTest, VariableDeclLiteral);
+//  TEST_CALL(ParseTest, VariableArrayDecl);
+//  TEST_CALL(ParseTest, VariableDeclBinary);
+//  TEST_CALL(ParseTest, IfStatement);
+//  TEST_CALL(ParseTest, WhileLoop);
+  TEST_CALL(ParseTest, SyntaxSemiColonError);
 }

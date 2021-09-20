@@ -1,9 +1,10 @@
-# ifndef JET_JET_DIAGNOSTICS_H
-# define JET_JET_DIAGNOSTICS_H
-# include "nextgen/io.h"
-# include "nextgen/allocator.h"
-# include "nextgen/str.h"
-# include "nextgen/panic.h"
+#ifndef JET_JET_DIAGNOSTICS_H
+#define JET_JET_DIAGNOSTICS_H
+#include "nextgen/io.h"
+#include "nextgen/allocator.h"
+#include "nextgen/str.h"
+#include "nextgen/panic.h"
+#include "jet-token.h"
 
 namespace nextgen { namespace jet {
 
@@ -55,6 +56,9 @@ namespace nextgen { namespace jet {
   private:
     // Helpers
     void ErrorLexSetup(std::string &line, const char *message, LexError &error);
+    void ErrorParseSetup(size_t const line, char const *message,
+                         Token const *reported_token,
+                         TokenTraits::SourceLocation loc);
 
     // Lex Errors (We will keep these PascalCase)
     void ErrorIntegerOverflow(LexError &error);
@@ -64,6 +68,9 @@ namespace nextgen { namespace jet {
     void ErrorMissingClosingDelim(LexError &error);
     void ErrorHexEscapeOutOfRange(LexError &error);
     void ErrorInvalidStringEscape(LexError &error);
+
+    // Parse Errors (We will keep these PascalCase)
+    void ErrorParseExpectedToken(ParseError const &error);
   };
 
 }}
@@ -71,4 +78,4 @@ namespace nextgen { namespace jet {
 
 
 
-# endif //JET_JET_DIAGNOSTICS_H
+#endif //JET_JET_DIAGNOSTICS_H

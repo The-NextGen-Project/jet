@@ -21,22 +21,16 @@ add_executable(tests
         # Parsing
         ../lib/jet-parser.cpp
 
-        ################################
+        ../lib/jet-x64-assembler.cpp
 
-        # Support
-#        Support/ListTest.cpp
-#
-#        # Lex
-#        Lex/LexTest.cpp
-#
-#        # Parse
-#        Parse/ParseTest.cpp
+        ################################
 
         ## Tests
         test-main.cpp
 
         lex-test.cpp
         parse-test.cpp
+        x64-test.cpp
 )
 
 #set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)

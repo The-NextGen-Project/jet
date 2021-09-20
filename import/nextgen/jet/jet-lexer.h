@@ -62,6 +62,8 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     Diagnostic diagnostics;
     ArenaVec<Token> tokens;
 
+    bool fatal = false;
+
     // Ensure that branches are taken away during compile-time with guaranteed
     // compile-time value if statements. This is used so that both printing mode
     // and normal mode do not have to be separate functions.
@@ -103,12 +105,14 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     char next(size_t n) {
 
       if (buf_pos >= buf_size) {
-        diagnostics.build(LexError {
-          LexErrorType::OutOfRange,
-          { line, column },
-          Token("\0", {line, column}, TokenKind::EOFToken)
-        });
-        UNREACHABLE;
+        if (Mode == TokenMode) {
+          diagnostics.build(LexError {
+            LexErrorType::OutOfRange,
+            { line, column },
+            Token("\0", {line, column}, TokenKind::EOFToken)
+          });
+          UNREACHABLE;
+        }  else fatal = true;
       }
 
       column += n;

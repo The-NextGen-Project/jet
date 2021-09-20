@@ -23,11 +23,45 @@ namespace nextgen { namespace jet {
     Boolean,
     //---------------------------------------
 
-    // File Control ---------------------------
-    NewLine,
-    Whitespace,
-    StringEscapeStart,
+    // Valid Expression Tokens (DO NOT CHANGE ORDER) ---------------------------
+    Identifier,   // [a-z] && [A-Z] && _
+    LessThan,     // <
+    GreaterThan,  // >
+
+    Plus,   // +
+    Minus,  // -
+    Slash,  // /
+    Star,   // *
+    XOR,    // ^
+    AND,    // &
+    NOT,    // ~
+    Pipe,   // |
+    Percent,// %
+    Char,   // \'
+    Dot,    // .
+
+    // TODO: Fix this ... Should not be apart of binary expression. It should
+    //  be apart of the assignment modifier.
+    PlusEquals,
+    MinusEquals,
+    DivEquals,
+    PowEquals,
+    MulEquals,
+    GreaterThanEquals,
+    LessThanEquals,
+    LeftShiftEquals,
+    RightShiftEquals,
+    ANDEquals,
+    XOREquals,
+    OREquals,
+    PercentEquals,
+
+    EqualsEquals, // ==
+    LeftShift,    // <<
+    RightShift,   // >>
+    Pow,          // **
     //---------------------------------------
+
 
     // Keywords  ---------------------------
     KeywordIf,
@@ -71,7 +105,12 @@ namespace nextgen { namespace jet {
     Typename_f64,
     //---------------------------------------
 
-    Identifier,   // [a-z] && [A-Z] && _
+    // File Control ---------------------------
+    NewLine,
+    Whitespace,
+    StringEscapeStart,
+    //---------------------------------------
+
     LParenthesis, // (
     RParenthesis, // )
     LCurlyBrace,  // {
@@ -79,47 +118,14 @@ namespace nextgen { namespace jet {
     LBracket,     // [
     RBracket,     // ]
     Colon,        // :
-    LessThan,     // <
-    GreaterThan,  // >
     Equals,       // =
     QuestionMark, // ?
     Then,         // ??
-
-    Plus,   // +
-    Minus,  // -
-    Slash,  // /
-    Star,   // *
-    XOR,    // ^
-    AND,    // &
-    NOT,    // ~
-    Pipe,   // |
-    Percent,// %
-    Char,   // \'
-    Dot,    // .
     At,     // @
     SemiColon, // ;
     ExclamationPoint, // !
     Comma, // ,
 
-    PlusEquals,
-    MinusEquals,
-    DivEquals,
-    PowEquals,
-    MulEquals,
-    GreaterThanEquals,
-    LessThanEquals,
-    LeftShiftEquals,
-    RightShiftEquals,
-    ANDEquals,
-    XOREquals,
-    OREquals,
-    PercentEquals,
-
-
-    EqualsEquals, // ==
-    LeftShift,    // <<
-    RightShift,   // >>
-    Pow,          // **
     RangeSpan,    // ..
     Ellipsis,     // ...
 
@@ -186,6 +192,187 @@ namespace nextgen { namespace jet {
       setKind(kind);
     }
 
+    static NG_INLINE char const *GetTokenKindName(TokenKind const kind) {
+      switch(kind){
+        case LessThan:
+          return "<";
+        case GreaterThan:
+          return ">";
+        case Plus:
+          return "+";
+        case Minus:
+          return "-";
+        case Slash:
+          return "/";
+        case Star:
+          return "*";
+        case XOR:
+          return "^";
+        case AND:
+          return "&";
+        case NOT:
+          return "~";
+        case Pipe:
+          return "|";
+        case Percent:
+          return "%";
+        case Char:
+          return "'";
+        case Dot:
+          return ".";
+        case PlusEquals:
+          return "+=";
+        case MinusEquals:
+          return "-=";
+        case DivEquals:
+          return "/=";
+        case PowEquals:
+          return "**=";
+        case MulEquals:
+          return "*=";
+        case GreaterThanEquals:
+          return ">=";
+        case LessThanEquals:
+          return "<=";
+        case LeftShiftEquals:
+          return "<<=";
+        case RightShiftEquals:
+          return ">>=";
+        case ANDEquals:
+          return "&=";
+        case XOREquals:
+          return "^=";
+        case OREquals:
+          return "|=";
+        case PercentEquals:
+          return "%=";
+        case EqualsEquals:
+          return "==";
+        case LeftShift:
+          return "<<";
+        case RightShift:
+          return ">>";
+        case Pow:
+          return "**";
+        case KeywordIf:
+          return "if";
+        case KeywordElse:
+          return "else";
+        case KeywordElif:
+          return "elif";
+        case KeywordWhile:
+          return "while";
+        case KeywordFor:
+          return "for";
+        case KeywordAnd:
+          return "and";
+        case KeywordOr:
+          return "or";
+        case KeywordBreak:
+          return "break";
+        case KeywordContinue:
+          return "continue";
+        case KeywordDefer:
+          return "defer";
+        case KeywordStruct:
+          return "struct";
+        case KeywordEnum:
+          return "enum";
+        case KeywordExport:
+          return "export";
+        case KeywordExtern:
+          return "extern";
+        case KeywordFunction:
+          return "fn";
+        case KeywordError:
+          return "error";
+        case KeywordTrue:
+          return "true";
+        case KeywordFalse:
+          return "false";
+        case KeywordNone:
+          return "None";
+        case KeywordReturn:
+          return "return";
+        case KeywordUnion:
+          return "union";
+        case KeywordMatch:
+          return "match";
+        case KeywordIn:
+          return "in";
+        case Typename_str:
+          return "str";
+        case Typename_i8:
+          return "i8";
+        case Typename_i16:
+          return "i16";
+        case Typename_i32:
+          return "i32";
+        case Typename_i64:
+          return "i64";
+        case Typename_u8:
+          return "u8";
+        case Typename_u16:
+          return "u16";
+        case Typename_u32:
+          return "u32";
+        case Typename_u64:
+          return "u64";
+        case Typename_box:
+          return "box";
+        case Typename_f32:
+          return "f32";
+        case Typename_f64:
+          return "f64";
+        case LParenthesis:
+          return "(";
+        case RParenthesis:
+          return ")";
+        case LCurlyBrace:
+          return "{";
+        case RCurlyBrace:
+          return "}";
+        case LBracket:
+          return "[";
+        case RBracket:
+          return "]";
+        case Colon:
+          return ":";
+        case Equals:
+          return "=";
+        case QuestionMark:
+          return "?";
+        case Then:
+          return "??";
+        case At:
+          return "@";
+        case SemiColon:
+          return ";";
+        case ExclamationPoint:
+          return "!";
+        case Comma:
+          return ",";
+        case RangeSpan:
+          return "..";
+        case Ellipsis:
+          return "...";
+        case PlusPlus:
+          return "++";
+        case MinusMinus:
+          return "--";
+        case FunctionArrow:
+          return "=>";
+        case ColonEquals:
+          return ":=";
+        case Arrow:
+          return "->";
+        case EOFToken:
+          return "EOF";
+        default:
+          UNREACHABLE;
+      }
+    }
+
     size_t len() const {
       return id.size();
     }
@@ -215,7 +402,12 @@ namespace nextgen { namespace jet {
       return flags & TokenClassification::Literal;
     }
 
-    SourceLocation getSourceLocation() {
+    bool isValidExpressionType() const {
+      auto ret = unsigned(kind) >= Integer && unsigned(kind) <= Pow;
+      return unsigned(kind) >= Integer && unsigned(kind) <= Pow;
+    }
+
+    SourceLocation getSourceLocation() const {
       return loc;
     }
 

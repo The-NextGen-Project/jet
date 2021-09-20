@@ -515,16 +515,21 @@ ArenaVec<Token> Lexer<Mode>::lex() {
 
   TokenKind kind;
   while(true) {
+    if (fatal) break;
+
     auto current = curr();
     kind = MatchTokenKind[current];
+    if (OUTPUT_MODE) Console::Log(Colors::RESET);
+
     switch (kind) {
       case EOFToken: {
-        tokens.end = new Token("\n", {line, column}, TokenKind::EOFToken);
+        tokens.end = new Token("a", {line, column}, TokenKind::EOFToken);
         return tokens;
       }
       case Integer: lex_int(); break;
       case String: lex_str(); break;
       case Identifier: lex_ident(); break;
+      case NewLine: skip_new_line(); break;
       case Whitespace: {
         if (OUTPUT_MODE)
           Console::Log(current);
@@ -536,12 +541,12 @@ ArenaVec<Token> Lexer<Mode>::lex() {
         auto token_start_col = column;
         if (OUTPUT_MODE) {
           Console::Log(Colors::GREEN, "'");
-          Console::Log(next(1));
+          Console::Log(next(1), Colors::RESET);
         }
         else {
           TOKEN_SHORT(next(1), TokenKind::Char);
         }
-        if (peek(1) != '\'') {
+        if (curr() != '\'') {
           if (NORMAL_MODE) {
             diagnostics.build(LexError {
               LexErrorType::MissingClosingDelim,
@@ -557,7 +562,8 @@ ArenaVec<Token> Lexer<Mode>::lex() {
           next(1); // Skip "'"
           break;
         }
-        else if (OUTPUT_MODE) Console::Log("'");
+        else if (OUTPUT_MODE) Console::Log("'", Colors::RESET);
+        next(1); // Skip the "'"
         break;
       }
         case LessThan: { // <, <=, <<, <<=

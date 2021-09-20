@@ -117,13 +117,13 @@ Token *Parser::skip() {
 
 template<TokenKind TK, size_t N>
 Token *Parser::expect(char const (&msg)[N]) {
-  auto next = tokens[(position++)];
+  Token *next = tokens[(position++)];
   if (next->getKind() != TK) {
     this->diagnostics.build(ParseError(
       ParseErrorType::ExpectedToken, 
       next->getSourceLocation(),
       {
-        ParseError::Metadata { TK, next->getKind(), msg }
+        ParseError::Metadata { TK, next, msg }
       }
     ));
     fatal++;
@@ -132,7 +132,7 @@ Token *Parser::expect(char const (&msg)[N]) {
 }
 
 template<TokenKind TK>
-void Parser::expect_delim(const TokenTraits::SourceLocation &loc) {
+void Parser::expect_delim(TokenTraits::SourceLocation const &loc) {
   Token *next = tokens[position++];
   if (next->getKind() != TK) {
     this->diagnostics.build(ParseError (
@@ -145,21 +145,6 @@ void Parser::expect_delim(const TokenTraits::SourceLocation &loc) {
 
 SyntaxNode *Parser::parse_variable_assignment(Token *name)  {
   SyntaxVariableAssignment *E;
-
-  if (name->isKeyword()) {
-    this->diagnostics.build(ParseError{
-      ParseErrorType::ReservedIdentifierAsVariableName,
-      name->getSourceLocation()
-    });
-    fatal++;
-  }
-  else if (name->getKind() != TokenKind::Identifier) {
-    this->diagnostics.build(ParseError{
-      ParseErrorType::MissingVariableName,
-      name->getSourceLocation()
-    });
-    fatal++;
-  }
 
   auto expr = parse_expr();
   expect<TokenKind::SemiColon>("Expected ';' after declaration");
@@ -218,7 +203,7 @@ SyntaxNode *Parser::parse_expr(int previous_binding)  {
   }
 
    do {
-    auto op = next(1); // Note: We peek here in case it is an incorrect op
+    auto op = next(1);
     auto op_kind = op->getKind();
 
     const auto op_bindings = Parser::InfixOperatorBinding(op_kind);
@@ -226,8 +211,7 @@ SyntaxNode *Parser::parse_expr(int previous_binding)  {
       //skip(1);
       break;
     }
-    // Force skip here so that token is consumed.
-    skip(1);
+    auto a = skip(1);
     const auto rhs = parse_expr(/* RightBindingPrecedence */
       op_bindings[1]);
     auto new_expr = new SyntaxBinary {
@@ -235,7 +219,7 @@ SyntaxNode *Parser::parse_expr(int previous_binding)  {
     };
     lhs = new_expr;
     lhs->kind = SyntaxKind::Binary;
-   } while (curr()->getKind() != EOFToken);
+   } while (curr()->isValidExpressionType());
   return lhs;
 }
 
@@ -370,8 +354,14 @@ SyntaxNode *Parser::parse_while() {
 
   // Yes ... It really is this easy to parse a while loop.
   E->condition = parse_expr();
+
+  auto v = curr();
+  ASSERT_EQ(v->getKind(), TokenKind::LCurlyBrace);
   E->body = parse_block();
-  return E;
+
+  auto ret = (SyntaxNode*) E;
+  ret->kind = SyntaxKind::While;
+  return ret;
 }
 
 

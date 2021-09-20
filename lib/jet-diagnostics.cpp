@@ -13,6 +13,38 @@ using nextgen::Range;
   using namespace nextgen::Colors;
 #endif
 
+static Range<const char *>
+  FileLines(size_t nth, const char *file_buf, size_t buf_len) {
+  int max_num_after_found_point = 3;
+
+  bool found = false;
+  int  count = 1;
+
+  auto copy = file_buf;
+  const char *found_point;
+  const char *last_new_line;
+
+  if (nth == 1) {
+    return Range<const char *>(file_buf, file_buf + buf_len);
+  }
+
+
+  FOR(ch, buf_len) {
+    if (*copy == '\n' || *copy == '\r') {
+      if (found) {
+        return Range<const char *>(file_buf, copy);
+      }
+      count++;
+    }
+    if (count == nth) {
+      if (!found) {
+        found = true;
+      }
+    }
+    copy++;
+  }
+}
+
 static str GetNthLineOfBuffer(size_t nth,
                               const char *file_buf,
                               size_t buf_len) {
@@ -26,22 +58,22 @@ static str GetNthLineOfBuffer(size_t nth,
   }
 
   FOR(i, buf_len) {
-    if (*copy == '\n') {
+    if (*copy == '\n' || *copy == '\r' || *copy == '\0') {
       if (found) {
-        return str(Range<const char *>(found_point, copy));
+        return str(Range<const char *>(found_point-2, copy-1));
       }
       count++;
     }
     if (count == nth) {
       if (!found) {
-        found_point = copy + 1;
+        found_point = copy+1;
         found = true;
       }
     }
     copy++;
   }
 
-  return str {found_point, buf_len};
+  return str {found_point, static_cast<size_t>(copy - found_point)};
 }
 
 template<typename... Args>
@@ -114,18 +146,36 @@ void Diagnostic::build(LexError error) {
 
 
 void Diagnostic::build(ParseError error) {
+  source_line = GetNthLineOfBuffer(error.location.line, file_buf, buf_len);
+  Console::Log(Colors::RED,
+               "Error ---------------------------------------------------------- ",
+               file_name, ":", error.location.line, ":", error.location.column, "\n",
+               Colors::RESET);
+
   switch (error.error) {
     case ReservedIdentifierAsVariableName:
+
       break;
     case UnexpectedExpression:
       break;
     case InvalidToken:
       break;
     case ExpectedToken:
+      ErrorParseExpectedToken(error);
       break;
     case MissingFunctionName:
       break;
     case MissingVariableName:
+      break;
+    case MissingForLoopVariable:
+      break;
+    case ExpectedIdentifierForFunctionParameter:
+      break;
+    case ExpectedIdentifierForStructProperty:
+      break;
+    case MissingClosingPair:
+      break;
+    case UnexpectedEndOfFile:
       break;
   }
 }
@@ -254,10 +304,10 @@ void Diagnostic::ErrorHexEscapeOutOfRange(LexError &error) {
 void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
   Console::Log(Colors::RESET, "Not a Valid String Escape\n\n");
 
-  auto Line = std::to_string(error.location.line);
-  ErrorLexSetup(Line, "Not a String Escape", error);
+  auto line = std::to_string(error.location.line);
+  ErrorLexSetup(line, "Not a String Escape", error);
 
-  AddHint(Line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
+  AddHint(line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
           Colors::GREEN,
           R"(\a, \b, \v, \n, \r, \', \", \x[0-9a-fA-F]{2}, \u{[0-9a-fA-F]}{1,6})",
           "\n\n");
@@ -271,6 +321,22 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
                "https://github.com/The-NextGen-Project/jet/blob/main/LANG.md",
                Colors::RESET);
 
+}
+
+void Diagnostic::ErrorParseExpectedToken(ParseError const &error) {
+  Console::Log(Colors::RESET, "Expected Token\n\n");
+
+  auto err = error.metadata.begin()->expected_error;
+  auto line = std::to_string(error.location.line);
+  ErrorParseSetup(error.location.line, err.message, err.got, error.location);
+  AddHint(line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
+          Colors::GREEN, "Adding ", Colors::YELLOW, "'",
+          Token::GetTokenKindName(err.expected), "'\n");
+  AddHint(line, Colors::BLUE, "= ", Colors::GREEN, "help: ",
+          Colors::RESET, "View docs here: "
+                         "https://github"
+                         ".com/The-NextGen-Project/jet/blob/main/LANG.md for "
+                         "syntax.");
 }
 
 void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
@@ -292,6 +358,60 @@ void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
   FOR(column, source_line.size()) {
     if (column == error.failed_token.getSourceLocation().column) {
       FOR(ch, error.failed_token.name().size()) {
+        Console::Log("^");
+      }
+      break;
+    }
+    Console::Log(" ");
+  }
+
+  Console::Log("_ <-- ", message);
+  Console::Log("\n\n");
+}
+
+void Diagnostic::ErrorParseSetup(size_t const ln,
+                                 const char *message,
+                                 Token const *reported_token,
+                                 TokenTraits::SourceLocation loc) {
+
+  std::string line = std::to_string(ln);
+  if (ln > 1) {
+    Console::Log(Colors::RESET, ln - 1, " |\t ");
+
+    str new_line;
+
+    if (ln - 1 == 1) {
+      new_line = str(file_buf, source_line.begin() - file_buf - 1);
+    }
+    else {
+      new_line = GetNthLineOfBuffer(ln - 1, file_buf, buf_len);
+    }
+
+    Lexer<PrintingMode>(new_line.begin(),
+                        file_name,
+                        new_line.size()).lex();
+    Console::Log("\n");
+  }
+
+  auto printer = Lexer<PrintingMode>((const char *) source_line,
+                                     file_name,
+                                     source_line.size());
+  // Log error line
+  Console::Log(Colors::RESET, line, " |\t ");
+  printer.lex(); // Print Failed Token
+
+  Console::Log("\n");
+
+  // Align space
+  FOR(i, line.length() + 1)  Console::Log(" ");
+
+  Console::Log("\t", Colors::RED);
+
+  auto size = reported_token->getKind() == EOFToken ? source_line.size()+2 :
+    source_line.size();
+  FOR(column, size) {
+    if (column == loc.column) {
+      FOR(ch, reported_token->name().size()) {
         Console::Log("^");
       }
       break;

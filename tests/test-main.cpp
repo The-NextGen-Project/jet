@@ -3,10 +3,12 @@
 
 #define DEF_ALL_TESTS \
   V(LexTest)          \
-  V(ParseTest)
+  V(ParseTest)        \
+  V(x64Test)          \
 
 DEF_ALL_TESTS
 int main(int argc, char **argv) {
   TEST(LexTest);
   TEST(ParseTest);
+  TEST(x64Test);
 }

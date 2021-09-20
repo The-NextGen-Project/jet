@@ -67,6 +67,7 @@ typedef __int8 int8_t;
 #       include <cstdint>
 #   endif
 #   include <iostream>
+#   include <iomanip>
 #   include <vector>
 #   include <fstream>
 #   include <string>
