@@ -248,8 +248,10 @@ SyntaxNode *Parser::match_expr() {
       return E;
     }
     case LParenthesis: {
+      skip(1);
       auto E = parse_expr();
       expect_delim<TokenKind::RParenthesis>(matched_token->getSourceLocation());
+      position--;
       return E;
     }
     case LBracket: { // ex: [1, 2, 3]
@@ -269,6 +271,7 @@ SyntaxNode *Parser::match_expr() {
         current = curr();
       }
       expect_delim<TokenKind::RBracket>(matched_token->getSourceLocation());
+      position--;
       auto node = (SyntaxNode*)E;
       node->kind = SyntaxKind::List;
       return node;
@@ -428,10 +431,12 @@ SyntaxBlock Parser::parse_block()  {
   auto open = expect<TokenKind::LCurlyBrace>("Expected '{' before beginning of "
                                        "current");
   auto block   = SyntaxBlock {};
+
+  // We know for sure that we got right curly brace
   while (curr()->getKind() != TokenKind::RCurlyBrace) {
     block.statements << parse_stmt();
   }
-  expect_delim<TokenKind::RParenthesis>(open->getSourceLocation());
+  next(1);
   return block;
 }
 

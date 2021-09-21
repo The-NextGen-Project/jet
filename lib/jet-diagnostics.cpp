@@ -60,7 +60,7 @@ static str GetNthLineOfBuffer(size_t nth,
   FOR(i, buf_len) {
     if (*copy == '\n' || *copy == '\r' || *copy == '\0') {
       if (found) {
-        return str(Range<const char *>(found_point-2, copy-1));
+        return str(Range<const char *>(found_point, copy));
       }
       count++;
     }
@@ -154,18 +154,15 @@ void Diagnostic::build(ParseError error) {
 
   switch (error.error) {
     case ReservedIdentifierAsVariableName:
-
       break;
     case UnexpectedExpression:
+      Console::Log("Unexpected Expression");
       break;
     case InvalidToken:
+      Console::Log("Invalid Token");
       break;
     case ExpectedToken:
       ErrorParseExpectedToken(error);
-      break;
-    case MissingFunctionName:
-      break;
-    case MissingVariableName:
       break;
     case MissingForLoopVariable:
       break;
@@ -174,8 +171,10 @@ void Diagnostic::build(ParseError error) {
     case ExpectedIdentifierForStructProperty:
       break;
     case MissingClosingPair:
+      Console::Log("Missing Closing Pair");
       break;
     case UnexpectedEndOfFile:
+      Console::Log("EOF");
       break;
   }
 }

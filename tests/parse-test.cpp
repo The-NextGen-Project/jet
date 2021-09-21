@@ -29,8 +29,6 @@ TEST(ParseTest, VariableDeclLiteral) {
   ASSERT_EQ(decl->expression->kind, jet::SyntaxKind::LiteralValue);
   ASSERT_EQ(CAST(SyntaxLiteral*, decl->expression)->literal->getValue<size_t>
   (), 23);
-
-  arena::deinit();
 }
 
 TEST(ParseTest, VariableArrayDecl) {
@@ -91,6 +89,40 @@ TEST(ParseTest, VariableDeclBinary) {
   ASSERT_EQ(lhs->literal->getValue<size_t>(),2);
   ASSERT_EQ(rhs_lhs->literal->getValue<size_t>(), 3);
   ASSERT_EQ(rhs_rhs->literal->getValue<size_t>(), 2);
+}
+
+TEST(ParseTest, VariableDeclParenBinary) {
+  using namespace nextgen;
+  using namespace nextgen::core;
+  using namespace nextgen::jet;
+
+  auto buf = "awesome := (2 + 3) * 2;";
+  auto buf_len = strlen(buf);
+  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
+  auto parser = jet::Parser(&lexer);
+
+  auto name = parser.curr(); parser.skip(2);
+  auto expr = parser.parse_variable_assignment(name);
+  auto decl = CAST(SyntaxVariableAssignment*, expr);
+
+  auto binary = CAST(SyntaxBinary*, decl->expression);
+
+  auto lhs = CAST(SyntaxBinary*, binary->lhs);
+  auto lhs_lhs = CAST(SyntaxLiteral*, lhs->lhs);
+  auto lhs_rhs = CAST(SyntaxLiteral*, lhs->rhs);
+
+  auto op  = binary->operation;
+  auto rhs = CAST(SyntaxLiteral*, binary->rhs);
+
+  ASSERT_EQ(expr->kind, jet::SyntaxKind::VariableAssignment);
+  //ASSERT_EQ(decl->name->name(), "wow"_intern);
+  ASSERT_TRUE(::strncmp(decl->name->name().begin(), "awesome", decl->name->len()) == 0);
+  ASSERT_EQ(binary->kind, jet::SyntaxKind::Binary);
+
+  ASSERT_EQ(op, SyntaxBinaryOp::Multiplication);
+  ASSERT_EQ(lhs_lhs->literal->getValue<size_t>(),2);
+  ASSERT_EQ(lhs_rhs->literal->getValue<size_t>(), 3);
+  ASSERT_EQ(rhs->literal->getValue<size_t>(), 2);
 }
 
 TEST(ParseTest, IfStatement) {
@@ -165,25 +197,27 @@ TEST(ParseTest, SyntaxSemiColonError) {
   using namespace nextgen::core;
   using namespace nextgen::jet;
 
-  auto buf = "cool := 23;\nanother_var := \"Hello, World!\" {";
+  auto buf = "// this is a comment\ncool := 23 / (22+3);\nanother_var := "
+             "\"Hello, "
+             "World!\" {";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
   auto parser = jet::Parser(&lexer);
 
   auto name = parser.curr(); parser.skip(2);
-  auto expr = parser.parse_variable_assignment(name);
+  parser.parse_variable_assignment(name);
+
+
   name = parser.curr(); parser.skip(2);
-  expr = parser.parse_variable_assignment(name);
-
-
-  arena::deinit();
+  parser.parse_variable_assignment(name);
 }
 
 TEST_SUITE_MAIN(ParseTest) {
-//  TEST_CALL(ParseTest, VariableDeclLiteral);
-//  TEST_CALL(ParseTest, VariableArrayDecl);
-//  TEST_CALL(ParseTest, VariableDeclBinary);
-//  TEST_CALL(ParseTest, IfStatement);
-//  TEST_CALL(ParseTest, WhileLoop);
+  TEST_CALL(ParseTest, VariableDeclLiteral);
+  TEST_CALL(ParseTest, VariableArrayDecl);
+  TEST_CALL(ParseTest, VariableDeclBinary);
+  TEST_CALL(ParseTest, IfStatement);
+  TEST_CALL(ParseTest, WhileLoop);
   TEST_CALL(ParseTest, SyntaxSemiColonError);
+  TEST_CALL(ParseTest, VariableDeclParenBinary);
 }

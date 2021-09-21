@@ -14,7 +14,7 @@ new Token { \
 if (OUTPUT_MODE) Console::Log(value), next((sizeof value) - 1); \
 else TOKEN_SHORT(value, kind), next((sizeof value) - 1)            \
 
-static constexpr TokenKind MatchTokenKind[256] {
+static const constexpr TokenKind MatchTokenKind[256] {
 
   // Error code
   TokenKind::EOFToken, TokenKind::Error, TokenKind::Error,
@@ -306,9 +306,10 @@ template<int radix, int skip>
 void Lexer<Mode>::lex_int() {
 
   // Initialize start of token
-  auto token_start = buffer;
-  auto token_start_col = column;
+  const char *token_start = buffer;
+  size_t token_start_col = column;
 
+  // Skip any tokens, if any (for 0x, 0b, 00 cases)
   next(skip);
 
   // Note: Keep the type!
@@ -352,20 +353,22 @@ void Lexer<Mode>::lex_int() {
     lexed_int = lexed_int * radix + digit;
   } while(next(1));
 
-  if (curr() == '.')  {
+
+  if (curr() == '.')  { // At this point, we've realized its f64, so we proceed
     lex_float(buffer - token_start, lexed_int);
     return;
   }
 
-  auto token_end = buffer;
-  auto id = Range<const char *>(token_start, token_end);
+  const char *token_end = buffer;
+  auto literal_token_representation
+          = Range<const char *>(token_start, token_end);
 
   if (OUTPUT_MODE) {
-    Console::Log(Colors::BLUE, str(id), Colors::RESET);
+    Console::Log(Colors::BLUE, str(literal_token_representation), Colors::RESET);
   }
 
   new Token {
-    id,
+    literal_token_representation,
     {line, column},
     (decltype(UINTPTR_MAX)) lexed_int,
     TokenKind::Integer,
@@ -375,21 +378,25 @@ void Lexer<Mode>::lex_int() {
 
 template<LexMode Mode>
 void Lexer<Mode>::lex_ident() {
-  auto token_start = buffer;
+  const char *token_start = buffer;
   do {} while(MatchTokenKind[next(1)] == TokenKind::Identifier);
-  auto token_end   = buffer;
+  const char *token_end   = buffer;
 
-  auto id = Range<const char *>(token_start, token_end);
-  auto reserved = MatchIdentToReserved(token_start, token_end - token_start);
+  auto literal_token_representation = Range<const char *>(token_start, token_end);
+  TokenKind reserved =
+    MatchIdentToReserved(token_start, token_end - token_start);
 
   if (OUTPUT_MODE) {
-    reserved != TokenKind::Identifier ?
-    Console::Log(Colors::RED, str(id), Colors::RESET) :
-    Console::Log(Colors::YELLOW, str(id), Colors::RESET);
+    if (reserved != TokenKind::Identifier) {
+      Console::Log(Colors::RED, str(literal_token_representation),
+                   Colors::RESET);
+    } else {
+      Console::Log(Colors::YELLOW, str(literal_token_representation), Colors::RESET);
+    }
   }
 
   new Token {
-    id,
+    literal_token_representation,
     {line, column},
     "",
     reserved,
@@ -406,22 +413,21 @@ void Lexer<Mode>::lex_str() {
   if (OUTPUT_MODE) Console::Log(Colors::GREEN);
 
   // @NOTE: Remember that this is DATA not OBJECT for allocation
-  auto id = (char*) (GLOBAL_DATA_ALLOC.current() + 1);
-  auto len = 0;
+  auto lexed_string = (char*) (GLOBAL_DATA_ALLOC.current() + 1);
+  size_t len = 0;
 
-  char current = next(1);
-
+  char current_char = next(1);
   if (OUTPUT_MODE) Console::Log("\"");
   do {
-    current = curr();
+    current_char = curr();
     if (OUTPUT_MODE) {
-      Console::Log(current);
-      if (current == '\0' || peek(1) == '\0') {
+      Console::Log(current_char);
+      if (current_char == '\0' || peek(1) == '\0') {
         offset = 0;
         break;
       }
     } else {
-      if (current == '\0') {
+      if (current_char == '\0') {
         diagnostics.build(LexError {
           LexErrorType::MissingClosingDelim,
           {line, column},
@@ -435,14 +441,14 @@ void Lexer<Mode>::lex_str() {
           });
       }
 
-      if (current == '\\') {
+      if (current_char == '\\') {
         switch (next(1)) {
-          case 'a': current = '\a'; break;
-          case 'b': current = '\b'; break;
-          case 'r': current = '\r'; break;
-          case 'n': current = '\n'; break;
-          case 'v': current = '\v'; break;
-          case 't': current = '\t'; break;
+          case 'a': current_char = '\a'; break;
+          case 'b': current_char = '\b'; break;
+          case 'r': current_char = '\r'; break;
+          case 'n': current_char = '\n'; break;
+          case 'v': current_char = '\v'; break;
+          case 't': current_char = '\t'; break;
           case 'x': {
             auto value = IntegerBits[next(1)];
             if (value >= 16) {
@@ -471,9 +477,9 @@ void Lexer<Mode>::lex_str() {
               });
             }
             int val = value;
-            val = val * 16 + value2;
+            val = val * 16 + value2; // @Opt: (val << 4) | value2 ?
 
-            current = (char) val;
+            current_char = (char) val;
             break;
           }
           default:
@@ -488,7 +494,7 @@ void Lexer<Mode>::lex_str() {
             });
         }
       }
-      id[len++] = current;
+      lexed_string[len++] = current_char;
     }
   } while(next(1) != '"');
 
@@ -497,10 +503,15 @@ void Lexer<Mode>::lex_str() {
   // For missing closing expect_delim this needs to be here
   if (OUTPUT_MODE && offset != 0) Console::Log("\"");
   if (NORMAL_MODE) {
-    id[len] = '\0';
+    lexed_string[len] = '\0';
+
+    // We wrote to the data buffer without telling the size of the string
+    // because we did not know what it was, so we tell it the size of the
+    // string after lexing it. `reserve(size_t)` in this case is used to
+    // increment the number of bytes written.
     GLOBAL_DATA_ALLOC.reserve(len);
     new Token {
-      str {id, static_cast<size_t>(len)},
+      str {lexed_string, len},
       {line, column},
       "",
       TokenKind::String,
@@ -515,10 +526,10 @@ ArenaVec<Token> Lexer<Mode>::lex() {
 
   TokenKind kind;
   while(true) {
-    if (fatal) break;
+    if (fatal) break; // Special case: Diagnostics may crash
 
-    auto current = curr();
-    kind = MatchTokenKind[current];
+    auto current_char = curr();
+    kind = MatchTokenKind[current_char];
     if (OUTPUT_MODE) Console::Log(Colors::RESET);
 
     switch (kind) {
@@ -532,7 +543,7 @@ ArenaVec<Token> Lexer<Mode>::lex() {
       case NewLine: skip_new_line(); break;
       case Whitespace: {
         if (OUTPUT_MODE)
-          Console::Log(current);
+          Console::Log(current_char);
         next(1);
         break;
       }
@@ -662,6 +673,7 @@ ArenaVec<Token> Lexer<Mode>::lex() {
           }
           else if (n == '/') {
             while (MatchTokenKind[next(1)] != NewLine) {}
+            skip_new_line();
           }
           else {
             TOKEN_ADD_SHORT("/", TokenKind::Slash);
