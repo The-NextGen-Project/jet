@@ -33,6 +33,9 @@ add_executable(jet main.cpp
 
         # Codegen
         lib/jet-x64-assembler.cpp
+
+        # Semantic Analysis
+        lib/jet-analyzer.cpp
         )
 
 # Link against LLVM libraries

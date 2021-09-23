@@ -71,6 +71,7 @@ namespace nextgen { namespace jet {
 
     // Parse Errors (We will keep these PascalCase)
     void ErrorParseExpectedToken(ParseError const &error);
+    void ErrorParseMissingClosingDelim(ParseError const &error);
   };
 
 }}

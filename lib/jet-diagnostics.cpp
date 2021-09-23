@@ -171,7 +171,7 @@ void Diagnostic::build(ParseError error) {
     case ExpectedIdentifierForStructProperty:
       break;
     case MissingClosingPair:
-      Console::Log("Missing Closing Pair");
+      ErrorParseMissingClosingDelim(error);
       break;
     case UnexpectedEndOfFile:
       Console::Log("EOF");
@@ -322,6 +322,29 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
 
 }
 
+void Diagnostic::ErrorParseMissingClosingDelim(ParseError const &error) {
+  Console::Log(Colors::RESET, "Missing Closing Delim\n\n");
+
+  auto err = error.metadata;
+  auto expected_kind = Token::GetTokenKindName(err.begin()->misc_kind);
+  auto token_got_instead = (err.begin()+1)->misc_tok;
+  auto token_loc         = (err.begin()+2)->location;
+
+  ErrorParseSetup(error.location.line, (std::string("Missing Closing Delim '") +
+    std::string(expected_kind) + std::string("'")).c_str(), token_got_instead,
+    error.location);
+
+  std::string line = std::to_string(error.location.line);
+  AddHint(line, Colors::CYAN, "= ",
+                         Colors::GREEN, "try: ",
+          Colors::RESET, "Adding ", Colors::YELLOW, "'", expected_kind,
+          "'\n", Colors::RESET);
+  AddHint(line, Colors::BLUE, "= ", Colors::GREEN, "help: ",
+          Colors::RESET, "Delimiters like ", Colors::BLUE, "'(', ",
+          "'[', ", "'{', ", Colors::RESET,
+          "must be met with their closing pairs.\n");
+}
+
 void Diagnostic::ErrorParseExpectedToken(ParseError const &error) {
   Console::Log(Colors::RESET, "Expected Token\n\n");
 
@@ -335,7 +358,7 @@ void Diagnostic::ErrorParseExpectedToken(ParseError const &error) {
           Colors::RESET, "View docs here: "
                          "https://github"
                          ".com/The-NextGen-Project/jet/blob/main/LANG.md for "
-                         "syntax.");
+                         "syntax.\n");
 }
 
 void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
@@ -367,6 +390,7 @@ void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
   Console::Log("_ <-- ", message);
   Console::Log("\n\n");
 }
+
 
 void Diagnostic::ErrorParseSetup(size_t const ln,
                                  const char *message,

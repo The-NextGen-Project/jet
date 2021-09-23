@@ -51,11 +51,13 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         } expected_error;
         TokenTraits::SourceLocation location;
         TokenKind const misc_kind;
+        Token const *misc_tok;
 
         // GCC and CLANG let us get away with not using union constructors,
         // but we need them for MSVC, and it's probably more clear anyway
         Metadata(TokenTraits::SourceLocation loc) : location(loc) {}
         Metadata(TokenKind const kind) : misc_kind(kind) {}
+        Metadata(Token const *tok) : misc_tok(tok) {}
         Metadata(TokenKind const expected, Token const *got, const char
         *message) {
           expected_error.expected = expected;
@@ -100,53 +102,54 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
           fatal(0) {}
 
       /// Parse all statements
-      void parse();
+      auto parse() -> ObjectVector<const SyntaxNode*, 20000>;
 
       // ========= Parsing Language Generalizations ==========
 
-      auto parse_decl() -> SyntaxNode*;
-      auto parse_stmt() -> SyntaxNode*;
-      auto parse_expr(int previous_binding = -1) -> SyntaxNode*;
-      auto match_expr() -> SyntaxNode*;
+      auto parse_stmt() -> const SyntaxNode*;
+      auto parse_expr(int previous_binding = -1) -> const SyntaxNode*;
+      auto match_expr() -> const SyntaxNode*;
 
       // ========= Parsing Language Constructs ==========
 
       auto parse_block() -> SyntaxBlock;
       auto parse_type() -> SyntaxType;
-      void parse_function_param(SyntaxFunction *func);
-      auto parse_variable_assignment(Token *name) -> SyntaxNode*;
-      auto parse_function(Token *name) -> SyntaxNode*;
-      auto parse_struct(Token *name) -> SyntaxNode*;
-      auto parse_function_call(Token *name, Token *delim) -> SyntaxNode*;
-      auto parse_if() -> SyntaxNode*;
-      auto parse_for() -> SyntaxNode*;
-      auto parse_match() -> SyntaxNode*;
-      auto parse_match_pair_value() -> SyntaxNode*;
-      auto parse_while() -> SyntaxNode*;
+      auto parse_function_param() -> ArenaVec<SyntaxFunctionParameter>;
+      auto parse_variable_assignment(const Token *name) -> const SyntaxNode*;
+      auto parse_function(const Token *name) -> const SyntaxFunction*;
+      auto parse_struct(const Token *name) -> const SyntaxNode*;
+      auto parse_function_call(const Token *name, const Token *delim) -> const SyntaxNode*;
+      
+      template<bool ELIF = false>
+      auto parse_if() -> const SyntaxNode*;
+      auto parse_for() -> const SyntaxNode*;
+      auto parse_match() -> const SyntaxNode*;
+      auto parse_match_pair_value() -> const SyntaxNode*;
+      auto parse_while() -> const SyntaxNode*;
 
       // TODO: Update in design choices, do we need this still?
       auto parse_struct_function
-        (Token *s, Token *function_name) -> SyntaxNode*;
+        (const Token *s, const Token *function_name) -> const SyntaxNode*;
 
 
       // ========= Parsing Utils ==========
 
       /** @brief Lookahead 'n' amount of times in the list */
-      auto peek(size_t n) -> Token*;
+      auto peek(size_t n) -> const Token*;
 
       /** @brief Returns the current token and skips 'n' tokens ahead */
-      auto skip(size_t n) -> Token*;
+      auto skip(size_t n) -> const Token*;
 
       /** @brief Skips 'n' tokens and returns the latest token after the skip */
-      auto next(size_t n) -> Token*;
+      auto next(size_t n) -> const Token*;
 
       /** @brief Asserts next token kind is 'TK' or errors with type 'PE' */
       template<TokenKind TK, ParseErrorType PE>
-      auto skip() -> Token*;
+      auto skip() -> const Token*;
 
       /** @brief Expect the next token to be 'kind', if not, build an error. */
       template<TokenKind TK, size_t N>
-      auto expect(char const (&msg)[N]) -> Token*;
+      auto expect(char const (&msg)[N]) -> const Token*;
 
       /** @brief Expected a closing delim in a statement or expression */
       template<TokenKind TK>

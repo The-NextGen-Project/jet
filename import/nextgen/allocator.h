@@ -142,12 +142,13 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
   extern Allocator GLOBAL_OBJECT_ALLOC;
   extern Allocator GLOBAL_DATA_ALLOC;
 
-  template<typename T>
+  template<typename T, size_t N = 1>
   class ObjectVector {
-    T *objects = GLOBAL_OBJECT_ALLOC.template allocate<T>(1);
+    T *objects = GLOBAL_OBJECT_ALLOC.template allocate<T>(N);
     size_t len = 0;
-    size_t cap = 1;
+    size_t cap = N;
   public:
+
     T operator[](size_t index) {
       return objects[index];
     }

@@ -36,14 +36,23 @@
 
 using namespace nextgen::jet;
 
-void Parser::parse() {
+nextgen::ObjectVector<const SyntaxNode*, 20000>
+Parser::parse() {
+
+  // Mark space for at least 20000 nodes which will
+  // likely be good for most programs.
+  auto nodes = mem::ObjectVector<const SyntaxNode*, 20000>();
+
   for (;;) {
+
+    // Report up to 2 errors before exiting the program
     if (fatal > 2) {
       this->diagnostics.send_exception();
     }
+
     switch (curr()->getKind()) {
       case TokenKind::EOFToken:
-        return;
+        return nodes;
       case TokenKind::KeywordIf:
         skip(1);
         parse_if();
@@ -88,23 +97,23 @@ void Parser::parse() {
   }
 }
 
-Token *Parser::peek(size_t n)  {
+const Token *Parser::peek(size_t n)  {
   return tokens[position + n];
 }
 
-Token *Parser::skip(size_t n)  {
+const Token *Parser::skip(size_t n)  {
   auto *ret = tokens[position];
   position += n;
   return ret;
 }
 
-Token *Parser::next(size_t n) {
+const Token *Parser::next(size_t n) {
   position += n;
   return tokens[position];
 }
 
 template<TokenKind TK, ParseErrorType PE>
-Token *Parser::skip() {
+const Token *Parser::skip() {
   auto next = tokens[(position++)];
   if (next->getKind() != TK) {
     this->diagnostics.build(ParseError(
@@ -116,8 +125,8 @@ Token *Parser::skip() {
 }
 
 template<TokenKind TK, size_t N>
-Token *Parser::expect(char const (&msg)[N]) {
-  Token *next = tokens[(position++)];
+const Token *Parser::expect(char const (&msg)[N]) {
+  const Token *next = tokens[(position++)];
   if (next->getKind() != TK) {
     this->diagnostics.build(ParseError(
       ParseErrorType::ExpectedToken, 
@@ -138,47 +147,36 @@ void Parser::expect_delim(TokenTraits::SourceLocation const &loc) {
     this->diagnostics.build(ParseError (
       ParseErrorType::MissingClosingPair,
       next->getSourceLocation(),
-      { ParseError::Metadata { TK }, ParseError::Metadata { loc } }
+      {
+                  ParseError::Metadata { TK },
+                  ParseError::Metadata { next },
+                  ParseError::Metadata { loc }
+                }
     ));
+    this->diagnostics.send_exception();
   }
 }
 
-SyntaxNode *Parser::parse_variable_assignment(Token *name)  {
-  SyntaxVariableAssignment *E;
+const NG_INLINE SyntaxNode *
+Parser::parse_variable_assignment(const Token *name)  {
 
-  auto expr = parse_expr();
-  expect<TokenKind::SemiColon>("Expected ';' after declaration");
-
-  // Check 1: var name: type = expr
-  // Check 2: var name = expr
+  // Check 1: name: type = expr
+  // Check 2: name := expr
   if (peek(1)->getKind() == TokenKind::Colon) {
-    E = new SyntaxVariableAssignment(name, Some(parse_type()), expr);
-    goto ret;
+    auto E = new SyntaxVariableAssignment(name, Some(parse_type()), parse_expr());
+    expect<TokenKind::SemiColon>("Expected ';' after declaration");
+    return E;
   } else {
-    E = new SyntaxVariableAssignment(name, None, expr);
-    goto ret;
+    auto E = new SyntaxVariableAssignment(name, None, parse_expr());
+    expect<TokenKind::SemiColon>("Expected ';' after declaration");
+    return E;
   }
-ret:
-  auto node = static_cast<SyntaxNode*>(E);
-  node->kind = SyntaxKind::VariableAssignment;
-  return node;
 }
-
-SyntaxNode *Parser::parse_decl() {
-  switch (curr()->getKind()) {
-    case TokenKind::KeywordVar:
-      skip(1);
-      break;
-    default:
-      break;
-  }
-  return nullptr;
-}
-
 
 /// Pratt Parsing Expression Technique (Precedence Matching)
 /// References: https://en.wikipedia.org/wiki/Operator-precedence_parser
-SyntaxNode *Parser::parse_expr(int previous_binding)  {
+const NG_INLINE SyntaxNode *
+Parser::parse_expr(int previous_binding)  {
   SyntaxNode *lhs;
 
   auto first_token = curr();
@@ -199,7 +197,7 @@ SyntaxNode *Parser::parse_expr(int previous_binding)  {
     E->kind = SyntaxKind::Unary;
     return expr;
   } else {
-    lhs = match_expr();
+    lhs = (SyntaxNode*) match_expr();
   }
 
    do {
@@ -223,7 +221,8 @@ SyntaxNode *Parser::parse_expr(int previous_binding)  {
   return lhs;
 }
 
-SyntaxNode *Parser::match_expr() {
+const NG_INLINE SyntaxNode *
+Parser::match_expr() {
   auto matched_token = curr();
   switch (matched_token->getKind()) {
     case EOFToken:
@@ -282,8 +281,8 @@ SyntaxNode *Parser::match_expr() {
   return nullptr;
 }
 
-
-SyntaxNode *Parser::parse_stmt()  {
+const NG_INLINE SyntaxNode *
+Parser::parse_stmt()  {
   switch (curr()->getKind()) {
     case KeywordIf:
       break;
@@ -332,43 +331,36 @@ SyntaxType Parser::parse_type()  {
 }
 
 
-SyntaxNode *Parser::parse_if()  {
-  auto E = new SyntaxIf;
+template<bool ELIF>
+const NG_INLINE SyntaxNode *
+Parser::parse_if()  {
+  auto cond = parse_expr();
+  auto body = parse_block();
 
-  E->condition = parse_expr();
-  E->body = parse_block();
-
+  SyntaxElse *else_ = nullptr; SyntaxElif *elif = nullptr;
   auto is_else = next(1);
   if (is_else->getKind() == TokenKind::KeywordElse) {
-    E->else_ = new SyntaxElse(parse_block());
+    else_ = new SyntaxElse(parse_block());
   }
   else if (is_else->getKind() == TokenKind::KeywordElif) {
-    E->elif = parse_if();
-    E->elif->kind = SyntaxKind::Elif;
+    elif = (SyntaxElif*)((SyntaxNode*) parse_if<true>());
   }
-
-  auto node = (SyntaxNode*) E;
-  node->kind = SyntaxKind::If;
-  return node;
-}
-
-SyntaxNode *Parser::parse_while() {
-  auto E = new SyntaxWhile;
-
-  // Yes ... It really is this easy to parse a while loop.
-  E->condition = parse_expr();
-
-  auto v = curr();
-  ASSERT_EQ(v->getKind(), TokenKind::LCurlyBrace);
-  E->body = parse_block();
-
-  auto ret = (SyntaxNode*) E;
-  ret->kind = SyntaxKind::While;
-  return ret;
+  auto E = (SyntaxNode*) new SyntaxIf(cond, body, else_, elif);
+  if (ELIF)
+    E->kind = SyntaxKind::Elif;
+  return E;
 }
 
 
-SyntaxNode *Parser::parse_for()  {
+const  SyntaxNode *
+Parser::parse_while() {
+  auto cond = parse_expr();
+  auto body = parse_block();
+  return new SyntaxWhile(cond, body);
+}
+
+const NG_INLINE SyntaxNode *
+Parser::parse_for()  {
   auto loop_variable = skip<TokenKind::Identifier,
                             ParseErrorType::MissingForLoopVariable>();
   skip<TokenKind::KeywordIn, ParseErrorType::ExpectedToken>();
@@ -376,43 +368,45 @@ SyntaxNode *Parser::parse_for()  {
   return nullptr;
 }
 
-SyntaxNode *Parser::parse_match()  {
+const NG_INLINE SyntaxNode *
+Parser::parse_match()  {
+  return nullptr;
+}
+const NG_INLINE SyntaxNode *
+Parser::parse_match_pair_value()  {
   return nullptr;
 }
 
-SyntaxNode *Parser::parse_match_pair_value()  {
-  return nullptr;
-}
-
-void Parser::parse_function_param(SyntaxFunction *fn) {
+nextgen::ArenaVec<SyntaxFunctionParameter> Parser::parse_function_param() {
   skip<TokenKind::LParenthesis, ParseErrorType::ExpectedToken>();
   auto current = curr();
 
-  fn->parameters.begin = (SyntaxFunctionParameter*)(GLOBAL_OBJECT_ALLOC.current());
+
+  SyntaxFunctionParameter *begin = (SyntaxFunctionParameter*)(GLOBAL_OBJECT_ALLOC.current());
+  SyntaxFunctionParameter *end = nullptr;
+
   while (current->getKind() != TokenKind::RParenthesis) {
     auto param_name = skip<TokenKind::Identifier,
                      ParseErrorType::ExpectedIdentifierForFunctionParameter>();
     expect<TokenKind::Colon>("Expected ':' before parameter type (this is not"
                              " go!)");
 
-    fn->parameters.end = new SyntaxFunctionParameter(param_name, parse_type());
+    end = new SyntaxFunctionParameter(param_name, parse_type());
   }
+  return mem::ArenaVec<SyntaxFunctionParameter>{begin, end};
 }
 
-SyntaxNode *Parser::parse_function(Token *function_name) {
-  auto E = new SyntaxFunction;
-  E->function_name = function_name;
-  parse_function_param(E);
-
-  E->function_type   = parse_type();
-  E->body = parse_block();
-  E->kind = SyntaxKind::FunctionDefault;
-  return E;
+const NG_INLINE SyntaxFunction *
+Parser::parse_function(const Token *function_name) {
+  return new SyntaxFunction(function_name,
+                              parse_type(),
+                              parse_block(),
+                              parse_function_param());
 }
 
-SyntaxNode *Parser::parse_function_call(Token *function_name, Token *delim) {
-  auto E = new SyntaxFunctionCall;
-  E->function_name = function_name;
+const NG_INLINE SyntaxNode *
+Parser::parse_function_call(const Token *function_name, const Token *delim) {
+  auto E = new SyntaxFunctionCall(function_name);
   while(curr()->getKind() != TokenKind::RParenthesis) {
 
     // Looks odd, right? What's happening here is that the arena will allocate
@@ -428,10 +422,9 @@ SyntaxNode *Parser::parse_function_call(Token *function_name, Token *delim) {
 }
 
 SyntaxBlock Parser::parse_block()  {
-  auto open = expect<TokenKind::LCurlyBrace>("Expected '{' before beginning of "
+  expect<TokenKind::LCurlyBrace>("Expected '{' before beginning of "
                                        "current");
   auto block   = SyntaxBlock {};
-
   // We know for sure that we got right curly brace
   while (curr()->getKind() != TokenKind::RCurlyBrace) {
     block.statements << parse_stmt();
@@ -440,10 +433,13 @@ SyntaxBlock Parser::parse_block()  {
   return block;
 }
 
-SyntaxNode *Parser::parse_struct(Token *struct_name)  {
+const NG_INLINE SyntaxNode *
+Parser::parse_struct(const Token *struct_name)  {
   return nullptr;
 }
 
-SyntaxNode *Parser::parse_struct_function(Token *s, Token *func_name) {
+const NG_INLINE SyntaxNode *
+Parser::parse_struct_function(const Token *s,
+                                          const Token *func_name) {
   return nullptr;
 }

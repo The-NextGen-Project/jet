@@ -416,7 +416,7 @@ namespace nextgen { namespace jet {
     }
 
     template<typename T>
-    T getValue()  {
+    T getValue() const {
       static_assert(std::is_same<T, char>::value                  ||
                     std::is_same<T, decltype(UINTPTR_MAX)>::value ||
                     std::is_same<T, bool>::value                  ||

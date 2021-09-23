@@ -22,12 +22,13 @@ TEST(ParseTest, VariableDeclLiteral) {
 
   auto name = parser.curr(); parser.skip(2);
   auto expr = parser.parse_variable_assignment(name);
-  auto decl = static_cast<SyntaxVariableAssignment*>(expr);
+  auto decl = static_cast<const SyntaxVariableAssignment*>(expr);
   ASSERT_EQ(expr->kind, SyntaxKind::VariableAssignment);
   //  //ASSERT_EQ(decl->name->name(), "hello"_intern);
   ASSERT_TRUE(::strncmp(decl->name->name().begin(), "hello", decl->name->len()) == 0);
   ASSERT_EQ(decl->expression->kind, jet::SyntaxKind::LiteralValue);
-  ASSERT_EQ(CAST(SyntaxLiteral*, decl->expression)->literal->getValue<size_t>
+  ASSERT_EQ(CAST(const SyntaxLiteral*, decl->expression)
+  ->literal->getValue<size_t>
   (), 23);
 }
 
@@ -49,10 +50,13 @@ TEST(ParseTest, VariableArrayDecl) {
 
 
   ASSERT_EQ(decl->kind, SyntaxKind::VariableAssignment);
-  ASSERT_EQ(CAST(SyntaxLiteral*, list->values[0])->literal->getValue<size_t>
+  ASSERT_EQ(CAST(const SyntaxLiteral*, list->values[0])
+  ->literal->getValue<size_t>
   (), 11);
-  ASSERT_EQ(CAST(SyntaxLiteral*, list->values[1])->literal->getValue<size_t>(), 2);
-  ASSERT_EQ(CAST(SyntaxLiteral*, list->values[2])->literal->getValue<size_t>
+  ASSERT_EQ(CAST(const SyntaxLiteral*, list->values[1])
+  ->literal->getValue<size_t>(), 2);
+  ASSERT_EQ(CAST(const SyntaxLiteral*, list->values[2])
+  ->literal->getValue<size_t>
   (), 55);
 }
 
@@ -207,17 +211,36 @@ TEST(ParseTest, SyntaxSemiColonError) {
   auto name = parser.curr(); parser.skip(2);
   parser.parse_variable_assignment(name);
 
-
-  name = parser.curr(); parser.skip(2);
-  parser.parse_variable_assignment(name);
+  try {
+    name = parser.curr(); parser.skip(2);
+    parser.parse_variable_assignment(name);
+  } catch(std::exception&) {}
 }
+
+TEST(ParseTest, SyntaxMissingDelimError) {
+  using namespace nextgen;
+  using namespace nextgen::core;
+  using namespace nextgen::jet;
+
+  auto buf = "some_value := 2 + 3 * (232 +4";
+  auto buf_len = strlen(buf);
+  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
+  auto parser = jet::Parser(&lexer);
+
+  try {
+    auto name = parser.curr(); parser.skip(2);
+    parser.parse_variable_assignment(name);
+  } catch (std::exception&) {}
+}
+
 
 TEST_SUITE_MAIN(ParseTest) {
   TEST_CALL(ParseTest, VariableDeclLiteral);
   TEST_CALL(ParseTest, VariableArrayDecl);
   TEST_CALL(ParseTest, VariableDeclBinary);
+  TEST_CALL(ParseTest, VariableDeclParenBinary);
   TEST_CALL(ParseTest, IfStatement);
   TEST_CALL(ParseTest, WhileLoop);
   TEST_CALL(ParseTest, SyntaxSemiColonError);
-  TEST_CALL(ParseTest, VariableDeclParenBinary);
+  TEST_CALL(ParseTest, SyntaxMissingDelimError);
 }

@@ -82,9 +82,12 @@ namespace nextgen { namespace jet {
       // type-checking can proceed in the third pass of the compiler.
       Option<Range<const char *>> user_defined_typename;
 
-      bool operator ==(const SyntaxTypename &other) {
-        if (kind == SyntaxTypenameKind::UserDefined && other.kind ==
-        SyntaxTypenameKind::UserDefined) {
+      bool operator ==(const SyntaxTypename &other) const {
+        if (
+          kind == SyntaxTypenameKind::UserDefined
+          &&
+          other.kind == SyntaxTypenameKind::UserDefined
+          )  {
           auto first = user_defined_typename.unwrap();
           auto second = other.user_defined_typename.unwrap();
           return strncmp(first.begin, second.begin, first.range());
@@ -101,7 +104,7 @@ namespace nextgen { namespace jet {
 
     struct SyntaxLiteral : public SyntaxNode {
 
-      explicit SyntaxLiteral(Token *l) : literal(l) {}
+      explicit SyntaxLiteral(const Token *l) : literal(l) {}
 
 
       // contains the literal token value. Token's already contain the actual
@@ -110,7 +113,7 @@ namespace nextgen { namespace jet {
       // source location & pretty printing options.
       //
       // Literal examples can be seen in the [Lexer] class.
-      Token *literal;
+      const Token *literal;
     };
 
 
@@ -128,14 +131,15 @@ namespace nextgen { namespace jet {
       // ^  : XOR
       // |  : OR
       // &  : AND
-      SyntaxBinaryOp operation; Token *op;
+      const SyntaxBinaryOp operation; 
+      const Token *op;
 
       // Left and right grouped expressions.
-      SyntaxNode *lhs;
-      SyntaxNode *rhs;
+      const SyntaxNode *lhs;
+      const SyntaxNode *rhs;
 
       /// Convert a `TokenKind` to `SyntaxBinaryOp` kind
-      static NG_INLINE SyntaxBinaryOp MatchOp(TokenKind kind) {
+      static NG_INLINE const SyntaxBinaryOp MatchOp(TokenKind kind) {
         switch(kind) {
           case TokenKind::Plus:
             return SyntaxBinaryOp::Addition;
@@ -174,7 +178,10 @@ namespace nextgen { namespace jet {
         }
       }
 
-      SyntaxBinary(SyntaxBinaryOp op, Token *oo, SyntaxNode *lhs, SyntaxNode*rhs)
+      SyntaxBinary(const SyntaxBinaryOp op,
+                   const Token *oo,
+                   const SyntaxNode *lhs,
+                   const SyntaxNode*rhs)
       : operation(op), op(oo), lhs(lhs), rhs(rhs) {}
     };
 
@@ -186,9 +193,9 @@ namespace nextgen { namespace jet {
                  : modifier(modifier), ty_name(ty), type(type) {}
 
 
-      Option<SyntaxTypeAnnotation> modifier = None;
-      Option<SyntaxTypename>       ty_name  = None;
-      Option<SyntaxType*>          type     = None;
+      const Option<SyntaxTypeAnnotation> modifier = None;
+      const Option<SyntaxTypename>       ty_name  = None;
+      const Option<SyntaxType*>          type     = None;
 
       bool has_typename() const {
         return ty_name.isSome();
@@ -202,7 +209,7 @@ namespace nextgen { namespace jet {
         return type.isSome();
       }
 
-      bool operator ==(const SyntaxType &other) {
+      bool operator ==(const SyntaxType &other) const {
         auto ret = (other.has_typename() && has_typename())
                    && (other.has_modifier() && has_modifier())
                    && (other.has_type());
@@ -214,7 +221,7 @@ namespace nextgen { namespace jet {
         return ret;
       }
 
-      SyntaxTypename get_typename() {
+      const SyntaxTypename get_typename() const {
         if (!has_typename()) {
           type.unwrap()->get_typename();
         }
@@ -232,18 +239,21 @@ namespace nextgen { namespace jet {
     };
 
     struct SyntaxList : public SyntaxNode {
-      ObjectVector<SyntaxNode*> values;
+      ObjectVector<const SyntaxNode*> values;
     };
 
     struct SyntaxVariableAssignment : public SyntaxNode {
 
-      SyntaxVariableAssignment(Token *name, const Option<SyntaxType> &ty,
-                               SyntaxNode*expr)
-                               : name(name), type(ty), expression(expr) {}
+      SyntaxVariableAssignment(const Token *name,
+                               const Option<SyntaxType> &ty,
+                               const SyntaxNode*expr)
+                               : name(name), type(ty), expression(expr) {
+        this->kind = SyntaxKind::VariableAssignment;
+      }
 
       // The actual variable name; ex: var my_variable_name = ...
       //                                   ^^^^^^^^^^^^^^^^
-      Token *name = nullptr;
+      const Token *name = nullptr;
 
       // Optional variable type. It may need to be inferred so it can be set
       // to 'None'. ex: (var ident: int) = 23 OR (var ident = 23)
@@ -251,13 +261,13 @@ namespace nextgen { namespace jet {
       Option<SyntaxType> type = None;
 
       // Node representing the actual value that the variable contains
-      SyntaxNode *expression;
+      const SyntaxNode *expression;
     };
 
 
     struct SyntaxVariableReassignment : public SyntaxNode {
 
-      SyntaxVariableReassignment(Token *v, SyntaxNode *expr)
+      SyntaxVariableReassignment(const Token *v, const SyntaxNode *expr)
       : variable(v), expression(expr) {}
 
       // Identifier representing the variable that is being reassigned.
@@ -268,10 +278,10 @@ namespace nextgen { namespace jet {
       // values that are not the same as its first initialization. For example,
       // the variable `some_var` is declared as an 'int' and cannot be
       // reassigned with a value of 'str'.
-      Token *variable = nullptr;
+      const Token *variable = nullptr;
 
       // Node representing the actual value that the variable contains
-      SyntaxNode *expression = nullptr;
+      const SyntaxNode *expression = nullptr;
     };
 
     struct SyntaxBlock : public SyntaxNode {
@@ -279,7 +289,7 @@ namespace nextgen { namespace jet {
       // A sequential list of statements categorized as a current node.
       // Ex:
       // {
-      //   var x = 23
+      //   x := 23
       //   x = x ** x
       //   a_function_call(x)
       // }
@@ -287,7 +297,7 @@ namespace nextgen { namespace jet {
       // Note: There is an exception to parsing of this node, in statements such
       // as 'while', 'if', 'elif', 'else', 'for' may contain a single statement
       // after them without a set of corresponding '{}'.
-      ObjectVector<SyntaxNode*> statements;
+      ObjectVector<const SyntaxNode*> statements;
 
 
       // Special statement for function / lambda return check. Allows for void
@@ -296,7 +306,7 @@ namespace nextgen { namespace jet {
     };
 
     struct SyntaxElse : public SyntaxNode {
-      
+
       explicit SyntaxElse(SyntaxBlock block) : body(block) {}
 
 
@@ -313,7 +323,7 @@ namespace nextgen { namespace jet {
 
       explicit SyntaxElif(SyntaxBlock block) : body(block) {}
 
-      
+
       // Elif statement current in an if-elif-else statement chain
       // Ex:
       // if cond { ... }
@@ -327,22 +337,27 @@ namespace nextgen { namespace jet {
       // Boolean expression representing the while condition.
       // Ex: while cond
       //        ^^^^ Declared here
-      SyntaxNode *condition;
+      const SyntaxNode *condition;
       // Statement list of commands executed upon the condition above being true
       // Ex: while cond {
       //    variable := "Hello"
       // }
       SyntaxBlock body;
+
+      SyntaxWhile(const SyntaxNode *cond, const SyntaxBlock &body)
+      : condition(cond), body(body) {
+        this->kind = SyntaxKind::While;
+      }
     };
 
     struct SyntaxMatch : public SyntaxNode {
 
       struct MatchPair {
-        SyntaxNode *value;
+        const SyntaxNode *value;
         SyntaxBlock action;
       };
 
-      SyntaxNode *value;
+      const SyntaxNode *value;
       ArenaVec<MatchPair> pairs;
     };
 
@@ -351,7 +366,7 @@ namespace nextgen { namespace jet {
       // Boolean expression representing the if condition.
       // Ex: if cond
       //        ^^^^ Declared here
-      SyntaxNode *condition;
+      const SyntaxNode *condition;
 
       // Statement list of commands executed upon the condition above being true
       // Ex: if cond {
@@ -360,10 +375,18 @@ namespace nextgen { namespace jet {
       SyntaxBlock body;
 
       // See `SyntaxElse`
-      SyntaxElse *else_ = nullptr;
+      const SyntaxElse *else_ = nullptr;
 
       // See `SyntaxElif`
-      SyntaxNode *elif  = nullptr;
+      const SyntaxNode *elif  = nullptr;
+
+      SyntaxIf(const SyntaxNode *cond,
+               const SyntaxBlock &body,
+               const SyntaxElse *else_,
+               const SyntaxNode *elif)
+               : condition(cond), body(body), else_(else_), elif(elif) {
+        this->kind = SyntaxKind::If;
+      }
     };
 
     struct SyntaxUnary : public SyntaxNode {
@@ -376,14 +399,15 @@ namespace nextgen { namespace jet {
       // +  : Assert RHS expression is positive
       // -  : Negate RHS expression
       // ~  : Bitwise NOT
-      SyntaxUnaryOp operation; Token *op;
+      const SyntaxUnaryOp operation;
+      const Token *op;
 
       // Expression to apply unary operation
       // Ex: ++some_var, &memory_address, *pointer_value, -some_value
-      SyntaxNode *expression = nullptr;
+      const SyntaxNode *expression = nullptr;
 
       /// Convert `TokenKind` to `SyntaxUnaryOp` operation
-      static NG_INLINE SyntaxUnaryOp MatchOp(TokenKind kind) {
+      static NG_INLINE const SyntaxUnaryOp MatchOp(TokenKind kind) {
         switch(kind) {
           case TokenKind::Plus:
             return SyntaxUnaryOp::Positive;
@@ -403,39 +427,50 @@ namespace nextgen { namespace jet {
         UNREACHABLE;
       }
 
-      SyntaxUnary(SyntaxUnaryOp op, Token *oo, SyntaxNode *expr)
-      : operation(op), op(oo), expression(expr) {}
+      SyntaxUnary(const SyntaxUnaryOp op,
+                  const Token *oo,
+                  const SyntaxNode *expr)
+      : operation(op), op(oo), expression(expr) {
+        this->kind = SyntaxKind::Unary;
+      }
     };
 
     struct SyntaxFunctionParameter : public SyntaxNode {
       
-      SyntaxFunctionParameter(Token *pn, SyntaxType ty)
+      SyntaxFunctionParameter(const Token *pn, SyntaxType ty)
       : param_name(pn), type(ty) {}
 
       // Function parameter name
-      Token *param_name = nullptr;
+      const Token *param_name = nullptr;
 
       // Function Parameter type. If no type is given, then it is inferred to
       // be a generic parameter.
       // Ex:
       // fn some_func(param_1: int, param_2: str, $param_3)
       //                                          ^^^^^^^^ Generic Parameter
-      SyntaxType type;
+      const SyntaxType type;
     };
 
     struct SyntaxFunction : public SyntaxNode {
 
       // Function name
-      Token *function_name = nullptr;
+      const Token *function_name = nullptr;
 
       // Function return type. If 'None' then infer return type.
-      Option<SyntaxType> function_type = None;
+      Option<SyntaxType> function_type;
 
       // Function body
       SyntaxBlock body;
 
       // Function parameters
       ArenaVec<SyntaxFunctionParameter> parameters{nullptr, nullptr};
+
+      SyntaxFunction(const Token *name,
+                     const Option<SyntaxType> &ty,
+                     const SyntaxBlock &body,
+                     const ArenaVec<SyntaxFunctionParameter> &params)
+                     : function_name(name), body(body), function_type(ty),
+                      parameters(params){}
     };
 
     struct SyntaxFunctionCall : public SyntaxNode {
@@ -445,25 +480,29 @@ namespace nextgen { namespace jet {
       //
       // Ex:
       // some_function(1, 2, 2, 3, 5)
-      Token      *function_name = nullptr;
-      ObjectVector<SyntaxNode*> parameters;
+      const Token      *function_name = nullptr;
+      ObjectVector<const SyntaxNode*> parameters;
+
+      SyntaxFunctionCall(const Token *name)
+                         : function_name(name)
+                        { this->kind = SyntaxKind::FunctionCall; }
     };
 
     struct SyntaxForList : public SyntaxNode {
-      SyntaxForList(Token *ln, Token *lv, SyntaxBlock body)
+      SyntaxForList(const Token *ln, const Token *lv, SyntaxBlock body)
       : list_name(ln), list_var(lv), body(body) {}
       
       // For loop iteration over a variable of type list.
       // Ex:
       // for num    in    numbers { ... }
       //     ^^^ Loop var ^^^^^^^ List variable
-      Token *list_name = nullptr;
-      Token *list_var  = nullptr;
+      const Token *list_name = nullptr;
+      const Token *list_var  = nullptr;
       SyntaxBlock body;
     };
 
     struct SyntaxForRange : public SyntaxNode {
-      SyntaxForRange(Token *list_var, SyntaxBlock body) :
+      SyntaxForRange(const Token *list_var, SyntaxBlock body) :
       list_var(list_var), body(body) {}
 
       // Range based for loop. A range consists of a few factors:
@@ -476,7 +515,7 @@ namespace nextgen { namespace jet {
       // Ex:
       // for i in range(1, 5) { ... } OR
       // for i in range(1, 232, 3) { ... }
-      Token *list_var = nullptr;
+      const Token *list_var = nullptr;
       SyntaxBlock body;
     };
 
