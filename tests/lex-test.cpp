@@ -335,9 +335,9 @@ TEST_SUITE_MAIN(LexTest) {
   TEST_CALL(LexTest, StringEscape);
   TEST_CALL(LexTest, AllTokens);
   TEST_CALL(LexTest, ErrorOverflow);
-//  TEST_CALL(LexTest, DigitOutOfRange);
-//  TEST_CALL(LexTest, HexEscapeOutOfRange);
-//  TEST_CALL(LexTest, InvalidStringEscape);
-//  TEST_CALL(LexTest, MissingClosingDelimString);
-//  TEST_CALL(LexTest, MissingClosingDelimChar);
+  TEST_CALL(LexTest, DigitOutOfRange);
+  TEST_CALL(LexTest, HexEscapeOutOfRange);
+  TEST_CALL(LexTest, InvalidStringEscape);
+  TEST_CALL(LexTest, MissingClosingDelimString);
+  TEST_CALL(LexTest, MissingClosingDelimChar);
 }

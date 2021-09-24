@@ -263,56 +263,6 @@ Parser::match_expr() {
   return nullptr;
 }
 
-const NG_INLINE SyntaxNode *
-Parser::parse_stmt()  {
-  switch (curr()->getKind()) {
-    case KeywordIf:
-      break;
-    case KeywordWhile:
-      break;
-    case KeywordFor:
-      break;
-    case KeywordBreak:
-      break;
-    case KeywordContinue:
-      break;
-    case KeywordDefer:
-      break;
-    case KeywordNone:
-      break;
-    case KeywordReturn:
-      break;
-    case KeywordMatch:
-      break;
-    case Identifier: {
-      auto C1 = peek(1);
-      if (C1->getKind() == TokenKind::ColonEquals) {
-        auto name = curr();
-        skip(2);
-        return parse_variable_assignment(name);
-      }
-      if (C1->isValueAssignmentOp()) {
-        auto name = curr();
-        skip(2);
-        return parse_variable_value_assignment(name,
-                                        SyntaxVariableValueAssignment::MatchOp(C1->getKind()));
-      }
-      break;
-    }
-    case LCurlyBrace:
-      break;
-    case Then:
-      break;
-    case At:
-      break;
-    case Error:
-      break;
-    case EOFToken:
-      break;
-    default: break;
-  }
-  return nullptr;
-}
 
 SyntaxType Parser::parse_type()  {
 

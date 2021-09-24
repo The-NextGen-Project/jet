@@ -112,64 +112,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       auto parse() -> const ParserOutput;
 
       // ========= Parsing Language Generalizations ==========
-
-      auto parse_stmt() -> const SyntaxNode*;
-      auto parse_expr(int previous_binding = -1) -> const SyntaxNode*;
-      auto match_expr() -> const SyntaxNode*;
-
-      // ========= Parsing Language Constructs ==========
-
-      auto parse_block() -> SyntaxBlock;
-      auto parse_type() -> SyntaxType;
-      auto parse_function_param() -> ArenaVec<SyntaxFunctionParameter>;
-      auto parse_variable_assignment(const Token *name) -> const SyntaxNode*;
-
-      auto parse_function(const Token *name) -> const SyntaxFunction*;
-      auto parse_struct(const Token *name) -> const SyntaxStruct*;
-      auto parse_function_call(const Token *name, const Token *delim) -> const SyntaxNode*;
-      
-      template<bool ELIF = false>
-      auto parse_if() -> const SyntaxNode* {
-        auto cond = parse_expr();
-        auto body = parse_block();
-
-        SyntaxElse *else_ = nullptr; SyntaxElif *elif = nullptr;
-        auto is_else = next(1);
-        if (is_else->getKind() == TokenKind::KeywordElse) {
-          else_ = new SyntaxElse(parse_block());
-        }
-        else if (is_else->getKind() == TokenKind::KeywordElif) {
-          elif = (SyntaxElif*)((SyntaxNode*) parse_if());
-        }
-        auto E = (SyntaxNode*) new SyntaxIf(cond, body, else_, elif);
-        if (ELIF)
-          E->kind = SyntaxKind::Elif;
-        return E;
-      }
-      auto parse_for() -> const SyntaxNode*;
-      auto parse_match() -> const SyntaxNode*;
-      auto parse_match_pair_value() -> const SyntaxNode*;
-
-      //========== INLINED FUNCTIONS ==========
-
-      auto NG_INLINE
-      parse_while() {
-        auto cond = parse_expr();
-        auto body = parse_block();
-        return new SyntaxWhile(cond, body);
-      }
-
-      auto NG_INLINE
-      parse_variable_value_assignment(const Token *name, SyntaxAssignmentOp op)  {
-        auto ret = new SyntaxVariableValueAssignment(name, parse_expr(), op);
-        expect<TokenKind::SemiColon>("Expected ';' after declaration");
-        return ret;
-      }
-
-      // TODO: Update in design choices, do we need this still?
-      auto parse_struct_function
-        (const Token *s, const Token *function_name) -> const SyntaxNode*;
-
+      auto NG_AINLINE curr()  { return tokens[position]; }
 
       // ========= Parsing Utils ==========
 
@@ -248,8 +191,114 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
             return {-1, -1};
         }
       }
+      auto parse_expr(int previous_binding = -1) -> const SyntaxNode*;
+      auto match_expr() -> const SyntaxNode*;
 
-      auto NG_AINLINE curr()  { return tokens[position]; }
+      // ========= Parsing Language Constructs ==========
+
+      auto parse_block() -> SyntaxBlock;
+      auto parse_type() -> SyntaxType;
+      auto parse_function_param() -> ArenaVec<SyntaxFunctionParameter>;
+      auto parse_variable_assignment(const Token *name) -> const SyntaxNode*;
+
+      auto parse_function(const Token *name) -> const SyntaxFunction*;
+      auto parse_struct(const Token *name) -> const SyntaxStruct*;
+      auto parse_function_call(const Token *name, const Token *delim) -> const SyntaxNode*;
+
+      auto parse_for() -> const SyntaxNode*;
+      auto parse_match() -> const SyntaxNode*;
+      auto parse_match_pair_value() -> const SyntaxNode*;
+
+      //========== INLINED FUNCTIONS ==========
+
+
+      template<bool ELIF = false>
+      auto parse_if() -> const SyntaxNode* {
+        auto cond = parse_expr();
+        auto body = parse_block();
+
+        SyntaxElse *else_ = nullptr; SyntaxElif *elif = nullptr;
+        auto is_else = next(1);
+        if (is_else->getKind() == TokenKind::KeywordElse) {
+          else_ = new SyntaxElse(parse_block());
+        }
+        else if (is_else->getKind() == TokenKind::KeywordElif) {
+          elif = (SyntaxElif*)((SyntaxNode*) parse_if());
+        }
+        auto E = (SyntaxNode*) new SyntaxIf(cond, body, else_, elif);
+        if (ELIF)
+          E->kind = SyntaxKind::Elif;
+        return E;
+      }
+
+      auto NG_INLINE
+      parse_while() {
+        auto cond = parse_expr();
+        auto body = parse_block();
+        return new SyntaxWhile(cond, body);
+      }
+
+      auto NG_INLINE
+      parse_variable_value_assignment(const Token *name, SyntaxAssignmentOp op)  {
+        auto ret = new SyntaxVariableValueAssignment(name, parse_expr(), op);
+        expect<TokenKind::SemiColon>("Expected ';' after declaration");
+        return ret;
+      }
+
+      auto parse_stmt() -> const SyntaxNode* {
+        switch (curr()->getKind()) {
+          case KeywordIf:
+            break;
+          case KeywordWhile:
+            break;
+          case KeywordFor:
+            break;
+          case KeywordBreak:
+            break;
+          case KeywordContinue:
+            break;
+          case KeywordDefer:
+            break;
+          case KeywordNone:
+            break;
+          case KeywordReturn:
+            break;
+          case KeywordMatch:
+            break;
+          case Identifier: {
+            auto C1 = peek(1);
+            if (C1->getKind() == TokenKind::ColonEquals) {
+              auto name = curr();
+              skip(2);
+              return parse_variable_assignment(name);
+            }
+            if (C1->isValueAssignmentOp()) {
+              auto name = curr();
+              skip(2);
+              return parse_variable_value_assignment(name,
+                                                     SyntaxVariableValueAssignment::MatchOp(C1->getKind()));
+            }
+            break;
+          }
+          case LCurlyBrace:
+            break;
+          case Then:
+            break;
+          case At:
+            break;
+          case Error:
+            break;
+          case EOFToken:
+            break;
+          default: break;
+        }
+        return nullptr;
+      }
+
+      // TODO: Update in design choices, do we need this still?
+      auto parse_struct_function
+        (const Token *s, const Token *function_name) -> const SyntaxNode*;
+
     };
   }}
 
