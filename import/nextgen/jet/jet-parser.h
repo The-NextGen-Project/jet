@@ -136,15 +136,51 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       /** @brief Asserts next token kind is 'TK' or errors with type 'PE' */
       template<TokenKind TK, ParseErrorType PE>
-      auto skip() -> const Token*;
+      auto skip() -> const Token* {
+        auto next = tokens[(position++)];
+        if (next->getKind() != TK) {
+          this->diagnostics.build(ParseError(
+            PE,
+            next->getSourceLocation()
+            ));
+        }
+        return next;
+      }
 
       /** @brief Expect the next token to be 'kind', if not, build an error. */
       template<TokenKind TK, size_t N>
-      auto expect(char const (&msg)[N]) -> const Token*;
+      auto expect(char const (&msg)[N]) -> const Token* {
+        const Token *next = tokens[(position++)];
+        if (next->getKind() != TK) {
+          this->diagnostics.build(ParseError(
+            ParseErrorType::ExpectedToken,
+            next->getSourceLocation(),
+            {
+              ParseError::Metadata { TK, next, msg }
+            }
+            ));
+          fatal++;
+        }
+        return next;
+      }
 
       /** @brief Expected a closing delim in a statement or expression */
       template<TokenKind TK>
-      void expect_delim(const TokenTraits::SourceLocation &loc);
+      void expect_delim(const TokenTraits::SourceLocation &loc) {
+        Token *next = tokens[position++];
+        if (next->getKind() != TK) {
+          this->diagnostics.build(ParseError (
+            ParseErrorType::MissingClosingPair,
+            next->getSourceLocation(),
+            {
+              ParseError::Metadata { TK },
+              ParseError::Metadata { next },
+              ParseError::Metadata { loc }
+            }
+            ));
+          this->diagnostics.send_exception();
+        }
+      }
 
 
       /** @brief Unary operator precedence */

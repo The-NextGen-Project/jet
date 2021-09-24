@@ -94,52 +94,8 @@ Parser::parse() {
 }
 
 
-template<TokenKind TK, ParseErrorType PE>
-const Token *Parser::skip() {
-  auto next = tokens[(position++)];
-  if (next->getKind() != TK) {
-    this->diagnostics.build(ParseError(
-      PE,
-      next->getSourceLocation()
-    ));
-  }
-  return next;
-}
 
-template<TokenKind TK, size_t N>
-const Token *Parser::expect(char const (&msg)[N]) {
-  const Token *next = tokens[(position++)];
-  if (next->getKind() != TK) {
-    this->diagnostics.build(ParseError(
-      ParseErrorType::ExpectedToken, 
-      next->getSourceLocation(),
-      {
-        ParseError::Metadata { TK, next, msg }
-      }
-    ));
-    fatal++;
-  }
-  return next;
-}
-
-template<TokenKind TK>
-void Parser::expect_delim(TokenTraits::SourceLocation const &loc) {
-  Token *next = tokens[position++];
-  if (next->getKind() != TK) {
-    this->diagnostics.build(ParseError (
-      ParseErrorType::MissingClosingPair,
-      next->getSourceLocation(),
-      {
-                  ParseError::Metadata { TK },
-                  ParseError::Metadata { next },
-                  ParseError::Metadata { loc }
-                }
-    ));
-    this->diagnostics.send_exception();
-  }
-}
-
-const NG_INLINE SyntaxNode *
+const SyntaxNode *
 Parser::parse_variable_assignment(const Token *name)  {
 
   // Check 1: name: type = expr
