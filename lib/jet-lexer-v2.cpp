@@ -275,7 +275,7 @@ void Lexer<Mode>::lex_float(int skip, int start) {
 
   decimal = (value / divisor);
 
-  new Token {
+  tokens.end = new Token {
     Range<const char *>(token_start, buffer),
     {line, column},
     (double)(start + decimal),
@@ -304,6 +304,7 @@ void Lexer<Mode>::lex_int() {
 template<LexMode Mode>
 template<int radix, int skip>
 void Lexer<Mode>::lex_int() {
+
 
   // Initialize start of token
   const char *token_start = buffer;
@@ -367,7 +368,7 @@ void Lexer<Mode>::lex_int() {
     Console::Log(Colors::BLUE, str(literal_token_representation), Colors::RESET);
   }
 
-  new Token {
+  tokens.end = new Token {
     literal_token_representation,
     {line, column},
     (decltype(UINTPTR_MAX)) lexed_int,
@@ -395,7 +396,8 @@ void Lexer<Mode>::lex_ident() {
     }
   }
 
-  new Token {
+
+  tokens.end = new Token {
     literal_token_representation,
     {line, column},
     "",
@@ -510,7 +512,7 @@ void Lexer<Mode>::lex_str() {
     // string after lexing it. `reserve(size_t)` in this case is used to
     // increment the number of bytes written.
     GLOBAL_DATA_ALLOC.reserve(len);
-    new Token {
+    tokens.end = new Token {
       str {lexed_string, len},
       {line, column},
       "",

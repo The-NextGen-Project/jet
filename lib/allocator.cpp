@@ -40,6 +40,7 @@ Allocator nextgen::mem::GLOBAL_DATA_ALLOC = Allocator(
   arena::DATA_ALLOCATION_MEMORY_SIZE
 );
 
+
 // Very important section. In general, you probably wouldn't want to overload
 // the new and delete operator, but for this code base, it just makes the code
 // much cleaner, and since the arena pool is global, it should be okay.

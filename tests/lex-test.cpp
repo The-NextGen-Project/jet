@@ -20,8 +20,10 @@ TEST(LexTest, NonFMTNumbers) {
   auto lexer = jet::Lexer<TokenMode> ( "1211", "src/test.jet", 4);
   auto token = lexer.lex()[0];
 
-  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 1211);
+
   ASSERT_EQ(token->getKind(), jet::TokenKind::Integer);
+  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 1211);
+
 }
 
 TEST(LexTest, DecimalNumber) {
