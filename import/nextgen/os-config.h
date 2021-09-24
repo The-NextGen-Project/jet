@@ -9,6 +9,8 @@
 #   elif __linux__ || __unix__
 #       define NG_OS_LINUX true
 #       include <unistd.h>
+#       include <sys/types.h>
+#       include <sys/mman.h>
 #   else
 #       error "Could Not Find A Valid OS"
 #   endif
