@@ -672,7 +672,12 @@ ArenaVec<Token> Lexer<Mode>::lex() {
             TOKEN_ADD_SHORT("/=", TokenKind::DivEquals);
           }
           else if (n == '/') {
-            while (MatchTokenKind[next(1)] != NewLine) {}
+            if (OUTPUT_MODE) Console::Log("/");
+            while (MatchTokenKind[next(1)] != NewLine) {
+              if (OUTPUT_MODE) {
+                Console::Log(curr());
+              }
+            }
             skip_new_line();
           }
           else {

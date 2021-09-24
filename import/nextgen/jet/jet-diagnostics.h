@@ -56,9 +56,12 @@ namespace nextgen { namespace jet {
   private:
     // Helpers
     void ErrorLexSetup(std::string &line, const char *message, LexError &error);
-    void ErrorParseSetup(size_t const line, char const *message,
-                         Token const *reported_token,
-                         TokenTraits::SourceLocation loc);
+
+    template<bool POINT = false>
+      void ErrorParseSetup(size_t const ln,
+                           const char *message,
+                           Token const *reported_token,
+                           TokenTraits::SourceLocation loc);
 
     // Lex Errors (We will keep these PascalCase)
     void ErrorIntegerOverflow(LexError &error);
@@ -72,6 +75,7 @@ namespace nextgen { namespace jet {
     // Parse Errors (We will keep these PascalCase)
     void ErrorParseExpectedToken(ParseError const &error);
     void ErrorParseMissingClosingDelim(ParseError const &error);
+    void ErrorParseInvalidTokenAfterIdentInGlobalScope(ParseError const &error);
   };
 
 }}

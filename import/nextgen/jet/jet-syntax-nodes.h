@@ -20,6 +20,7 @@ namespace nextgen { namespace jet {
       ForRange,
       Enum,
       VariableAssignment,
+      VariableValueAssignment,
       VariableReassignment,
       ArrayInitialization,
       Assert,
@@ -72,6 +73,20 @@ namespace nextgen { namespace jet {
       Float64,
       StringValue,
       UserDefined
+    };
+
+    enum SyntaxAssignmentOp {
+      AddAssign,
+      SubAssign,
+      MulAssign,
+      DivAssign,
+      ModAssign,
+      PowAssign,
+      LShiftAssign,
+      RShiftAssign,
+      ORAssign,
+      XORAssign,
+      ANDAssign,
     };
 
     struct SyntaxTypename {
@@ -240,6 +255,48 @@ namespace nextgen { namespace jet {
 
     struct SyntaxList : public SyntaxNode {
       ObjectVector<const SyntaxNode*> values;
+    };
+
+    struct SyntaxVariableValueAssignment : public SyntaxNode {
+      const Token *name = nullptr;
+      const SyntaxNode *expression = nullptr;
+      const SyntaxAssignmentOp op;
+
+      static NG_INLINE SyntaxAssignmentOp MatchOp(TokenKind kind) {
+        switch(kind) {
+          case PlusEquals:
+            return SyntaxAssignmentOp::AddAssign;
+          case MinusEquals:
+            return SyntaxAssignmentOp::SubAssign;
+          case DivEquals:
+            return SyntaxAssignmentOp::DivAssign;
+          case PowEquals:
+            return SyntaxAssignmentOp::PowAssign;
+          case MulEquals:
+            return SyntaxAssignmentOp::MulAssign;
+          case LeftShiftEquals:
+            return SyntaxAssignmentOp::LShiftAssign;
+          case RightShiftEquals:
+            return SyntaxAssignmentOp::RShiftAssign;
+          case ANDEquals:
+            return SyntaxAssignmentOp::ANDAssign;
+          case XOREquals:
+            return SyntaxAssignmentOp::XORAssign;
+          case OREquals:
+            return SyntaxAssignmentOp::ORAssign;
+          case PercentEquals:
+            return SyntaxAssignmentOp::ModAssign;
+          default:
+            break;
+        }
+      }
+
+      SyntaxVariableValueAssignment(const Token *name,
+                                    const SyntaxNode *expr,
+                                    const SyntaxAssignmentOp op)
+                                    : name(name), expression(expr), op(op)
+                                { this->kind = SyntaxKind::VariableAssignment; }
+
     };
 
     struct SyntaxVariableAssignment : public SyntaxNode {
@@ -519,6 +576,16 @@ namespace nextgen { namespace jet {
       SyntaxBlock body;
     };
 
+    struct SyntaxStructMember {
+      const Token *name = nullptr;
+      SyntaxType type;
+      SyntaxStructMember(const Token *name, const SyntaxType ty)
+      : name(name), type(ty) {}
+    };
+
+    struct SyntaxStruct : public SyntaxNode {
+      ArenaVec<SyntaxStructMember> members;
+    };
 
 }}
 #endif //JET_JET_SYNTAX_NODES_H

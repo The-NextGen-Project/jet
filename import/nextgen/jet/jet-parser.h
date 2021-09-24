@@ -17,6 +17,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       ExpectedIdentifierForFunctionParameter,
       ExpectedIdentifierForStructProperty,
+      InvalidTokenAfterIdentInGlobalScope,
 
       MissingClosingPair,
       UnexpectedEndOfFile
@@ -31,6 +32,12 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       GeneralScope
     };
 
+
+    struct ParserOutput {
+      ObjectVector<const SyntaxFunction*, 100> functions;
+      ObjectVector<const SyntaxStruct*, 100> structures;
+      ObjectVector<const SyntaxVariableAssignment*> global_variables;
+    };
 
     struct ParseError {
       union Metadata;
@@ -102,7 +109,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
           fatal(0) {}
 
       /// Parse all statements
-      auto parse() -> ObjectVector<const SyntaxNode*, 20000>;
+      auto parse() -> const ParserOutput;
 
       // ========= Parsing Language Generalizations ==========
 
@@ -116,16 +123,48 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       auto parse_type() -> SyntaxType;
       auto parse_function_param() -> ArenaVec<SyntaxFunctionParameter>;
       auto parse_variable_assignment(const Token *name) -> const SyntaxNode*;
+
       auto parse_function(const Token *name) -> const SyntaxFunction*;
-      auto parse_struct(const Token *name) -> const SyntaxNode*;
+      auto parse_struct(const Token *name) -> const SyntaxStruct*;
       auto parse_function_call(const Token *name, const Token *delim) -> const SyntaxNode*;
       
       template<bool ELIF = false>
-      auto parse_if() -> const SyntaxNode*;
+      auto parse_if() -> const SyntaxNode* {
+        auto cond = parse_expr();
+        auto body = parse_block();
+
+        SyntaxElse *else_ = nullptr; SyntaxElif *elif = nullptr;
+        auto is_else = next(1);
+        if (is_else->getKind() == TokenKind::KeywordElse) {
+          else_ = new SyntaxElse(parse_block());
+        }
+        else if (is_else->getKind() == TokenKind::KeywordElif) {
+          elif = (SyntaxElif*)((SyntaxNode*) parse_if());
+        }
+        auto E = (SyntaxNode*) new SyntaxIf(cond, body, else_, elif);
+        if (ELIF)
+          E->kind = SyntaxKind::Elif;
+        return E;
+      }
       auto parse_for() -> const SyntaxNode*;
       auto parse_match() -> const SyntaxNode*;
       auto parse_match_pair_value() -> const SyntaxNode*;
-      auto parse_while() -> const SyntaxNode*;
+
+      //========== INLINED FUNCTIONS ==========
+
+      auto NG_INLINE
+      parse_while() {
+        auto cond = parse_expr();
+        auto body = parse_block();
+        return new SyntaxWhile(cond, body);
+      }
+
+      auto NG_INLINE
+      parse_variable_value_assignment(const Token *name, SyntaxAssignmentOp op)  {
+        auto ret = new SyntaxVariableValueAssignment(name, parse_expr(), op);
+        expect<TokenKind::SemiColon>("Expected ';' after declaration");
+        return ret;
+      }
 
       // TODO: Update in design choices, do we need this still?
       auto parse_struct_function
@@ -135,13 +174,22 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       // ========= Parsing Utils ==========
 
       /** @brief Lookahead 'n' amount of times in the list */
-      auto peek(size_t n) -> const Token*;
+      auto NG_AINLINE peek(size_t n) {
+        return tokens[position + n];
+      }
 
       /** @brief Returns the current token and skips 'n' tokens ahead */
-      auto skip(size_t n) -> const Token*;
+      auto NG_INLINE skip(size_t n) {
+        auto *ret = tokens[position];
+        position += n;
+        return ret;
+      }
 
       /** @brief Skips 'n' tokens and returns the latest token after the skip */
-      auto next(size_t n) -> const Token*;
+      auto NG_INLINE next(size_t n) {
+        position += n;
+        return tokens[position];
+      }
 
       /** @brief Asserts next token kind is 'TK' or errors with type 'PE' */
       template<TokenKind TK, ParseErrorType PE>

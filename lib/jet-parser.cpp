@@ -36,12 +36,9 @@
 
 using namespace nextgen::jet;
 
-nextgen::ObjectVector<const SyntaxNode*, 20000>
+const ParserOutput
 Parser::parse() {
-
-  // Mark space for at least 20000 nodes which will
-  // likely be good for most programs.
-  auto nodes = mem::ObjectVector<const SyntaxNode*, 20000>();
+  auto output = ParserOutput();
 
   for (;;) {
 
@@ -52,19 +49,7 @@ Parser::parse() {
 
     switch (curr()->getKind()) {
       case TokenKind::EOFToken:
-        return nodes;
-      case TokenKind::KeywordIf:
-        skip(1);
-        parse_if();
-        break;
-      case TokenKind::KeywordFor:
-        skip(1);
-        parse_for();
-        break;
-      case TokenKind::KeywordMatch:
-        skip(1);
-        parse_match();
-        break;
+        return output;
       case TokenKind::Identifier: {
         auto C1 = peek(1);
         auto C2 = peek(2);
@@ -72,10 +57,10 @@ Parser::parse() {
         if (C1->getKind() == TokenKind::FunctionArrow) {
           switch (C2->getKind()) {
             case TokenKind::LParenthesis: // Function
-              parse_function(curr());
+              output.functions << parse_function(curr());
               break;
             case TokenKind::KeywordStruct: // Struct
-              parse_struct(curr());
+              output.structures << parse_struct(curr());
               break;
             case TokenKind::KeywordEnum: // Enum
               break;
@@ -87,7 +72,17 @@ Parser::parse() {
         else if (C1->getKind() == TokenKind::ColonEquals) {
           auto name = curr();
           skip(2);
-          parse_variable_assignment(name);
+          output.global_variables <<
+          (const SyntaxVariableAssignment*)
+            parse_variable_assignment(name);
+        }
+        else {
+          this->diagnostics.build(ParseError {
+            ParseErrorType::InvalidTokenAfterIdentInGlobalScope,
+            C1->getSourceLocation(),
+            { ParseError::Metadata { C1 }}
+          });
+          this->diagnostics.send_exception();
         }
         break;
       }
@@ -95,22 +90,9 @@ Parser::parse() {
         break;
     }
   }
+  return output;
 }
 
-const Token *Parser::peek(size_t n)  {
-  return tokens[position + n];
-}
-
-const Token *Parser::skip(size_t n)  {
-  auto *ret = tokens[position];
-  position += n;
-  return ret;
-}
-
-const Token *Parser::next(size_t n) {
-  position += n;
-  return tokens[position];
-}
 
 template<TokenKind TK, ParseErrorType PE>
 const Token *Parser::skip() {
@@ -175,7 +157,7 @@ Parser::parse_variable_assignment(const Token *name)  {
 
 /// Pratt Parsing Expression Technique (Precedence Matching)
 /// References: https://en.wikipedia.org/wiki/Operator-precedence_parser
-const NG_INLINE SyntaxNode *
+const SyntaxNode *
 Parser::parse_expr(int previous_binding)  {
   SyntaxNode *lhs;
 
@@ -309,6 +291,12 @@ Parser::parse_stmt()  {
         skip(2);
         return parse_variable_assignment(name);
       }
+      if (C1->isValueAssignmentOp()) {
+        auto name = curr();
+        skip(2);
+        return parse_variable_value_assignment(name,
+                                        SyntaxVariableValueAssignment::MatchOp(C1->getKind()));
+      }
       break;
     }
     case LCurlyBrace:
@@ -327,37 +315,28 @@ Parser::parse_stmt()  {
 }
 
 SyntaxType Parser::parse_type()  {
+
+  // []i32
+  // [5][5][5]i32
+  // **i32
+  // *****i32
+  // (i32, i32)
+
+  auto first_token = curr();
+  switch(first_token->getKind()) {
+    case LBracket:
+      break;
+    case LParenthesis:
+      break;
+    case Star:
+      break;
+    default:
+      UNREACHABLE;
+  }
+
   return SyntaxType(None, None, None);
 }
 
-
-template<bool ELIF>
-const NG_INLINE SyntaxNode *
-Parser::parse_if()  {
-  auto cond = parse_expr();
-  auto body = parse_block();
-
-  SyntaxElse *else_ = nullptr; SyntaxElif *elif = nullptr;
-  auto is_else = next(1);
-  if (is_else->getKind() == TokenKind::KeywordElse) {
-    else_ = new SyntaxElse(parse_block());
-  }
-  else if (is_else->getKind() == TokenKind::KeywordElif) {
-    elif = (SyntaxElif*)((SyntaxNode*) parse_if<true>());
-  }
-  auto E = (SyntaxNode*) new SyntaxIf(cond, body, else_, elif);
-  if (ELIF)
-    E->kind = SyntaxKind::Elif;
-  return E;
-}
-
-
-const  SyntaxNode *
-Parser::parse_while() {
-  auto cond = parse_expr();
-  auto body = parse_block();
-  return new SyntaxWhile(cond, body);
-}
 
 const NG_INLINE SyntaxNode *
 Parser::parse_for()  {
@@ -433,7 +412,7 @@ SyntaxBlock Parser::parse_block()  {
   return block;
 }
 
-const NG_INLINE SyntaxNode *
+const NG_INLINE SyntaxStruct *
 Parser::parse_struct(const Token *struct_name)  {
   return nullptr;
 }

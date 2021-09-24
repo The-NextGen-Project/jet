@@ -129,6 +129,24 @@ TEST(ParseTest, VariableDeclParenBinary) {
   ASSERT_EQ(rhs->literal->getValue<size_t>(), 2);
 }
 
+TEST(ParseTest, VariableValueAssignment) {
+  using namespace nextgen;
+  using namespace nextgen::core;
+  using namespace nextgen::jet;
+
+  auto buf = "weather <<= 2223;";
+  auto buf_len = strlen(buf);
+  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
+  auto parser = jet::Parser(&lexer);
+
+  auto node = (SyntaxVariableValueAssignment*) parser.parse_stmt();
+
+  ASSERT_TRUE(::strncmp(node->name->name().begin(), "weather", node->name->len()) == 0);
+  ASSERT_EQ(node->op, SyntaxAssignmentOp::LShiftAssign);
+  ASSERT_EQ(((SyntaxLiteral*)(node->expression))->literal->getValue<size_t>(),
+    2223);
+}
+
 TEST(ParseTest, IfStatement) {
   using namespace nextgen;
   using namespace nextgen::core;
@@ -233,6 +251,24 @@ TEST(ParseTest, SyntaxMissingDelimError) {
   } catch (std::exception&) {}
 }
 
+TEST(ParseTest, SyntaxInvalidGlobalDecl) {
+  using namespace nextgen;
+  using namespace nextgen::core;
+  using namespace nextgen::jet;
+
+  auto buf = "some_value := 2 + 3 / 232;\n// bad value\nvalue << 23;";
+  auto buf_len = strlen(buf);
+  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
+  auto parser = jet::Parser(&lexer);
+
+  try {
+    auto name = parser.curr();
+    parser.skip(2);
+    parser.parse_variable_assignment(name);
+    parser.parse();
+  } catch (std::exception&) {}
+}
+
 
 TEST_SUITE_MAIN(ParseTest) {
   TEST_CALL(ParseTest, VariableDeclLiteral);
@@ -243,4 +279,6 @@ TEST_SUITE_MAIN(ParseTest) {
   TEST_CALL(ParseTest, WhileLoop);
   TEST_CALL(ParseTest, SyntaxSemiColonError);
   TEST_CALL(ParseTest, SyntaxMissingDelimError);
+  TEST_CALL(ParseTest, SyntaxInvalidGlobalDecl);
+  TEST_CALL(ParseTest, VariableValueAssignment);
 }

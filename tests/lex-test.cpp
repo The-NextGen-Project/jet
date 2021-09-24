@@ -190,7 +190,6 @@ TEST(LexTest, AllTokens) {
              auto len = strlen(buf);
              auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
 
-             Console::Log((char)buf[108]);
 
              ArenaVec<Token> tokens{nullptr, nullptr};
              try {
@@ -324,18 +323,18 @@ TEST(LexTest, MissingClosingDelimChar) {
 
 
 TEST_SUITE_MAIN(LexTest) {
-//  TEST_CALL(LexTest, NonFMTNumbers);
-//  TEST_CALL(LexTest, DecimalNumber);
-//  TEST_CALL(LexTest, HexadecimalNumber);
-//  TEST_CALL(LexTest, BinaryNumber);
-//  TEST_CALL(LexTest, OctalNumber);
-//  TEST_CALL(LexTest, Base36Number);
-//  TEST_CALL(LexTest, Identifier);
-//  TEST_CALL(LexTest, Keyword);
-//  TEST_CALL(LexTest, String);
-//  TEST_CALL(LexTest, StringEscape);
-//  TEST_CALL(LexTest, AllTokens);
-//  TEST_CALL(LexTest, ErrorOverflow);
+  TEST_CALL(LexTest, NonFMTNumbers);
+  TEST_CALL(LexTest, DecimalNumber);
+  TEST_CALL(LexTest, HexadecimalNumber);
+  TEST_CALL(LexTest, BinaryNumber);
+  TEST_CALL(LexTest, OctalNumber);
+  TEST_CALL(LexTest, Base36Number);
+  TEST_CALL(LexTest, Identifier);
+  TEST_CALL(LexTest, Keyword);
+  TEST_CALL(LexTest, String);
+  TEST_CALL(LexTest, StringEscape);
+  TEST_CALL(LexTest, AllTokens);
+  TEST_CALL(LexTest, ErrorOverflow);
 //  TEST_CALL(LexTest, DigitOutOfRange);
 //  TEST_CALL(LexTest, HexEscapeOutOfRange);
 //  TEST_CALL(LexTest, InvalidStringEscape);

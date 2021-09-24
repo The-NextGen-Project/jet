@@ -47,14 +47,14 @@ namespace nextgen { namespace jet {
     DivEquals,
     PowEquals,
     MulEquals,
-    GreaterThanEquals,
-    LessThanEquals,
-    LeftShiftEquals,
-    RightShiftEquals,
     ANDEquals,
     XOREquals,
     OREquals,
     PercentEquals,
+    LeftShiftEquals,
+    RightShiftEquals,
+    GreaterThanEquals,
+    LessThanEquals,
 
     EqualsEquals, // ==
     LeftShift,    // <<
@@ -403,8 +403,11 @@ namespace nextgen { namespace jet {
     }
 
     bool isValidExpressionType() const {
-      auto ret = unsigned(kind) >= Integer && unsigned(kind) <= Pow;
       return unsigned(kind) >= Integer && unsigned(kind) <= Pow;
+    }
+
+    bool isValueAssignmentOp() const {
+      return unsigned(kind) >= PlusEquals && unsigned(kind) <= RightShiftEquals;
     }
 
     SourceLocation getSourceLocation() const {

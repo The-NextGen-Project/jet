@@ -176,6 +176,13 @@ void Diagnostic::build(ParseError error) {
     case UnexpectedEndOfFile:
       Console::Log("EOF");
       break;
+    case MissingFunctionName:
+      break;
+    case MissingVariableName:
+      break;
+    case InvalidTokenAfterIdentInGlobalScope:
+      ErrorParseInvalidTokenAfterIdentInGlobalScope(error);
+      break;
   }
 }
 
@@ -322,6 +329,46 @@ void Diagnostic::ErrorInvalidStringEscape(LexError &error) {
 
 }
 
+void Diagnostic::ErrorParseInvalidTokenAfterIdentInGlobalScope(const ParseError &error) {
+  Console::Log(Colors::RESET, "Invalid Token\n\n");
+
+  auto err = error.metadata;
+  auto invalid_token = err.begin()->misc_tok;
+
+  auto loc  = invalid_token->getSourceLocation();
+  auto line = std::to_string(loc.line);
+  ErrorParseSetup<true>(loc.line, "Unexpected Token After Identifier",
+                  invalid_token, error.location);
+  AddHint(line, Colors::BLUE, "= ",
+          Colors::CYAN, "try: ",
+          Colors::RESET, "Adding ", Colors::YELLOW, "=>", Colors::BLUE, " or "
+                                                                        "",
+                                                                        Colors::YELLOW,
+          ":="
+          "\n", Colors::RESET);
+
+  AddHint(line, Colors::BLUE, "= ", Colors::GREEN, "help: ",
+          Colors::RESET, "Expected one of ", Colors::BLUE, "':=', ",
+          "'=>', ", Colors::RESET,
+          "in global scope declaration.");
+  Console::Log("\n");
+  FOR(i, line.length() + 9)  Console::Log(" ");
+  Console::Log("Identifiers in the global scope only represent two values: "
+               "\n", Colors::GREEN);
+  FOR(i, line.length() + 9)  Console::Log(" ");
+  Console::Log("Global Variable "
+                             "Declaration ",
+                             Colors::RESET,
+                             "and ",
+                             Colors::BLUE,
+                             "Function "
+                             "Declaration",
+                             Colors::RESET,
+                             " but your token was "
+                             "", Colors::RED,
+                             "none of these.\n");
+}
+
 void Diagnostic::ErrorParseMissingClosingDelim(ParseError const &error) {
   Console::Log(Colors::RESET, "Missing Closing Delim\n\n");
 
@@ -335,8 +382,8 @@ void Diagnostic::ErrorParseMissingClosingDelim(ParseError const &error) {
     error.location);
 
   std::string line = std::to_string(error.location.line);
-  AddHint(line, Colors::CYAN, "= ",
-                         Colors::GREEN, "try: ",
+  AddHint(line, Colors::BLUE, "= ",
+                         Colors::CYAN, "try: ",
           Colors::RESET, "Adding ", Colors::YELLOW, "'", expected_kind,
           "'\n", Colors::RESET);
   AddHint(line, Colors::BLUE, "= ", Colors::GREEN, "help: ",
@@ -391,12 +438,11 @@ void Diagnostic::ErrorLexSetup(std::string& line, const char *message,
   Console::Log("\n\n");
 }
 
-
+template<bool POINT>
 void Diagnostic::ErrorParseSetup(size_t const ln,
                                  const char *message,
                                  Token const *reported_token,
                                  TokenTraits::SourceLocation loc) {
-
   std::string line = std::to_string(ln);
   if (ln > 1) {
     Console::Log(Colors::RESET, ln - 1, " |\t ");
@@ -432,17 +478,21 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
 
   auto size = reported_token->getKind() == EOFToken ? source_line.size()+2 :
     source_line.size();
-  FOR(column, size) {
-    if (column == loc.column) {
+
+  auto nth_column = POINT ? loc.column-1 : loc.column;
+  FOR(column, source_line.size()) {
+    if (column == nth_column) {
       FOR(ch, reported_token->name().size()) {
-        Console::Log("^");
+          Console::Log("^");
       }
       break;
     }
     Console::Log(" ");
   }
 
-  Console::Log("_ <-- ", message);
+  if (!POINT)
+    Console::Log("_ <-- ", message);
+  else Console::Log(" <-- ", message);
   Console::Log("\n\n");
 }
 
