@@ -93,16 +93,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
                    PAGE_READWRITE);
 #endif
     }
-
-
-    NG_INLINE void deinit() {
-#ifdef NG_OS_WINDOWS
-      VirtualFree(ArenaMemory, arena::length(), MEM_DECOMMIT);
-#endif
-    }
   }
-
-
 
   class Allocator {
     uint8_t *bytes = nullptr;
@@ -145,6 +136,15 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
   extern Allocator GLOBAL_OBJECT_ALLOC;
   extern Allocator GLOBAL_DATA_ALLOC;
+
+    NG_INLINE void deinit() {
+#ifdef NG_OS_WINDOWS
+      VirtualFree(arena::ArenaMemory, arena::length(), MEM_DECOMMIT);
+#else
+      munmap(arena::ArenaMemory, GLOBAL_DATA_ALLOC.length()
+      +GLOBAL_OBJECT_ALLOC.length());
+#endif
+    }
 
 
   template<typename T, size_t N = 1>

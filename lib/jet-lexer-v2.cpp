@@ -368,6 +368,7 @@ void Lexer<Mode>::lex_int() {
     Console::Log(Colors::BLUE, str(literal_token_representation), Colors::RESET);
   }
 
+
   tokens.end = new Token {
     literal_token_representation,
     {line, column},
