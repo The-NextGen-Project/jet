@@ -171,12 +171,20 @@ namespace nextgen { namespace jet {
     str id;
 
     unsigned       flags = TokenClassification::Literal;
-    TokenValue     repr  = {};
     SourceLocation loc   = {};
+
+
 
     TokenKind kind;
   public:
     Token() = default;
+
+    union {
+      decltype(UINTPTR_MAX) integer;
+      bool    boolean;
+      double  float64;
+      char    character;
+    };
 
     template<typename T>
     Token(const str &id, SourceLocation loc, T value,
@@ -465,40 +473,41 @@ namespace nextgen { namespace jet {
     // We are guaranteed to know the actual type of the value from the
     // [Token] constructor, therefore setting and retrieving values is not UB.
 
+
     void setFromInternalRepr(double &V) const {
-      V = repr.float64;
+      V = float64;
     }
 
     void setFromInternalRepr(decltype(UINTPTR_MAX) &V) const {
-      V = repr.integer;
+      V = integer;
     }
 
     void setFromInternalRepr(char &V) const {
-      V = repr.character;
+      V = character;
     }
 
     void setFromInternalRepr(bool &V) const {
-      V = repr.boolean;
+      V = boolean;
     }
 
     void setInternalRepr(double V)  {
-      repr.float64 = V;
+      float64 = V;
     }
 
     void setInternalRepr(bool V)  {
-      repr.boolean = V;
+      boolean = V;
     }
 
     void setInternalRepr(char V)  {
-      repr.character = V;
+      character = V;
     }
 
     void setInternalRepr(decltype(UINTPTR_MAX) V)  {
-      repr.integer = V;
+      integer = V;
     }
 
     void setInternalRepr(const char *V)  {
-      repr.integer = (unsigned long long) V;
+      integer = (unsigned long long) V;
     }
 
   };

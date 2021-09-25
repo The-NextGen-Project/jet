@@ -480,7 +480,7 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
     source_line.size();
 
   auto nth_column = POINT ? loc.column-1 : loc.column;
-  FOR(column, source_line.size()) {
+  FOR(column, size) {
     if (column == nth_column) {
       FOR(ch, reported_token->name().size()) {
           Console::Log("^");

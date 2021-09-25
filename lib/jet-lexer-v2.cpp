@@ -275,8 +275,17 @@ void Lexer<Mode>::lex_float(int skip, int start) {
 
   decimal = (value / divisor);
 
+  auto token_end = buffer;
+
+  auto literal_token_representation
+    = Range<const char *>(token_start, token_end);
+
+  if (OUTPUT_MODE) {
+    Console::Log(Colors::BLUE, str(literal_token_representation), Colors::RESET);
+  }
+
   tokens.end = new Token {
-    Range<const char *>(token_start, buffer),
+    literal_token_representation,
     {line, column},
     (double)(start + decimal),
     TokenKind::Decimal,
