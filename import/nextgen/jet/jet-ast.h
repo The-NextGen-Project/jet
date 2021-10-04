@@ -76,7 +76,8 @@ namespace nextgen { namespace jet {
 
   struct Scope {
     Scope *parent;
-    VariableMap variables;
+    std::unordered_set<Variable, Variable::intern_hash,
+    Variable::intern_eq> variables;
   };
 
   struct NodeLiteral {
