@@ -26,9 +26,8 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
     enum ParseContext {
       AnonymousBlock,
       StatementBlock,
+      LoopBlock,
       LambdaBlock,
-      StructBlock,
-      MatchBlock,
       GeneralScope
     };
 
@@ -59,12 +58,14 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         TokenTraits::SourceLocation location;
         TokenKind const misc_kind;
         Token const *misc_tok;
+        const char *context_message;
 
         // GCC and CLANG let us get away with not using union constructors,
         // but we need them for MSVC, and it's probably more clear anyway
         Metadata(TokenTraits::SourceLocation loc) : location(loc) {}
         Metadata(TokenKind const kind) : misc_kind(kind) {}
         Metadata(Token const *tok) : misc_tok(tok) {}
+        Metadata(const char *msg) : context_message(msg) {}
         Metadata(TokenKind const expected, Token const *got, const char
         *message) {
           expected_error.expected = expected;
@@ -233,12 +234,12 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       // ========= Parsing Language Constructs ==========
 
       auto parse_block() -> SyntaxBlock;
-      auto parse_type() -> SyntaxType;
+      auto parse_type() -> SyntaxType*;
       auto parse_function_param() -> ArenaVec<SyntaxFunctionParameter>;
       auto parse_variable_assignment(const Token *name) -> const SyntaxNode*;
 
       auto parse_function(const Token *name) -> const SyntaxFunction*;
-      auto parse_struct(const Token *name) -> const SyntaxStruct*;
+      auto parse_struct_data_members() -> ArenaVec<SyntaxStructMember>;
       auto parse_function_call(const Token *name, const Token *delim) -> const SyntaxNode*;
 
       auto parse_for() -> const SyntaxNode*;
@@ -281,18 +282,37 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
         return ret;
       }
 
+      auto parse_struct(const Token *name) -> const SyntaxStruct* {
+        expect<TokenKind::LCurlyBrace>("Opening curly brace is required "
+                                       "before struct member declarations");
+        return new SyntaxStruct(name, parse_struct_data_members());
+      }
+
       auto parse_stmt() -> const SyntaxNode* {
         switch (curr()->getKind()) {
           case KeywordIf:
-            break;
+            skip(1);
+            return parse_if();
           case KeywordWhile:
-            break;
+            context = ParseContext::LoopBlock;
+            skip(1);
+            return parse_while();
           case KeywordFor:
+            context = ParseContext::LoopBlock;
+            skip(1);
+            return parse_for();
+          case KeywordBreak: {
+            if (context != ParseContext::LoopBlock) {
+              // TODO: Add Error
+            }
             break;
-          case KeywordBreak:
+          }
+          case KeywordContinue: {
+            if (context != ParseContext::LoopBlock) {
+              // TODO: Add Error
+            }
             break;
-          case KeywordContinue:
-            break;
+          }
           case KeywordDefer:
             break;
           case KeywordNone:
@@ -328,12 +348,9 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
             break;
           default: break;
         }
+        next(1);
         return nullptr;
       }
-
-      // TODO: Update in design choices, do we need this still?
-      auto parse_struct_function
-        (const Token *s, const Token *function_name) -> const SyntaxNode*;
 
     };
   }}

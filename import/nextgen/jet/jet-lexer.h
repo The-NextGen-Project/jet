@@ -136,7 +136,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       if (next_ch != current && (next_ch == '\n' || next_ch == '\r')) {
         if (Mode == LexMode::PrintingMode) Console::Log(next_ch);
-        ++line, next(1);
+        ++line, column = 1, next(1);
       }
     }
 

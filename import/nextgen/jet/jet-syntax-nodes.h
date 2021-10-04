@@ -63,12 +63,19 @@ namespace nextgen { namespace jet {
       Reference,  // &int
       Pointer,    // *int
       Box,        // box int
-      ListType    // [] int
+      ArrayType    // [] int
     };
 
     enum SyntaxTypenameKind {
+      Integer8,
+      Integer16,
       Integer32,
       Integer64,
+      UInteger8,
+      UInteger16,
+      UInteger32,
+      UInteger64,
+      Boxed,
       Float32,
       Float64,
       StringValue,
@@ -96,6 +103,12 @@ namespace nextgen { namespace jet {
       // we need to ensure that the name is recorded somewhere so that
       // type-checking can proceed in the third pass of the compiler.
       Option<Range<const char *>> user_defined_typename;
+
+      SyntaxTypename() = default;
+      SyntaxTypename(SyntaxTypenameKind kind,
+                     const Option<Range<const char *>> &optional)
+                     : kind(kind), user_defined_typename(optional)
+                     {}
 
       bool operator ==(const SyntaxTypename &other) const {
         if (
@@ -204,13 +217,44 @@ namespace nextgen { namespace jet {
       SyntaxType() = default;
       SyntaxType(const Option<SyntaxTypeAnnotation> &modifier,
                  const Option<SyntaxTypename> &ty,
-                 const Option<SyntaxType*> type)
+                 const SyntaxType *type)
                  : modifier(modifier), ty_name(ty), type(type) {}
 
 
       const Option<SyntaxTypeAnnotation> modifier = None;
       const Option<SyntaxTypename>       ty_name  = None;
-      const Option<SyntaxType*>          type     = None;
+      const SyntaxType *type = nullptr;
+
+      static NG_INLINE SyntaxTypename MatchTypename(const Token *kind) {
+        switch (kind->getKind()) {
+          case Typename_str:
+            return SyntaxTypename(SyntaxTypenameKind::StringValue, None);
+          case Typename_i8:
+            return SyntaxTypename(SyntaxTypenameKind::Integer8, None);
+          case Typename_i16:
+            return SyntaxTypename(SyntaxTypenameKind::Integer16, None);
+          case Typename_i32:
+            return SyntaxTypename(SyntaxTypenameKind::Integer32, None);
+          case Typename_i64:
+            return SyntaxTypename(SyntaxTypenameKind::Integer64, None);
+          case Typename_u8:
+            return SyntaxTypename(SyntaxTypenameKind::UInteger8, None);
+          case Typename_u16:
+            return SyntaxTypename(SyntaxTypenameKind::UInteger16, None);
+          case Typename_u32:
+            return SyntaxTypename(SyntaxTypenameKind::UInteger32, None);
+          case Typename_u64:
+            return SyntaxTypename(SyntaxTypenameKind::UInteger64, None);
+          case Typename_box:
+            return SyntaxTypename(SyntaxTypenameKind::Boxed, None);
+          case Identifier:
+            return SyntaxTypename(SyntaxTypenameKind::UserDefined,
+                                  (Range<const char *>)kind->name());
+          default:
+            UNREACHABLE;
+        }
+      }
+
 
       bool has_typename() const {
         return ty_name.isSome();
@@ -221,7 +265,7 @@ namespace nextgen { namespace jet {
       }
 
       bool has_type() const {
-        return type.isSome();
+        return type;
       }
 
       bool operator ==(const SyntaxType &other) const {
@@ -229,7 +273,7 @@ namespace nextgen { namespace jet {
                    && (other.has_modifier() && has_modifier())
                    && (other.has_type());
         if (ret) {
-          return type.contains(other.type.unwrap())
+          return (*type) == (*other.type)
              &&  ty_name.contains(other.ty_name.unwrap())
              &&  modifier.contains(other.modifier.unwrap());
         }
@@ -238,7 +282,7 @@ namespace nextgen { namespace jet {
 
       const SyntaxTypename get_typename() const {
         if (!has_typename()) {
-          type.unwrap()->get_typename();
+          type->get_typename();
         }
         return ty_name.unwrap();
       }
@@ -302,7 +346,7 @@ namespace nextgen { namespace jet {
     struct SyntaxVariableAssignment : public SyntaxNode {
 
       SyntaxVariableAssignment(const Token *name,
-                               const Option<SyntaxType> &ty,
+                               const Option<SyntaxType*> &ty,
                                const SyntaxNode*expr)
                                : name(name), type(ty), expression(expr) {
         this->kind = SyntaxKind::VariableAssignment;
@@ -315,7 +359,7 @@ namespace nextgen { namespace jet {
       // Optional variable type. It may need to be inferred so it can be set
       // to 'None'. ex: (var ident: int) = 23 OR (var ident = 23)
       //                            ^^^                    ^  No type here
-      Option<SyntaxType> type = None;
+      Option<SyntaxType*> type = None;
 
       // Node representing the actual value that the variable contains
       const SyntaxNode *expression;
@@ -494,7 +538,7 @@ namespace nextgen { namespace jet {
 
     struct SyntaxFunctionParameter : public SyntaxNode {
       
-      SyntaxFunctionParameter(const Token *pn, SyntaxType ty)
+      SyntaxFunctionParameter(const Token *pn, SyntaxType *ty)
       : param_name(pn), type(ty) {}
 
       // Function parameter name
@@ -505,7 +549,7 @@ namespace nextgen { namespace jet {
       // Ex:
       // fn some_func(param_1: int, param_2: str, $param_3)
       //                                          ^^^^^^^^ Generic Parameter
-      const SyntaxType type;
+      const SyntaxType *type;
     };
 
     struct SyntaxFunction : public SyntaxNode {
@@ -514,7 +558,7 @@ namespace nextgen { namespace jet {
       const Token *function_name = nullptr;
 
       // Function return type. If 'None' then infer return type.
-      Option<SyntaxType> function_type;
+      Option<SyntaxType*> function_type;
 
       // Function body
       SyntaxBlock body;
@@ -523,7 +567,7 @@ namespace nextgen { namespace jet {
       ArenaVec<SyntaxFunctionParameter> parameters{nullptr, nullptr};
 
       SyntaxFunction(const Token *name,
-                     const Option<SyntaxType> &ty,
+                     const Option<SyntaxType*> &ty,
                      const SyntaxBlock &body,
                      const ArenaVec<SyntaxFunctionParameter> &params)
                      : function_name(name), body(body), function_type(ty),
@@ -558,9 +602,14 @@ namespace nextgen { namespace jet {
       SyntaxBlock body;
     };
 
+    struct RangeFunction {
+      size_t set[3] = {0, 0, 0};
+    };
+
     struct SyntaxForRange : public SyntaxNode {
-      SyntaxForRange(const Token *list_var, SyntaxBlock body) :
-      list_var(list_var), body(body) {}
+      SyntaxForRange(const Token *list_var, const RangeFunction
+      range, SyntaxBlock body) :
+      list_var(list_var), range(range), body(body) {}
 
       // Range based for loop. A range consists of a few factors:
       // start, end, and step.
@@ -573,18 +622,22 @@ namespace nextgen { namespace jet {
       // for i in range(1, 5) { ... } OR
       // for i in range(1, 232, 3) { ... }
       const Token *list_var = nullptr;
+      const RangeFunction range;
       SyntaxBlock body;
     };
 
     struct SyntaxStructMember {
       const Token *name = nullptr;
-      SyntaxType type;
-      SyntaxStructMember(const Token *name, const SyntaxType ty)
+      SyntaxType *type;
+      SyntaxStructMember(const Token *name, SyntaxType *ty)
       : name(name), type(ty) {}
     };
 
     struct SyntaxStruct : public SyntaxNode {
+      const Token *name = nullptr;
       ArenaVec<SyntaxStructMember> members;
+      SyntaxStruct(const Token *name, const ArenaVec<SyntaxStructMember>
+        &members) : name(name), members(members) {}
     };
 
 }}

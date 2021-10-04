@@ -1,13 +1,19 @@
 #ifndef JET_JET_ANALYZER_H
 #define JET_JET_ANALYZER_H
 
-#include "jet-syntax-nodes.h"
-#include "../allocator.h"
+#include "jet-parser.h"
+#include "jet-ast.h"
 
 namespace nextgen { namespace jet {
 
+
   class Analyzer {
-    ObjectVector<SyntaxFunction> functions_to_analyze;
+    VariableMap global_variables;
+    FunctionMap functions;
+  public:
+    void analyze(const ParserOutput output_to_analyze);
+    void analyze_function(const SyntaxFunction *function);
+    void analyze_syntax_node(const SyntaxNode *node);
   };
 }}
 

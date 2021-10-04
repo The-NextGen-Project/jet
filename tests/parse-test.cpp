@@ -214,14 +214,43 @@ TEST(ParseTest, WhileLoop) {
   ->literal->getValue<size_t>(), 43);
 }
 
+TEST(ParseTest, ForStatement) {
+  using namespace nextgen;
+  using namespace nextgen::core;
+  using namespace nextgen::jet;
+
+
+  auto buf = "for value in list_of_values { \n"
+             " do_something := 23.233"
+             "}";
+  auto buf_len = strlen(buf);
+  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
+
+  auto parser = jet::Parser(&lexer);
+  parser.skip(1);
+
+  auto node = parser.parse_for();
+  auto stmt = (SyntaxForList*) node;
+  auto variable_decl = (SyntaxVariableAssignment*) stmt->body.statements[0];
+
+
+  ASSERT_TRUE(::strncmp(stmt->list_var->name().begin(), "value",
+                        stmt->list_var->len()) == 0);
+  ASSERT_TRUE(::strncmp(stmt->list_name->name().begin(), "list_of_values",
+                        stmt->list_name->len()) == 0);
+  ASSERT_TRUE(::strncmp(variable_decl->name->name().begin(), "do_something",
+                        variable_decl->name->len()) == 0);
+  ASSERT_EQ(CAST(SyntaxLiteral*, variable_decl->expression)
+  ->literal->getValue<double>(), 23.233);
+}
+
 TEST(ParseTest, SyntaxSemiColonError) {
   using namespace nextgen;
   using namespace nextgen::core;
   using namespace nextgen::jet;
 
   auto buf = "// this is a comment\ncool := 23 / (22+3);\nanother_var := "
-             "\"Hello, "
-             "World!\" {";
+             "232 {";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
   auto parser = jet::Parser(&lexer);
@@ -271,14 +300,16 @@ TEST(ParseTest, SyntaxInvalidGlobalDecl) {
 
 
 TEST_SUITE_MAIN(ParseTest) {
-  TEST_CALL(ParseTest, VariableDeclLiteral);
-  TEST_CALL(ParseTest, VariableArrayDecl);
-  TEST_CALL(ParseTest, VariableDeclBinary);
-  TEST_CALL(ParseTest, VariableDeclParenBinary);
-  TEST_CALL(ParseTest, IfStatement);
-  TEST_CALL(ParseTest, WhileLoop);
-  TEST_CALL(ParseTest, SyntaxSemiColonError);
-  TEST_CALL(ParseTest, SyntaxMissingDelimError);
-  TEST_CALL(ParseTest, SyntaxInvalidGlobalDecl);
-  TEST_CALL(ParseTest, VariableValueAssignment);
+//  TEST_CALL(ParseTest, VariableDeclLiteral);
+//  TEST_CALL(ParseTest, VariableArrayDecl);
+//  TEST_CALL(ParseTest, VariableDeclBinary);
+//  TEST_CALL(ParseTest, VariableDeclParenBinary);
+//  TEST_CALL(ParseTest, VariableValueAssignment);
+//  TEST_CALL(ParseTest, IfStatement);
+//  TEST_CALL(ParseTest, WhileLoop);
+//  TEST_CALL(ParseTest, SyntaxSemiColonError);
+//  TEST_CALL(ParseTest, SyntaxMissingDelimError);
+//  TEST_CALL(ParseTest, SyntaxInvalidGlobalDecl);
+  TEST_CALL(ParseTest, ForStatement);
+
 }

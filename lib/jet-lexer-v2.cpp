@@ -257,10 +257,10 @@ static const TokenKind MatchIdentToReserved(const char *ident, size_t len) {
 template<LexMode Mode>
 void Lexer<Mode>::lex_float(int skip, int start) {
   // Initialize start of token
-  auto token_start = buffer;
+  auto token_start = buffer-skip;
   auto token_start_col = column;
 
-  next(skip);
+  next(skip-1);
 
   double decimal = 0;
   double divisor = 1;
@@ -390,26 +390,33 @@ void Lexer<Mode>::lex_int() {
 template<LexMode Mode>
 void Lexer<Mode>::lex_ident() {
   const char *token_start = buffer;
-  do {} while(MatchTokenKind[next(1)] == TokenKind::Identifier);
+  auto token_start_col = column;
+  auto val = FNV_OFF;
+  do {
+    val ^= (curr());
+    val *= FNV_PRIME;
+  } while(MatchTokenKind[next(1)] == TokenKind::Identifier);
   const char *token_end   = buffer;
 
-  auto literal_token_representation = Range<const char *>(token_start, token_end);
+  auto literal_token_representation = str(Range<const char *>(token_start,
+                                                           token_end));
+  literal_token_representation.setHash(val);
   TokenKind reserved =
     MatchIdentToReserved(token_start, token_end - token_start);
 
   if (OUTPUT_MODE) {
     if (reserved != TokenKind::Identifier) {
-      Console::Log(Colors::RED, str(literal_token_representation),
+      Console::Log(Colors::RED, literal_token_representation,
                    Colors::RESET);
     } else {
-      Console::Log(Colors::YELLOW, str(literal_token_representation), Colors::RESET);
+      Console::Log(Colors::YELLOW, literal_token_representation, Colors::RESET);
     }
   }
 
 
   tokens.end = new Token {
     literal_token_representation,
-    {line, column},
+    {line, token_start_col},
     "",
     reserved,
     static_cast<unsigned int>(reserved == Identifier ? Keyword : -1)

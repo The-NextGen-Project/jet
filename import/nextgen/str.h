@@ -79,6 +79,9 @@ namespace nextgen { using namespace core; using namespace nextgen::mem;
     /*implicit*/ operator std::string() const {
       return std::string((const char *) *this);
     }
+    /*implicit*/ operator Range<const char *>() const {
+      return Range<const char *>(pointer, pointer + len);
+    }
 
     explicit operator const char *() const {
       return static_cast<const char *>(pointer);

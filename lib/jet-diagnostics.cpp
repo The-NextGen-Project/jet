@@ -397,7 +397,8 @@ void Diagnostic::ErrorParseExpectedToken(ParseError const &error) {
 
   auto err = error.metadata.begin()->expected_error;
   auto line = std::to_string(error.location.line);
-  ErrorParseSetup(error.location.line, err.message, err.got, error.location);
+  ErrorParseSetup(error.location.line, err.message, err.got, err
+  .got->getSourceLocation());
   AddHint(line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
           Colors::GREEN, "Adding ", Colors::YELLOW, "'",
           Token::GetTokenKindName(err.expected), "'\n");
@@ -445,7 +446,7 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
                                  TokenTraits::SourceLocation loc) {
   std::string line = std::to_string(ln);
   if (ln > 1) {
-    Console::Log(Colors::RESET, ln - 1, " |\t ");
+    Console::Log(Colors::RESET, ln - 1, " | ");
 
     str new_line;
 
@@ -466,28 +467,30 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
                                      file_name,
                                      source_line.size());
   // Log error line
-  Console::Log(Colors::RESET, line, " |\t ");
+  Console::Log(Colors::RESET, line, " | ");
   printer.lex(); // Print Failed Token
 
   Console::Log("\n");
 
   // Align space
-  FOR(i, line.length() + 1)  Console::Log(" ");
+  FOR(i, line.length()+1)  Console::Log(" ");
 
-  Console::Log("\t", Colors::RED);
+  Console::Log(" ", Colors::RED);
 
   auto size = reported_token->getKind() == EOFToken ? source_line.size()+2 :
     source_line.size();
 
-  auto nth_column = POINT ? loc.column-1 : loc.column;
-  FOR(column, size) {
-    if (column == nth_column) {
+  size_t nth_column;
+  if (POINT) nth_column = loc.column-1;
+  else nth_column = loc.column;
+  for(size_t column = 1; column <= size; ++column) {
+    Console::Log(" ");
+    if (column == loc.column-1) {
       FOR(ch, reported_token->name().size()) {
           Console::Log("^");
       }
       break;
     }
-    Console::Log(" ");
   }
 
   if (!POINT)

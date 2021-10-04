@@ -103,10 +103,12 @@ Parser::parse_variable_assignment(const Token *name)  {
   if (peek(1)->getKind() == TokenKind::Colon) {
     auto E = new SyntaxVariableAssignment(name, Some(parse_type()), parse_expr());
     expect<TokenKind::SemiColon>("Expected ';' after declaration");
+    --position;
     return E;
   } else {
     auto E = new SyntaxVariableAssignment(name, None, parse_expr());
     expect<TokenKind::SemiColon>("Expected ';' after declaration");
+    --position;
     return E;
   }
 }
@@ -220,39 +222,98 @@ Parser::match_expr() {
 }
 
 
-SyntaxType Parser::parse_type()  {
+SyntaxType *Parser::parse_type()  {
 
   // []i32
-  // [5][5][5]i32
   // **i32
   // *****i32
   // (i32, i32)
 
   auto first_token = curr();
   switch(first_token->getKind()) {
-    case LBracket:
-      break;
+    case LBracket: {
+      expect<TokenKind::RBracket>("Sequence '[]' (representing array) must be"
+                                  " met with closing value ']'");
+      SyntaxTypename ty_name;
+      auto ty_name_tok = curr();
+      if (! ty_name_tok->isValidTypenameStart()) {
+        auto ty = parse_type();
+        return new SyntaxType(SyntaxTypeAnnotation::ArrayType, None, ty);
+      }
+      else if (! ty_name_tok->isValidTypename()) {
+        // TODO: Add type error value here
+      }
+      else {
+        ty_name = SyntaxType::MatchTypename(ty_name_tok);
+      }
+      return new SyntaxType(SyntaxTypeAnnotation::ArrayType, ty_name, nullptr);
+    }
     case LParenthesis:
+      // TODO: Add tuples
       break;
-    case Star:
-      break;
+    case Star: {
+      SyntaxTypename ty_name;
+      auto ty_name_tok = next(1);
+      if (! ty_name_tok->isValidTypenameStart()) {
+        auto ty = parse_type();
+        return new SyntaxType(SyntaxTypeAnnotation::Pointer, None, ty);
+      }
+      else if (! ty_name_tok->isValidTypename()) {
+        // TODO: Add type error value here
+      }
+      else {
+        ty_name = SyntaxType::MatchTypename(ty_name_tok);
+      }
+      return new SyntaxType(SyntaxTypeAnnotation::Pointer, ty_name, nullptr);
+    }
     default:
       UNREACHABLE;
   }
-
-  return SyntaxType(None, None, None);
+  return new SyntaxType(None, None, nullptr);
 }
 
 
-const NG_INLINE SyntaxNode *
+const SyntaxNode *
 Parser::parse_for()  {
   auto loop_variable = skip<TokenKind::Identifier,
                             ParseErrorType::MissingForLoopVariable>();
   skip<TokenKind::KeywordIn, ParseErrorType::ExpectedToken>();
-  auto Begin = skip(1);
+  auto list_or_range = skip(1);
+  switch (list_or_range->getKind()) {
+    case Identifier: {
+      auto body = parse_block();
+      return new SyntaxForList(list_or_range, loop_variable, body);
+    }
+    case KeywordRange: {
+      expect<TokenKind::LParenthesis>("");
+      RangeFunction func;
+      FOR(value, 3) {
+        if (curr()->getKind() == TokenKind::RParenthesis
+        || curr()->getKind() == TokenKind::EOFToken)
+          break;
+        func.set[value] = expect<TokenKind::Integer>("Range function values "
+                                                    "must "
+                                                 "be "
+                                       "integers")->getValue<size_t>();
+        expect<TokenKind::Comma>("Expected comma in between parameters.");
+      }
+      auto body = parse_block();
+      return new SyntaxForRange(loop_variable, func, body);
+    }
+    default:
+      this->diagnostics.build(ParseError {
+        ParseErrorType::InvalidToken,
+        list_or_range->getSourceLocation(),
+        { ParseError::Metadata("Invalid token in for-loop context. Expected "
+                               "a list variable or the range function.") }
+      });
+      break;
+  }
   return nullptr;
 }
 
+// TODO: Finish match statement. Leave this for later as it will be difficult
+//  to see the outlook of this right now.
 const NG_INLINE SyntaxNode *
 Parser::parse_match()  {
   return nullptr;
@@ -318,13 +379,16 @@ SyntaxBlock Parser::parse_block()  {
   return block;
 }
 
-const NG_INLINE SyntaxStruct *
-Parser::parse_struct(const Token *struct_name)  {
-  return nullptr;
-}
-
-const NG_INLINE SyntaxNode *
-Parser::parse_struct_function(const Token *s,
-                                          const Token *func_name) {
-  return nullptr;
+nextgen::ArenaVec<SyntaxStructMember>
+Parser::parse_struct_data_members() {
+  auto members = mem::ArenaVec<SyntaxStructMember>();
+  members.begin = (SyntaxStructMember*) (GLOBAL_OBJECT_ALLOC.current());
+  while (curr()->getKind() != TokenKind::RCurlyBrace) {
+    auto name = expect<TokenKind::Identifier>("Identifiers must be used for "
+                                              "struct name");
+    expect<TokenKind::Colon>("':' Must be followed after struct member name");
+    auto type = parse_type();
+    members.end = new SyntaxStructMember(name, type);
+  }
+  return members;
 }

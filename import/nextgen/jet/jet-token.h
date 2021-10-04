@@ -88,6 +88,7 @@ namespace nextgen { namespace jet {
     KeywordUnion,
     KeywordMatch,
     KeywordIn,
+    KeywordRange,
     //---------------------------------------
 
     // Typename  ---------------------------
@@ -308,6 +309,8 @@ namespace nextgen { namespace jet {
           return "match";
         case KeywordIn:
           return "in";
+        case KeywordRange:
+          return "range";
         case Typename_str:
           return "str";
         case Typename_i8:
@@ -416,6 +419,15 @@ namespace nextgen { namespace jet {
 
     bool isValueAssignmentOp() const {
       return unsigned(kind) >= PlusEquals && unsigned(kind) <= RightShiftEquals;
+    }
+
+    bool isValidTypename() const {
+      return unsigned (kind) >= Typename_str && unsigned(kind) <=
+      Typename_f64 || kind == Identifier;
+    }
+
+    bool isValidTypenameStart() const {
+      return kind == Star || kind == LBracket || kind == LParenthesis;
     }
 
     SourceLocation getSourceLocation() const {

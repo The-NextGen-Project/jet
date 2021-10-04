@@ -32,11 +32,10 @@ TEST(LexTest, DecimalNumber) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode> ( "3.1234", "src/test.jet", 6);
+  auto lexer = jet::Lexer<TokenMode> ( "23.246", "src/test.jet", 6);
   auto token = lexer.lex()[0];
 
-
-  ASSERT_EQ(token->template getValue<double>(), 3.1234);
+  ASSERT_EQ(token->template getValue<double>(), 23.246);
   ASSERT_EQ(token->getKind(), jet::TokenKind::Decimal);
 }
 
@@ -325,7 +324,7 @@ TEST(LexTest, MissingClosingDelimChar) {
 
 
 TEST_SUITE_MAIN(LexTest) {
-//  TEST_CALL(LexTest, NonFMTNumbers);
+  TEST_CALL(LexTest, NonFMTNumbers);
   TEST_CALL(LexTest, DecimalNumber);
   TEST_CALL(LexTest, HexadecimalNumber);
   TEST_CALL(LexTest, BinaryNumber);

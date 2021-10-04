@@ -49,6 +49,10 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
       (uint8_t*) mmap(nullptr, OVER_COMMIT_MEMORY_SIZE, PROT_READ |
       PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
 #endif
+#ifdef NG_OS_APPLE
+      (uint8_t*) mmap(nullptr, OVER_COMMIT_MEMORY_SIZE, PROT_READ |
+      PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
+#endif
 
 
     NG_INLINE size_t &length() {

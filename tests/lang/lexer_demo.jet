@@ -2,12 +2,6 @@ Another => struct {
     pub value: i32
 }
 
-impl Another {
-    new => (f: Any) i32 {
-        return 23232;
-    }
-}
-
 print => (static fmt: str, static args: ...) {
     for arg in args {
         assert(arg > 2);
@@ -16,15 +10,17 @@ print => (static fmt: str, static args: ...) {
     b := 123;
 }
 
-generic_params => ($val, $another, some: i32, another_val: f64) {
-    
-}
-
-call_parameter => (func: (i32, i32) -> i32) {
+pass_pointer => (v: *Another) {
 
 }
+value := 23;
 
+value_func => () {
 
-call_parameter(|a, b| => {
-    return a * b + b * b + (b & a);
-});
+}
+
+main => (args: []str) {
+  for i in len(args) {
+
+  }
+}
