@@ -6,6 +6,8 @@
 #   elif __APPLE__
 #       define NG_OS_APPLE true
 #       include <TargetConditionals.h>
+#       include <sys/types.h>
+#       include <sys/mman.h>
 #   elif __linux__ || __unix__
 #       define NG_OS_LINUX true
 #       include <unistd.h>
