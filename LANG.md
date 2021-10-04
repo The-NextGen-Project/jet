@@ -13,7 +13,9 @@ Outline
 * [Arrays](#arrays)
 * [Variables](#variables)
 * [Functions](#functions)
-* [Structs](#structs)
+* [Structs](#struct-declaration)
+* [Enum](#enum-declaration)
+* [Match Statement](#match-statement)
 
 
 Primitives
@@ -95,7 +97,7 @@ Current Status: **WIP**
 
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
-```v
+```rust
 mut list := [1, 2, 3, 4, 5]; // Can now add values to the list
 fixed: [5,i32] = [1, 2, 3, 4, 5];
 ```
@@ -231,11 +233,70 @@ export MyStruct => struct {
 ```
 Variables:
 ```js
-export static MyGlobalVariable := 32;
+export MyGlobalVariable := 32;
 ```
 
 Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
 of the `export` before the declaration.
+
+### Static Compilation (Generally JIT Compiled)
+Examples:
+```zig
+// Evaluated at compile-time
+some_value := static {
+  return calling_a_function();
+}
+```
+
+### Match Statement
+Match statements allow for expressing complex situations in shorter and more readable code. 
+Examples:
+```rust
+match value {
+  0 -> {
+    // do seomthing
+  }
+  . -> {
+    // default
+  }
+}
+```
+
+### Struct Declaration
+Struct declarations will emulate C in which they are handled. The language aims to be as simple as possible while allowing for zero cost abstractions to take place.
+Examples:
+```zig
+MyStruct => struct {
+  prop: str;
+  another: i32;
+}
+```
+
+### Enum Declaration
+Enum Declarations will be the core foundation for applying complex principles in the language. Tagged unions as well as constant values may be implemented.
+Regular Enum:
+```zig
+Opcodes => enum {
+  Add,
+  Sub,
+  Mul,
+  Div
+}
+```
+Tagged Enums:
+```zig
+Operation => enum {
+  Add {
+    lhs: i32
+    rhs: i32
+  },
+  Sub {
+    lhs: i32
+    rhs: i32
+  }
+  // etc ...
+}
+```
 
 End
 -------
