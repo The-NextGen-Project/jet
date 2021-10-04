@@ -11,7 +11,8 @@
 DEF_ALL_TESTS
 int main(int argc, char **argv) {
   //TEST(LexTest);
-  TEST(ParseTest);
+//  TEST(ParseTest);
   //TEST(x64Test);
+  printf("%p\n", nextgen::mem::arena::ArenaMemory);
   nextgen::mem::deinit();
 }
