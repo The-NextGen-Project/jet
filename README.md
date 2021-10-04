@@ -73,13 +73,13 @@ unless it is necessary to explain an error.
 Progress
 ----------
 - [x] Lexer 
-- [ ] Parser (**WIP**)
+- [x] Parser 
 - [ ] Semantic Analysis
 - [ ] IR-Gen
 - [ ] IR-Optimization
+- [ ] C-Codegen (**WIP**)
 - [x] x64 Code Generation (**Testing Phase In Progress**)
 - [ ] ARM64 Code Generation (**WIP**)
-- [ ] WASMMacroAssembler
 - [ ] Link
 
 Contributing
