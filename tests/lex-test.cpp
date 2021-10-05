@@ -161,7 +161,7 @@ TEST(LexTest, StringEscape) { // TODO: Add Unicode Escape Later
   using namespace nextgen::jet;
 
 
-  auto buf = R"(var every_escape = "I have\x56 every \t thing\n that could \b\v\a in \r")";
+  auto buf = R"(var every_escape = "I have\x56 every \t thing\n that could \b\v in \r")";
   auto len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   ArenaVec<Token> tokens{nullptr, nullptr};
@@ -174,7 +174,7 @@ TEST(LexTest, StringEscape) { // TODO: Add Unicode Escape Later
   auto token = tokens[3];
   Console::Log("Name: ", token->name(), '\n');
 
-  auto compare = "I have\x56 every \t thing\n that could \b\v\a in \r";
+  auto compare = "I have\x56 every \t thing\n that could \b\v in \r";
   ASSERT_TRUE(::strncmp(token->name().begin(), compare, token->len()) == 0);
 }
 
