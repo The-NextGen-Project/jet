@@ -4,8 +4,7 @@
 [![Mac](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/MacOS?label=MacOS&style=for-the-badge&logo=github)]()
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
 #### Fast Language for Developing Consistent Native, Mobile App, and Web Applications.
-> **NOTE:** The language is in its early development stages. Don't expect syntax to be fixed until v1.0. If you are wondering why we have only finished the lexer,
-> we are currently writing the x64 backend right now. You can view its source [here](https://github.com/The-NextGen-Project/wasm2bin).
+> **NOTE:** The language is in its early development stages. Don't expect syntax to be fixed until v1.0. If you want to see the development branch, you can view it [here](https://github.com/The-NextGen-Project/jet/tree/dev). The main branch is the most stable with all tests passing on every platform.
 
 Resources
 -----------------
