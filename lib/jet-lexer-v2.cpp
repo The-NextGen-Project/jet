@@ -413,6 +413,7 @@ void Lexer<Mode>::lex_ident() {
     }
   }
 
+  Console::Log(literal_token_representation, '\n');
 
   tokens.end = new Token {
     literal_token_representation,
