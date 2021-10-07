@@ -12,7 +12,8 @@ new Token { \
 }
 #define TOKEN_ADD_SHORT(value, kind) \
 if (OUTPUT_MODE) Console::Log(value), next((sizeof value) - 1); \
-else TOKEN_SHORT(value, kind), next((sizeof value) - 1)            \
+else (tokens.end = TOKEN_SHORT(value, kind), next((sizeof value) - 1)) \
+\
 
 static const constexpr TokenKind MatchTokenKind[256] {
 
