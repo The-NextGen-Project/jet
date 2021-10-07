@@ -413,6 +413,11 @@ namespace nextgen { namespace jet {
       return flags & TokenClassification::Literal;
     }
 
+    bool isClosingDelim() const {
+      return kind == TokenKind::RBracket || kind == TokenKind::RCurlyBrace
+      || kind == TokenKind::RParenthesis;
+    }
+
     bool isValidExpressionType() const {
       return unsigned(kind) >= Integer && unsigned(kind) <= Pow;
     }

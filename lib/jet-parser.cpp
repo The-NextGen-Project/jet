@@ -137,14 +137,14 @@ Parser::parse_expr(int previous_binding)  {
   } else {
     lhs = (SyntaxNode*) match_expr();
   }
-
-   do {
-    auto op = next(1);
+  next(1);
+  do {
+    auto op = curr();
     auto op_kind = op->getKind();
 
     const auto op_bindings = Parser::InfixOperatorBinding(op_kind);
-    if (/* LeftBindingPrecedence */ op_bindings[0] <= previous_binding) {
-      //skip(1);
+    if (/* LeftBindingPrecedence */ op_bindings[0] <= previous_binding ||
+    op_bindings[0] == -1) {
       break;
     }
     auto a = skip(1);
@@ -155,7 +155,7 @@ Parser::parse_expr(int previous_binding)  {
     };
     lhs = new_expr;
     lhs->kind = SyntaxKind::Binary;
-   } while (curr()->isValidExpressionType());
+ } while (curr()->isValidExpressionType());
   return lhs;
 }
 
@@ -187,7 +187,7 @@ Parser::match_expr() {
     case LParenthesis: {
       skip(1);
       auto E = parse_expr();
-      expect_delim<TokenKind::RParenthesis>(matched_token->getSourceLocation());
+      expect_delim<TokenKind::RParenthesis>(curr()->getSourceLocation());
       position--;
       return E;
     }
@@ -370,9 +370,11 @@ SyntaxBlock Parser::parse_block()  {
                                        "current");
   auto block   = SyntaxBlock {};
   // We know for sure that we got right curly brace
-  while (curr()->getKind() != TokenKind::RCurlyBrace) {
+  while (curr()->getKind() != TokenKind::RCurlyBrace
+        && curr()->getKind() != TokenKind::EOFToken) {
     block.statements << parse_stmt();
   }
+  expect_delim<TokenKind::RCurlyBrace>(curr()->getSourceLocation());
   next(1);
   return block;
 }

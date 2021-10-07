@@ -222,7 +222,7 @@ TEST(ParseTest, ForStatement) {
 
   auto buf = "for value in list_of_values { \n"
              " do_something := 23.233;"
-             "}";
+             "";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
 
@@ -269,7 +269,7 @@ TEST(ParseTest, SyntaxMissingDelimError) {
   using namespace nextgen::core;
   using namespace nextgen::jet;
 
-  auto buf = "some_value := 2 + 3 * (232 +4";
+  auto buf = "some_value := 22 * 2 / (232 + 4 + (2 + (3*2) / 2)";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
   auto parser = jet::Parser(&lexer);

@@ -276,7 +276,7 @@ TEST(LexTest, InvalidStringEscape) {
   using namespace nextgen::jet;
 
 
-  auto buf = R"(extern fail_again := "Hello Test\q")";
+  auto buf = R"(export fail_again := "Hello Test\q")";
   auto len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   try {
