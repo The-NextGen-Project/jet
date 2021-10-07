@@ -6,9 +6,13 @@
 #   elif __APPLE__
 #       define NG_OS_APPLE true
 #       include <TargetConditionals.h>
+#       include <sys/types.h>
+#       include <sys/mman.h>
 #   elif __linux__ || __unix__
 #       define NG_OS_LINUX true
 #       include <unistd.h>
+#       include <sys/types.h>
+#       include <sys/mman.h>
 #   else
 #       error "Could Not Find A Valid OS"
 #   endif
@@ -67,6 +71,7 @@ typedef __int8 int8_t;
 #       include <cstdint>
 #   endif
 #   include <iostream>
+#   include <iomanip>
 #   include <vector>
 #   include <fstream>
 #   include <string>
@@ -76,6 +81,7 @@ typedef __int8 int8_t;
 #   include <cstring>
 #   include <unordered_set>
 #   include <memory>
+#   include <array>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32
@@ -89,16 +95,12 @@ typedef __int8 int8_t;
 #           error "This Compiler Does not have this detection"
 #       endif
 #   endif
-#   if _WIN32 || _WIN64 /* Only windows has this here because MSVC sometimes does not have stdint.h */
-#       if _WIN64
-#           ifndef BIT32
-#               define BIT32
-#           endif
-#       else
-#           ifndef BIT64
-#               define BIT64
-#           endif
-#   endif
+#   if !defined(BIT32) && !defined(BIT64)
+#     ifdef _WIN64 /* Only windows has this here because MSVC sometimes does not have stdint.h */
+        define BIT64
+#     else
+#       define BIT32
+#     endif
 #   endif
 #   if defined(BIT32)
 #       define FNV_PRIME 16777619u
@@ -114,6 +116,8 @@ typedef __int8 int8_t;
 = typename std::enable_if<std::is_convertible<Lambda, std::function<Ret \
 (__VA_ARGS__)\
 >>::value>::type
-// Class Init
+# define FOR(var, range) for (auto var = 0; var < range; ++var)
+# define CAST(ty, value) ((ty)(value))
+
 
 #endif //NEXTGEN_CONFIG_H

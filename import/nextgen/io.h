@@ -1,14 +1,12 @@
 # ifndef NEXTGEN_IO_H
 # define NEXTGEN_IO_H
-# include "Allocator.h"
+# include "allocator.h"
 
 namespace nextgen { namespace io {
 
   enum FileID {
     JetSourceCode,
     CSourceCode,
-    LLVM_IR,
-    LLVM_BC,
     Mach_O,
     ELF,
     PE
@@ -35,7 +33,7 @@ namespace nextgen { namespace io {
     //
     // Example:
     // FileBuf files[] = ...
-    // FileBuf::Output(files, FiledID::LLVM_IR);
+    // FileBuf::Output(files, FileID::CSourceCode);
     //
     // NOTE: The types of files need to be able to be linked together to form
     // the resulting FileID file type.

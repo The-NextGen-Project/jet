@@ -41,7 +41,7 @@ Current Status: **WIP**
 | `box`          | Designates a type as smart pointer value |
 | `*`            | Type is a pointer. |
 | `?`            | Optional type. Either None or the value. |
-| `&`            | Memory reference to the location of an object (or a pass by reference). |
+| `&`            | allocator reference to the location of an object (or a pass by reference). |
 
 Operators
 -----------
@@ -60,6 +60,7 @@ Current Status: **WIP**
 | `~`            | Bitwise Not and Concat. |
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
+=======
 | `??`           | Then operator |
 
 
@@ -151,7 +152,7 @@ my_func => (a: i32, b: i32, c: str) {
 ...
 }
 ```
-Parameters are ordered in the format of VariableName -> Typename. A variable of type `str` with a name of `name` would be 
+parameters are ordered in the format of VariableName -> Typename. A variable of type `str` with a name of `name` would be 
 written as `name str`. For those familiar with Golang, it follows a similar naming convention. Generic functions are also 
 supported:
 ```zig
@@ -218,7 +219,7 @@ This is especially a very interesting part of the programming language. We will 
 will need to be Jet projects that can be recognizable and imported directly into your project. This may be a good way to consistantly 
 ensure that you have the latest stable version of the git repository imported into your programming language. 
 
-### Exporting Values
+### Exporting values
 Current Status: **Planned**
 
 Functions:
@@ -236,7 +237,7 @@ Variables:
 export MyGlobalVariable := 32;
 ```
 
-Values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
+values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
 of the `export` before the declaration.
 
 ### Static Compilation (Generally JIT Compiled)

@@ -1,116 +1,12 @@
-/* ----- Variables ----- */
-var x = 23; // Inferred
-var b: int = 324;  // Explicitly defined
-
-var mut some_list = [1, 2, 3, 4, 5];
-some_list << 23;
-some_list << 4324; // some_list = [1, 2, 3, 4, 5, 23, 4324]
-
-/* ----- Constructs ----- */
-for i in 0..10 { // Prints "Hello" 10 times
-  print("Hello");
-}
-for n in some_list { // Print "Wow" 7 times
-  print("Wow");
-}
-var some_bool = false;
-var q = 0;
-while not some_bool {
-  print("Wow");
-  q++;
-  if q is 3 {
-    break;
-  }
+static {
+  GLOBAL_CONSTANT_VARIABLE = 23;
 }
 
-var nice = 232;
-if nice > 232 {
-// ...
-} elif nice < 232 {
-// ...
-} else {
-// ...
-}
-/* ----- Functions ----- */
-fn my_func(wow?, ok?) {
-  wow.foo();
-  if ok {
-    print("Hi");
-  }
+fib => (n: i32) i32 {
+  return match n {
+    0 -> 0,
+    1 -> 1,
+    n -> fib(n - 1) + fib(n - 2)
+  };
 }
 
-fn another_func(i int, maybe int?) { // Inferred return type
- var should_be_int: int = maybe?; // Unwrap optional value syntax
- return should_be_int;
-}
-
-fn explicit(a int, b str) str {
-  return str(a) + b; // Casting
-}
-
-fn restrict(b bool, accept union(str, int, float64)) { // Union parameter types are values of the given types
-  if (b) {
-    print(accept);
-  }
-}
-
-restrict(false, "Hello");
-restrict(true, 23);
-restrict(false, 23f);
-
-
-/* ----- Structs and Enums ----- */
-Dataclass : struct {
-  a : int;
-  s : str;
-  d : float64;
-}
-
-Map : struct(K, V) {
-  values (K, V)[]; // Array of tuple of type (K, V). Where K and V are generic
-}
-
-TokenType : enum {
-  LPAREN,
-  RPAREN,
-  INTEGER
-}
-
-RustEnum : enum { // Capture data values in enums
-  Cool(str),
-  Integer(int),
-  SomeStruct(Dataclass)
-}
-
-Result : enum(T, E) { // Generic Enum
-  Ok(T),
-  Err(E)
-}
-
-IHaveFunctions : struct {
- v List![int];
-
-}
-
-impl IHaveFunctions {
-
- fn wow(self) {
-   self.v = 23;
- }
- fn some_static() IHaveFunctions {
-   IHaveFunctions {
-    v: 23
-   }
- }
-}
-
-// Initialize Structs
-var ihf = IHaveFunctions { v: 0 };
-ihf.wow();
-
-
-// Call Static Functions
-var CONST = IHaveFunctions.some_static();
-
-// Grouped Enum Values
-var decl = RustEnum.Integer(232);
