@@ -1,4 +1,4 @@
-# Jet ✈️ Compiler Features
+# Jet ✈️ Language Documentation
 The language specification is listed below, everything from function variables, and the build systems that are planned to 
 be implemented or are already implemented are below. 
 > **Note:** To determine whether a feature currently exists check for the keywords: **Implemented**, **WIP**, and **Planned**.
@@ -13,7 +13,9 @@ Outline
 * [Arrays](#arrays)
 * [Variables](#variables)
 * [Functions](#functions)
-* [Structs](#structs)
+* [Structs](#struct-declaration)
+* [Enum](#enum-declaration)
+* [Match Statement](#match-statement)
 
 
 Primitives
@@ -21,23 +23,22 @@ Primitives
 Current Status: **WIP**
 | Core Type     | Description |
 | ------------- | ------------- |
-| `int`         | By default, all integer types are designated to 32 bits unless specified differently.  |
-| `int64`       | 64 bit integer is separate and is using for longer integer values.  |
-| `uint`        | Unsigned 32 bit integer.  |
-| `uint64`      | Unsigned 64 bit integer. |
-| `float`       | 32 bit decimal value. |
-| `float64`     | 64 bit decimal value. |
-| `bool`        | boolean Value: true or false.  |
+| `i32`         | By default, all integer types are designated to 32 bits unless specified differently.  |
+| `i64`       | 64 bit integer is separate and is using for longer integer values.  |
+| `u32`        | Unsigned 32 bit integer.  |
+| `u64`      | Unsigned 64 bit integer. |
+| `f32`       | 32 bit decimal value. |
+| `f64`     | 64 bit decimal value. |
+| `bool`        | Boolean Value: true or false.  |
 | `fn(Arg Types...) -> Ret`       | Function Lambda.   |
-| `utf8`        | A valid utf8 character. |
 | `char`        | A 1 byte character. |
-| `str`         | Alias for `[utf8]` |
+| `str`         | Array of characters |
 | `None`        | Optional value for `None` |
 
 ### Type Annotations
 | Annotation     | Description |
 | -------------  | ------------- |
-| `^`            | Designates a type as a smart pointer (a little more into that later).  |
+| `box`          | Designates a type as smart pointer value |
 | `*`            | Type is a pointer. |
 | `?`            | Optional type. Either None or the value. |
 | `&`            | allocator reference to the location of an object (or a pass by reference). |
@@ -59,9 +60,8 @@ Current Status: **WIP**
 | `~`            | Bitwise Not and Concat. |
 | `**`           | Exponential Power. |
 | `!`            | Logical Not. |
-| `??`           | Value / operation action. |
-> **Note:** The operators described above all have the combination operator with `=`, for example, `+` has `+=`. More operators may come
-> in the future, but the list is not likely to change much at all.
+=======
+| `??`           | Then operator |
 
 
 ### Operator Overloading
@@ -72,20 +72,20 @@ Current Status: **Planned**
 
 Variables
 ---------
-Current Status: **WIP**
+Current Status: **Almost Done**
 
 The programming language is gradually typed. Static typing is only required when the compiler cannot infer the type.
 Variables may be declared in two different ways:
-```zig
-var my_variable = 23;
-var another_variable: bool = false;
+```v
+my_variable := 23;
+another_variable: bool = false;
 ```
 All variables are immutable by default (except for lists), and require the `mut` keyword in order to change the way you
 interact with that variable.
-```zig
-var cant_change_me = 2324;
+```v
+cant_change_me := 2324;
 cant_change_me = 24354; // Compiler error!
-mut var change_me = 3342;
+mut change_me := 3342;
 change_me = 23424; // Ok
 ```
 Custom initialization is specified in with different primitive datatypes (ie: lists and tuples). Other than these two, the
@@ -98,9 +98,9 @@ Current Status: **WIP**
 
 ### Initialization
 We wanted arrays to be simple and easy to initalize like in Python.
-```js
-var list = [1, 2, 3, 4, 5]; // This by default is a dynamic array unless specefied like below
-var fixed: [5,int] = [1, 2, 3, 4, 5];
+```rust
+mut list := [1, 2, 3, 4, 5]; // Can now add values to the list
+fixed: [5,i32] = [1, 2, 3, 4, 5];
 ```
 
 ### Designated Initializers
@@ -110,8 +110,8 @@ Lists are mutable by default (unlike most of the other data types) because they 
 commonly dynamic and require mutability. Since we like to acknowledge the strengths of some
 languages and weaknesses of others, one may consider a similar example of initalizing an array
 using designated initalizers in Jet.
-```c
-var list: [256,int] = [
+```v
+list: [256,i32] = [
   ['>'] = 2323, ['3'] = 343,
   ...
 ]
@@ -128,12 +128,6 @@ len(list);
 ```
 Length is checked in a similar global length function that can find the length of various types, including lists.
 
-### variable initialization
-Current Status: **Planned**
-```python
-var (a, b, c) = [1, 2, 3];
-```
-Similar to Python, this tuple like initialization is valid in Jet for convience and pretty clean and readable syntax.
 
 ### Slices
 Current Status: **Planned**
@@ -154,7 +148,7 @@ languages.
 ### Function Declaration
 Current Status: **WIP**
 ```zig
-fn my_func(a int, b int, c str) {
+my_func => (a: i32, b: i32, c: str) {
 ...
 }
 ```
@@ -162,17 +156,8 @@ parameters are ordered in the format of VariableName -> Typename. A variable of 
 written as `name str`. For those familiar with Golang, it follows a similar naming convention. Generic functions are also 
 supported:
 ```zig
-fn generics(a?, b?, c int) {
+generics => ($a, $b) {
  ...
-}
-```
-The `?` after an identifier that is not a type declares that the value has an anonymous type (generic type / value). One thing
-you may consider is how are functions type-checked or function checked. An example of a scenario in which a custom struct value is
-passed into a generic parameter and calls the function `foo`:
-```zig
-fn test(a?) {
-  a.foo(); // A is guranteed to have the function foo with no parameters. 
-  var x = a.bar(23); // This DOES NOT result in a compile time error because the rest of the function may guarantee that this value is legit.
 }
 ```
 Generic function parameters have anonymous traits bounded to them which means that their functions and generated code is guarnteed to be valid
@@ -180,17 +165,32 @@ otherwise a compile-time error will be thrown otherwise. This allows for a mix o
 generalized for similar actions. To make it easier for anonymous trait building, it is best for the programmer to statically define their variables
 to make it easier for the compiler.
 
+### Default Values
+```zig
+default_values := (a: int = 0xffff, b: str) {
+...
+}
+```
+Default values allow for flexibility in programming, especially when you want to handle a case without passing in a parameter. Currently
+it is not planned to have default values for parameters that don't have their type explicitely stated.
+
 ### Lambdas
 Current Status: **Planned**
 
 Lambdas are small anonymous functions that can be passed in as callbacks into functions to be called. They are generally declared as a parameters
 by the following method:
 ```zig
-fn func(lambda fn(int) -> int) {
+func => (lambda: fn(i32) -> i32) {
   lambda(23); // Calling the function
 }
 ```
-You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended.
+You may pass in lambdas through generic parameters as well and call them as long as function definition generation works as intended. An Example
+for this function call may be (in reference to the above example):
+```zig
+func(|x| => {
+  return x * x
+})
+```
 
 Modules
 --------
@@ -224,21 +224,80 @@ Current Status: **Planned**
 
 Functions:
 ```zig
-export fn my_func(...) { ... } 
+export my_func => (...) { ... } 
 ```
 Types:
 ```zig
-export MyStruct : struct {
+export MyStruct => struct {
   ...
 }
 ```
 Variables:
 ```js
-export var MyGlobalVariable = 32;
+export MyGlobalVariable := 32;
 ```
 
 values are explicitly exported from the file (each file is a module with exported functions and types). This is denoted by the prefix
 of the `export` before the declaration.
+
+### Static Compilation (Generally JIT Compiled)
+Examples:
+```zig
+// Evaluated at compile-time
+some_value := static {
+  return calling_a_function();
+}
+```
+
+### Match Statement
+Match statements allow for expressing complex situations in shorter and more readable code. 
+Examples:
+```rust
+match value {
+  0 -> {
+    // do seomthing
+  }
+  . -> {
+    // default
+  }
+}
+```
+
+### Struct Declaration
+Struct declarations will emulate C in which they are handled. The language aims to be as simple as possible while allowing for zero cost abstractions to take place.
+Examples:
+```zig
+MyStruct => struct {
+  prop: str;
+  another: i32;
+}
+```
+
+### Enum Declaration
+Enum Declarations will be the core foundation for applying complex principles in the language. Tagged unions as well as constant values may be implemented.
+Regular Enum:
+```zig
+Opcodes => enum {
+  Add,
+  Sub,
+  Mul,
+  Div
+}
+```
+Tagged Enums:
+```zig
+Operation => enum {
+  Add {
+    lhs: i32
+    rhs: i32
+  },
+  Sub {
+    lhs: i32
+    rhs: i32
+  }
+  // etc ...
+}
+```
 
 End
 -------
