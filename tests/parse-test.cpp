@@ -222,7 +222,7 @@ TEST(ParseTest, ForStatement) {
 
   auto buf = "for value in list_of_values { \n"
              " do_something := 23.233;"
-             "";
+             "}";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
 
