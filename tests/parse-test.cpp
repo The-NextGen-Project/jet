@@ -300,16 +300,16 @@ TEST(ParseTest, SyntaxInvalidGlobalDecl) {
 
 
 TEST_SUITE_MAIN(ParseTest) {
-//  TEST_CALL(ParseTest, VariableDeclLiteral);
-//  TEST_CALL(ParseTest, VariableArrayDecl);
-//  TEST_CALL(ParseTest, VariableDeclBinary);
-//  TEST_CALL(ParseTest, VariableDeclParenBinary);
-//  TEST_CALL(ParseTest, VariableValueAssignment);
-//  TEST_CALL(ParseTest, IfStatement);
-//  TEST_CALL(ParseTest, WhileLoop);
-//  TEST_CALL(ParseTest, SyntaxSemiColonError);
-//  TEST_CALL(ParseTest, SyntaxMissingDelimError);
-//  TEST_CALL(ParseTest, SyntaxInvalidGlobalDecl);
+  TEST_CALL(ParseTest, VariableDeclLiteral);
+  TEST_CALL(ParseTest, VariableArrayDecl);
+  TEST_CALL(ParseTest, VariableDeclBinary);
+  TEST_CALL(ParseTest, VariableDeclParenBinary);
+  TEST_CALL(ParseTest, VariableValueAssignment);
+  TEST_CALL(ParseTest, IfStatement);
+  TEST_CALL(ParseTest, WhileLoop);
+  TEST_CALL(ParseTest, SyntaxSemiColonError);
+  TEST_CALL(ParseTest, SyntaxMissingDelimError);
+  TEST_CALL(ParseTest, SyntaxInvalidGlobalDecl);
   TEST_CALL(ParseTest, ForStatement);
 
 }
