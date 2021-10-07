@@ -173,11 +173,6 @@ TEST(LexTest, StringEscape) { // TODO: Add Unicode Escape Later
   }
   auto token = tokens[3];
 
-  Console::Log("Name: ", tokens[0]->name(), '\n');
-  Console::Log("Name: ", tokens[1]->name(), '\n');
-  Console::Log("Name: ", tokens[2]->name(), '\n');
-  Console::Log("Name: ", tokens[3]->name(), '\n');
-
   auto compare = "I have\x56 every \t thing\n that could \b\v in \r";
   ASSERT_TRUE(::strncmp(token->name().begin(), compare, token->len()) == 0);
 }
