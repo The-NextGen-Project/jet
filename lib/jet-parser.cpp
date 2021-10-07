@@ -103,12 +103,10 @@ Parser::parse_variable_assignment(const Token *name)  {
   if (peek(1)->getKind() == TokenKind::Colon) {
     auto E = new SyntaxVariableAssignment(name, Some(parse_type()), parse_expr());
     expect<TokenKind::SemiColon>("Expected ';' after declaration");
-    --position;
     return E;
   } else {
     auto E = new SyntaxVariableAssignment(name, None, parse_expr());
     expect<TokenKind::SemiColon>("Expected ';' after declaration");
-    --position;
     return E;
   }
 }

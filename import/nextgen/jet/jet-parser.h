@@ -160,7 +160,10 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
               ParseError::Metadata { TK, next, msg }
             }
             ));
-          fatal++;
+          if (curr()->getKind() == EOFToken)
+            this->diagnostics.send_exception();
+          else
+            fatal++;
         }
         return next;
       }

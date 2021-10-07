@@ -221,7 +221,7 @@ TEST(ParseTest, ForStatement) {
 
 
   auto buf = "for value in list_of_values { \n"
-             " do_something := 23.233"
+             " do_something := 23.233;"
              "}";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
@@ -285,7 +285,7 @@ TEST(ParseTest, SyntaxInvalidGlobalDecl) {
   using namespace nextgen::core;
   using namespace nextgen::jet;
 
-  auto buf = "some_value := 2 + 3 / 232;\n// bad value\nvalue << 23;";
+  auto buf = "some_value := 2 + 3 / 232;\n value << 23;";
   auto buf_len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
   auto parser = jet::Parser(&lexer);
@@ -311,5 +311,4 @@ TEST_SUITE_MAIN(ParseTest) {
   TEST_CALL(ParseTest, SyntaxMissingDelimError);
   TEST_CALL(ParseTest, SyntaxInvalidGlobalDecl);
   TEST_CALL(ParseTest, ForStatement);
-
 }
