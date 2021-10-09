@@ -43,7 +43,7 @@ Parser::parse() {
   for (;;) {
 
     // Report up to 2 errors before exiting the program
-    if (fatal > 2) {
+    if (fatal >= 2) {
       this->diagnostics.send_exception();
     }
 
@@ -171,8 +171,16 @@ Parser::match_expr() {
       break;
     case Identifier: { // Unresolved variable or Function Call
       auto C1 = peek(1);
-      if (peek(1)->getKind() == TokenKind::LParenthesis) {
+      if (C1->getKind() == TokenKind::LParenthesis) {
         return parse_function_call(matched_token, C1);
+      }
+      else if (C1->getKind() == TokenKind::LCurlyBrace) {
+        // We are in a struct instantiation
+        return parse_struct_instantiation(matched_token);
+      }
+      else if (C1->getKind() == TokenKind::Path) {
+        // We are in a path value (ie: SomeEnum::Value)
+        return parse_path(matched_token);
       }
       auto E = (SyntaxNode*) new SyntaxLiteral(matched_token);
       E->kind = SyntaxKind::LiteralValue;
@@ -342,6 +350,7 @@ nextgen::ArenaVec<SyntaxFunctionParameter> Parser::parse_function_param() {
 
 const NG_INLINE SyntaxFunction *
 Parser::parse_function(const Token *function_name) {
+
   return new SyntaxFunction(function_name,
                               parse_type(),
                               parse_block(),
@@ -365,14 +374,20 @@ Parser::parse_function_call(const Token *function_name, const Token *delim) {
   return E;
 }
 
-SyntaxBlock Parser::parse_block()  {
+SyntaxBlock Parser::parse_block(bool ret)  {
   expect<TokenKind::LCurlyBrace>("Expected '{' before beginning of "
                                        "current");
   auto block   = SyntaxBlock {};
+
   // We know for sure that we got right curly brace
   while (curr()->getKind() != TokenKind::RCurlyBrace
         && curr()->getKind() != TokenKind::EOFToken) {
-    block.statements << parse_stmt();
+    auto stmt = parse_stmt();
+    block.statements << stmt;
+    if (ret) {
+      if (stmt->kind == SyntaxKind::ReturnValue)
+        block.returns << stmt;
+    }
   }
   expect_delim<TokenKind::RCurlyBrace>(curr()->getSourceLocation());
   next(1);
@@ -391,4 +406,60 @@ Parser::parse_struct_data_members() {
     members.end = new SyntaxStructMember(name, type);
   }
   return members;
+}
+
+const SyntaxNode *
+Parser::parse_path(const Token *type) {
+  auto value = expect<TokenKind::Identifier>("Path value must be an "
+                                             "identifier.");
+  if (curr()->getKind() == TokenKind::LParenthesis) {
+    // Path Struct Value
+  }
+  return new SyntaxPath(type, value);
+  //F0C452
+}
+
+const SyntaxNode *
+Parser::parse_struct_instantiation(const Token *name)  {
+  auto members = ArenaVec<SyntaxStructMemberInitialization>();
+  members.begin = (SyntaxStructMemberInitialization*) (GLOBAL_OBJECT_ALLOC.current());
+  while (curr()->getKind() != TokenKind::RCurlyBrace
+        && curr()->getKind() != TokenKind::EOFToken) {
+    auto n = expect<TokenKind::Identifier>("Identifiers must be used for "
+                                              "struct name");
+    expect<TokenKind::Colon>("':' Must be followed after struct member name");
+    auto value = parse_expr();
+    members.end = new SyntaxStructMemberInitialization(n, value);
+  }
+  expect_delim<TokenKind::RCurlyBrace>(curr()->getSourceLocation());
+  return new SyntaxStructInstantiation(name, members);
+}
+
+const SyntaxEnum *
+Parser::parse_enum(const Token *name) {
+
+  auto enumeration = new SyntaxEnum;
+  enumeration->name = name;
+  while (curr()->getKind() != TokenKind::RCurlyBrace
+  && curr()->getKind() != TokenKind::EOFToken) {
+    auto constant = expect<TokenKind::Identifier>("Identifiers must be used "
+                                                  "for "
+                                           "enum value");
+    if (curr()->getKind() == TokenKind::Comma) {
+      skip(1);
+    }
+    else if (curr()->getKind() == TokenKind::LCurlyBrace) {
+      skip(2);
+      enumeration->tagged_values << parse_struct(constant);
+    }
+    else {
+      if (curr()->getKind() != TokenKind::RCurlyBrace) {
+        // TODO: Add Error Here
+      } else {
+        enumeration->non_tagged_values << constant;
+      }
+    }
+  }
+  expect_delim<TokenKind::RCurlyBrace>(curr()->getSourceLocation());
+  return enumeration;
 }

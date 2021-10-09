@@ -136,6 +136,7 @@ namespace nextgen { namespace jet {
 
     ColonEquals,   // :=
     Arrow,         // ->
+    Path, // ::
 
     Error,
     EOFToken,
@@ -377,6 +378,8 @@ namespace nextgen { namespace jet {
           return ":=";
         case Arrow:
           return "->";
+        case Path:
+          return "::";
         case EOFToken:
           return "EOF";
         default:

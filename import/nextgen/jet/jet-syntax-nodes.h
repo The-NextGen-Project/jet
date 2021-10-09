@@ -27,6 +27,10 @@ namespace nextgen { namespace jet {
       FunctionDefault,
       FunctionStructProperty,
       Match,
+      PathNode,
+      PathStruct,
+      StructInit,
+      ReturnValue
     };
 
     enum SyntaxUnaryOp {
@@ -96,6 +100,7 @@ namespace nextgen { namespace jet {
       ANDAssign,
     };
 
+
     struct SyntaxTypename {
       SyntaxTypenameKind kind;
 
@@ -128,11 +133,42 @@ namespace nextgen { namespace jet {
       SyntaxKind kind;
       SyntaxNode() = default;
     };
-    
+
+    struct Return : public SyntaxNode {
+      const SyntaxNode *value;
+      Return(const SyntaxNode *value) : value(value) {
+        this->kind = SyntaxKind::ReturnValue;
+      }
+    };
+
+
+    struct SyntaxPath : public SyntaxNode {
+      const Token *path_origin;
+      const Token *path_value;
+      SyntaxPath(const Token *t, const Token *l)
+      : path_origin(t), path_value(l) {
+        this->kind = SyntaxKind::PathNode;
+      }
+    };
+
+    struct SyntaxPathStruct : public SyntaxNode {
+      const Token *path_origin;
+      const Token *path_value;
+      ArenaVec<SyntaxNode*> struct_values_in_order;
+
+      SyntaxPathStruct(const Token *origin,
+                       const Token *value,
+                       const ArenaVec<SyntaxNode*> struct_values)
+      : path_origin(origin), path_value(value), struct_values_in_order
+      (struct_values)
+      { this->kind = SyntaxKind::PathStruct; }
+    };
 
     struct SyntaxLiteral : public SyntaxNode {
 
-      explicit SyntaxLiteral(const Token *l) : literal(l) {}
+      explicit SyntaxLiteral(const Token *l) : literal(l) {
+        this->kind = SyntaxKind::LiteralValue;
+      }
 
 
       // contains the literal token value. Token's already contain the actual
@@ -400,6 +436,7 @@ namespace nextgen { namespace jet {
       // after them without a set of corresponding '{}'.
       ObjectVector<const SyntaxNode*> statements;
 
+      ObjectVector<Return, 10> returns;
 
       // Special statement for function / lambda return check. Allows for void
       // function type inference.
@@ -566,12 +603,13 @@ namespace nextgen { namespace jet {
       // Function parameters
       ArenaVec<SyntaxFunctionParameter> parameters{nullptr, nullptr};
 
+
       SyntaxFunction(const Token *name,
                      const Option<SyntaxType*> &ty,
                      const SyntaxBlock &body,
                      const ArenaVec<SyntaxFunctionParameter> &params)
                      : function_name(name), body(body), function_type(ty),
-                      parameters(params){}
+                      parameters(params) {}
     };
 
     struct SyntaxFunctionCall : public SyntaxNode {
@@ -633,11 +671,37 @@ namespace nextgen { namespace jet {
       : name(name), type(ty) {}
     };
 
+    struct SyntaxStructMemberInitialization : public SyntaxNode {
+      const Token *name = nullptr;
+      const SyntaxNode *value = nullptr;
+      SyntaxStructMemberInitialization(const Token *name,
+                                       const SyntaxNode *value)
+                                       {
+                                       }
+    };
+
+    struct SyntaxStructInstantiation : public SyntaxNode {
+      const Token *name = nullptr;
+      ArenaVec<SyntaxStructMemberInitialization> values;
+      SyntaxStructInstantiation(const Token *name,
+                                const
+                                ArenaVec<SyntaxStructMemberInitialization>&
+                                values)
+                                : name(name), values(values)
+                                { this->kind = SyntaxKind::StructInit; }
+    };
+
     struct SyntaxStruct : public SyntaxNode {
       const Token *name = nullptr;
       ArenaVec<SyntaxStructMember> members;
       SyntaxStruct(const Token *name, const ArenaVec<SyntaxStructMember>
         &members) : name(name), members(members) {}
+    };
+
+    struct SyntaxEnum {
+      const Token *name = nullptr;
+      ObjectVector<const Token *, 200> non_tagged_values;
+      ObjectVector<const SyntaxStruct*, 200> tagged_values;
     };
 
 }}

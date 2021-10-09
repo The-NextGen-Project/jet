@@ -82,6 +82,7 @@ typedef __int8 int8_t;
 #   include <unordered_set>
 #   include <memory>
 #   include <array>
+#   include <unordered_map>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32

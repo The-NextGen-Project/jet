@@ -3,6 +3,9 @@
 
 namespace nextgen { namespace jet {
 
+  template<typename T>
+  using Map = std::unordered_map<str, T, str::intern_hash, str::intern_eq>;
+
   enum ASTKind {
     BinaryExprNode,
     LiteralExprNode,
@@ -26,58 +29,71 @@ namespace nextgen { namespace jet {
     I8,
     I16,
     I32,
-    I65,
+    I64,
     U8,
     U16,
     U32,
     U64,
+    F32,
+    F64,
     Str,
+    Bool,
     PointerTy,
     ArrayView,
-    SmartPointer
+    SmartPointer,
+    UserDefinedType
   };
 
   struct Type {
     TypeTag tag;
     Type *ref;
+
+    Type() = default;
+    Type(TypeTag tag, Type *ref)
+    : tag(tag), ref(ref) {}
+    Type(const Type& other)
+    : tag(other.tag), ref(other.ref) {}
   };
 
-  struct Pointer : public Type {
+  struct PointerType : public Type {
     Type pointer_of;
-    /*implicit*/ Pointer(const Type &p) : pointer_of(p) {}
+    explicit PointerType(const Type &p) : pointer_of(p) {
+      this->tag = TypeTag::PointerTy;
+    }
   };
 
-  struct ArrayView : public Type {
+  struct ArrayViewType : public Type {
     Type array_of;
     size_t size   = 0;
     bool has_size = false;
-    /*implicit*/ ArrayView(const Type &a) : array_of(a) {}
+    explicit ArrayViewType(const Type &a) : array_of(a) {
+      this->tag = TypeTag::ArrayView;
+    }
+  };
+
+  struct StructType : public Type {
+    const str name = nullptr;
+    explicit StructType(const str &name) : name(name) {
+      this->tag = TypeTag::UserDefinedType;
+    }
   };
 
   struct Variable {
     const Token *initial_decl;
-    const Type type;
+    Type type = Type();
     bool is_mutable = false;
 
-    struct intern_hash {
-      size_t operator()(Variable const &s) const {
-        return s.initial_decl->name().getHashCache();
-      }
-    };
-
-    struct intern_eq {
-      bool operator()(Variable const &LHS, Variable const &RHS) const {
-        auto lhs = LHS.initial_decl->name();
-        auto rhs = RHS.initial_decl->name();
-        return strncmp(lhs.begin(), rhs.begin(), lhs.size()) == 0;
-      }
-    };
+    Variable() = default;
+    Variable(const Token *decl,
+             Type type)
+             : initial_decl(decl), type(type) {}
   };
 
   struct Scope {
     Scope *parent;
-    std::unordered_set<Variable, Variable::intern_hash,
-    Variable::intern_eq> variables;
+    Map<Variable> variables;
+    Scope() = default;
+    Scope(Scope *parent) : parent(parent) {}
   };
 
   struct NodeLiteral {
@@ -157,11 +173,48 @@ namespace nextgen { namespace jet {
     };
   };
 
-  using VariableMap = std::unordered_set<Variable, Variable::intern_hash,
-  Variable::intern_eq> ;
-  using FunctionMap = std::unordered_set<NodeFunction, NodeFunction::intern_hash,
-  NodeFunction::intern_eq> ;
+  struct StructMember {
+    const Token *name = nullptr;
+    const Type type;
+  };
 
+  struct NodeStruct {
+    const Token *name = nullptr;
+    ArenaVec<StructMember> members;
+
+    struct intern_hash {
+      size_t operator()(NodeStruct const &s) const {
+        return s.name->name().getHashCache();
+      }
+    };
+
+    struct intern_eq {
+      bool operator()(NodeStruct const &LHS, NodeStruct const &RHS) const {
+        auto lhs = LHS.name->name();
+        auto rhs = RHS.name->name();
+        return strncmp(lhs.begin(), rhs.begin(), lhs.size()) == 0;
+      }
+    };
+  };
+
+  struct NodeEnum {
+    const Token *name = nullptr;
+    ArenaVec<const Token *> constants;
+
+    struct intern_hash {
+      size_t operator()(NodeStruct const &s) const {
+        return s.name->name().getHashCache();
+      }
+    };
+
+    struct intern_eq {
+      bool operator()(NodeStruct const &LHS, NodeStruct const &RHS) const {
+        auto lhs = LHS.name->name();
+        auto rhs = RHS.name->name();
+        return strncmp(lhs.begin(), rhs.begin(), lhs.size()) == 0;
+      }
+    };
+  };
 }}
 
 

@@ -236,7 +236,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       // ========= Parsing Language Constructs ==========
 
-      auto parse_block() -> SyntaxBlock;
+      auto parse_block(bool ret = false) -> SyntaxBlock;
       auto parse_type() -> SyntaxType*;
       auto parse_function_param() -> ArenaVec<SyntaxFunctionParameter>;
       auto parse_variable_assignment(const Token *name) -> const SyntaxNode*;
@@ -245,9 +245,15 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
       auto parse_struct_data_members() -> ArenaVec<SyntaxStructMember>;
       auto parse_function_call(const Token *name, const Token *delim) -> const SyntaxNode*;
 
+
       auto parse_for() -> const SyntaxNode*;
       auto parse_match() -> const SyntaxNode*;
       auto parse_match_pair_value() -> const SyntaxNode*;
+
+      auto parse_path(const Token *type) -> const SyntaxNode*;
+      auto parse_struct_instantiation(const Token *name) -> const SyntaxNode*;
+
+      auto parse_enum(const Token *name) -> const SyntaxEnum*;
 
       //========== INLINED FUNCTIONS ==========
 
@@ -320,8 +326,10 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
             break;
           case KeywordNone:
             break;
-          case KeywordReturn:
-            break;
+          case KeywordReturn: {
+            auto value = parse_expr();
+            return new Return(value);
+          }
           case KeywordMatch:
             break;
           case Identifier: {
@@ -337,6 +345,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
               return parse_variable_value_assignment(name,
                                                      SyntaxVariableValueAssignment::MatchOp(C1->getKind()));
             }
+            // TODO: Add Path Value Check
             break;
           }
           case LCurlyBrace:

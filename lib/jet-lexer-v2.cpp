@@ -787,6 +787,8 @@ ArenaVec<Token> Lexer<Mode>::lex() {
         case Colon:
           if (peek(1) == '=')
             TOKEN_ADD_SHORT(":=", TokenKind::ColonEquals);
+          else if (peek(1) == ':')
+            TOKEN_ADD_SHORT("::", TokenKind::Path);
           else
             TOKEN_ADD_SHORT(":", TokenKind::Colon);
           break;

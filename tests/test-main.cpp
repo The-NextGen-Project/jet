@@ -8,6 +8,7 @@
 
 #include <nextgen/allocator.h>
 
+
 DEF_ALL_TESTS
 int main(int argc, char **argv) {
   TEST(LexTest);

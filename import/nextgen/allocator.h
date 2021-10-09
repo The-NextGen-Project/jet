@@ -158,7 +158,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     size_t cap = N;
   public:
 
-    T operator[](size_t index) {
+    T operator[](size_t index) const {
       return objects[index];
     }
 
@@ -172,6 +172,10 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
         objects = new_ptr;
       }
       objects[len++] = elem;
+    }
+
+    NG_AINLINE size_t size() const {
+      return len;
     }
   };
 

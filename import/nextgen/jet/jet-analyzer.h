@@ -8,12 +8,22 @@ namespace nextgen { namespace jet {
 
 
   class Analyzer {
-    VariableMap global_variables;
-    FunctionMap functions;
+    Map<Variable> global_variables;
+    Map<NodeFunction> functions;
+    Map<NodeStruct> structs;
+    Map<NodeEnum> enums;
+
+    Scope *global_scope = new Scope(nullptr);
+    Scope *scope_that_is_being_analyzed = nullptr;
   public:
     void analyze(const ParserOutput output_to_analyze);
     void analyze_function(const SyntaxFunction *function);
+    void analyze_struct(const SyntaxStruct *structure);
+    void analyze_enum(const SyntaxEnum *enumeration);
     void analyze_syntax_node(const SyntaxNode *node);
+    const Type resolve_type(const Token *value);
+    const Type resolve_type(const SyntaxType *type);
+    const Type resolve_type(SyntaxTypename name);
   };
 }}
 
