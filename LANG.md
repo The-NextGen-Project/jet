@@ -45,7 +45,7 @@ Current Status: **WIP**
 
 Operators
 -----------
-Current Status: **WIP**
+Current Status: **Completed**
 | Operator       | Description |
 | -------------  | ------------- |
 | `+`            | Addition.  |
@@ -64,15 +64,10 @@ Current Status: **WIP**
 | `??`           | Then operator |
 
 
-### Operator Overloading
-Current Status: **Planned**
-
-> **Note:** Outline is not available yet, but will be soon.
-
 
 Variables
 ---------
-Current Status: **Almost Done**
+Current Status: **Completed**
 
 The programming language is gradually typed. Static typing is only required when the compiler cannot infer the type.
 Variables may be declared in two different ways:
