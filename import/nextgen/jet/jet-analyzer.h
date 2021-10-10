@@ -12,6 +12,7 @@ namespace nextgen { namespace jet {
     Map<NodeFunction> functions;
     Map<NodeStruct> structs;
     Map<NodeEnum> enums;
+    Map<FuncSig> function_signatures;
 
     Scope *global_scope = new Scope(nullptr);
     Scope *scope_that_is_being_analyzed = nullptr;
@@ -21,9 +22,13 @@ namespace nextgen { namespace jet {
     void analyze_struct(const SyntaxStruct *structure);
     void analyze_enum(const SyntaxEnum *enumeration);
     void analyze_syntax_node(const SyntaxNode *node);
-    const Type resolve_type(const Token *value);
-    const Type resolve_type(const SyntaxType *type);
-    const Type resolve_type(SyntaxTypename name);
+
+    void register_function(const SyntaxFunction *function);
+
+    const Type *resolve_type(const Token *value);
+    const Type *resolve_type(const SyntaxType *type);
+    const Type *resolve_type(const SyntaxNode *value);
+    const Type *resolve_type(SyntaxTypename name);
   };
 }}
 

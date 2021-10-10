@@ -188,7 +188,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
     /** @brief Indexes the value of the vector. This is slightly more
      * expensive than normal array access */
-    NG_INLINE T *operator[](size_t index) {
+    NG_INLINE T *operator[](size_t index) const {
       return (T*) (((uint8_t *)begin) + (sizeof(T) * index));
     }
 
@@ -199,7 +199,7 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
     }
 
     /** @brief Span of the vector in memory */
-    auto NG_AINLINE len() {
+    auto NG_AINLINE len() const {
       return end-begin;
     }
   };

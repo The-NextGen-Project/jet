@@ -56,17 +56,15 @@ namespace nextgen { namespace jet {
   };
 
   struct PointerType : public Type {
-    Type pointer_of;
-    explicit PointerType(const Type &p) : pointer_of(p) {
+    const Type *pointer_of;
+    explicit PointerType(const Type *p) : pointer_of(p) {
       this->tag = TypeTag::PointerTy;
     }
   };
 
   struct ArrayViewType : public Type {
-    Type array_of;
-    size_t size   = 0;
-    bool has_size = false;
-    explicit ArrayViewType(const Type &a) : array_of(a) {
+    const Type *array_of;
+    explicit ArrayViewType(const Type *a) : array_of(a) {
       this->tag = TypeTag::ArrayView;
     }
   };
@@ -80,12 +78,12 @@ namespace nextgen { namespace jet {
 
   struct Variable {
     const Token *initial_decl;
-    Type type = Type();
+    const Type *type;
     bool is_mutable = false;
 
     Variable() = default;
     Variable(const Token *decl,
-             Type type)
+             const Type *type)
              : initial_decl(decl), type(type) {}
   };
 
@@ -97,7 +95,7 @@ namespace nextgen { namespace jet {
   };
 
   struct NodeLiteral {
-    Type type;
+    Type *type;
     const Token *literal_token;
   };
 
@@ -157,63 +155,27 @@ namespace nextgen { namespace jet {
     const Token *name = nullptr;
     ArenaVec<AST> statements;
     ArenaVec<FunctionParameter> parameters;
+  };
 
-    struct intern_hash {
-      size_t operator()(NodeFunction const &s) const {
-        return s.name->name().getHashCache();
-      }
-    };
-
-    struct intern_eq {
-      bool operator()(NodeFunction const &LHS, NodeFunction const &RHS) const {
-        auto lhs = LHS.name->name();
-        auto rhs = RHS.name->name();
-        return strncmp(lhs.begin(), rhs.begin(), lhs.size()) == 0;
-      }
-    };
+  struct FuncSig {
+    str name;
+    const Type *return_type;
+    ArenaVec<const Type> parameter_types;
   };
 
   struct StructMember {
     const Token *name = nullptr;
-    const Type type;
+    const Type *type;
   };
 
   struct NodeStruct {
     const Token *name = nullptr;
     ArenaVec<StructMember> members;
-
-    struct intern_hash {
-      size_t operator()(NodeStruct const &s) const {
-        return s.name->name().getHashCache();
-      }
-    };
-
-    struct intern_eq {
-      bool operator()(NodeStruct const &LHS, NodeStruct const &RHS) const {
-        auto lhs = LHS.name->name();
-        auto rhs = RHS.name->name();
-        return strncmp(lhs.begin(), rhs.begin(), lhs.size()) == 0;
-      }
-    };
   };
 
   struct NodeEnum {
     const Token *name = nullptr;
     ArenaVec<const Token *> constants;
-
-    struct intern_hash {
-      size_t operator()(NodeStruct const &s) const {
-        return s.name->name().getHashCache();
-      }
-    };
-
-    struct intern_eq {
-      bool operator()(NodeStruct const &LHS, NodeStruct const &RHS) const {
-        auto lhs = LHS.name->name();
-        auto rhs = RHS.name->name();
-        return strncmp(lhs.begin(), rhs.begin(), lhs.size()) == 0;
-      }
-    };
   };
 }}
 

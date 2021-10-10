@@ -33,6 +33,7 @@ add_executable(jet main.cpp
 
         # Codegen
         lib/jet-x64-assembler.cpp
+        lib/jet-cgen.cpp
 
         # Semantic Analysis
         lib/jet-analyzer.cpp
