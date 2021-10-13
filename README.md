@@ -73,7 +73,7 @@ Progress
 ----------
 - [x] Lexer 
 - [x] Parser 
-- [ ] Semantic Analysis
+- [x] Semantic Analysis (**WIP**)
 - [ ] IR-Gen
 - [ ] IR-Optimization
 - [ ] C-Codegen (**WIP**)
