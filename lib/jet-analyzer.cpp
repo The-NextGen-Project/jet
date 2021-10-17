@@ -62,6 +62,14 @@ void Analyzer::analyze_syntax_node(const SyntaxNode *node) {
       break;
     case If: {
       scope_that_is_being_analyzed = new Scope(scope_that_is_being_analyzed);
+      auto if_stmt = (SyntaxIf*) node;
+
+      auto cond_type = resolve_type(if_stmt->condition);
+
+      // Condition is expression is not a boolean, then we add an error
+      if (*cond_type != Type(TypeTag::Bool, nullptr)) {
+        // TODO: Add Error Here
+      }
       break;
     }
     case Else:
@@ -82,9 +90,9 @@ void Analyzer::analyze_syntax_node(const SyntaxNode *node) {
       break;
     case Enum:
       break;
-    case VariableAssignment: {
+    case VariableAssignment:
+      this->register_variable((const SyntaxVariableAssignment*)(node));
       break;
-    }
     case VariableValueAssignment:
       break;
     case VariableReassignment:
@@ -108,11 +116,13 @@ void Analyzer::analyze_syntax_node(const SyntaxNode *node) {
   }
 }
 
-void Analyzer::analyze_struct(const SyntaxStruct *structure) {
+void
+Analyzer::analyze_struct(const SyntaxStruct *structure) {
 
 }
 
-void Analyzer::analyze_enum(const SyntaxEnum *enumeration) {
+void
+Analyzer::analyze_enum(const SyntaxEnum *enumeration) {
 
 }
 
@@ -158,6 +168,7 @@ Analyzer::resolve_type(const SyntaxType *type) {
   else if (type->has_typename()) {
     return resolve_type(type->ty_name.unwrap());
   }
+  UNREACHABLE;
   return nullptr;
 }
 
@@ -192,13 +203,91 @@ Analyzer::resolve_type(SyntaxTypename name) {
       return new StructType(name.user_defined_typename.unwrap());
   }
   UNREACHABLE;
+  return nullptr;
 }
 
 const Type *
 Analyzer::resolve_type(const SyntaxNode *type) {
+  switch (type->kind) {
+    case LiteralValue:
+      return resolve_type(((SyntaxLiteral*)(type))->literal);
+    case Binary:
+      return validate_binary_expr(((SyntaxBinary*)(type)));
+    case Unary:
+      return validate_unary_expr((SyntaxUnary*)type);
+    case List:
+      return validate_list_expr((SyntaxList*) type);
+    case If:
+      return new Type(TypeTag::Void, nullptr);
+    case Else:
+      return new Type(TypeTag::Void, nullptr);
+    case Elif:
+      return new Type(TypeTag::Void, nullptr);
+    case For:
+      return new Type(TypeTag::Void, nullptr);
+    case While:
+      return new Type(TypeTag::Void, nullptr);
+    case FunctionCall: {
+      auto call = (SyntaxFunctionCall*) type;
+      auto sig_find = function_signatures.find(call->function_name->name());
+      if (sig_find == function_signatures.end()) {
+        // TODO: Function has not been declared
+      }
+      return sig_find->second.return_type;
+    }
+    case Struct:
+      return new Type(TypeTag::Void, nullptr);
+    case ForList:
+      return new Type(TypeTag::Void, nullptr);
+    case ForRange:
+      return new Type(TypeTag::Void, nullptr);
+    case Enum:
+      return new Type(TypeTag::Void, nullptr);
+    case VariableAssignment:
+      return new Type(TypeTag::Void, nullptr);
+    case VariableValueAssignment:
+      return new Type(TypeTag::Void, nullptr);
+    case VariableReassignment:
+      return new Type(TypeTag::Void, nullptr);
+    case ArrayInitialization:
+      break;
+    case Assert:
+      break;
+    case FunctionDefault:
+      UNREACHABLE;
+      break;
+    case FunctionStructProperty:
+      UNREACHABLE;
+      break;
+    case Match:
+      return new Type(TypeTag::Void, nullptr);
+    case PathNode:
+      break;
+    case PathStruct:
+      break;
+    case StructInit:
+      break;
+    case ReturnValue:
+      return new Type(TypeTag::Void, nullptr);
+  }
   return nullptr;
 }
 
+const Type *
+Analyzer::validate_binary_expr(const SyntaxBinary *expr) {
+  return nullptr;
+}
+
+const Type *
+Analyzer::validate_list_expr(const SyntaxList *list) {
+  return nullptr;
+}
+
+
+const Type *
+Analyzer::validate_unary_expr(const SyntaxUnary *unary) {
+  return nullptr;
+}
 
 void
 Analyzer::register_function(const SyntaxFunction *function) {
@@ -229,3 +318,22 @@ Analyzer::register_function(const SyntaxFunction *function) {
   }
   this->function_signatures[sig.name] = sig;
 }
+
+void
+Analyzer::register_variable(const SyntaxVariableAssignment *var) {
+  auto var_name = var->name;
+
+  auto should_be_invalid = scope_that_is_being_analyzed->variables.find
+    (var_name->name());
+
+  if (should_be_invalid != scope_that_is_being_analyzed->variables.end()) {
+    // TODO: Variable is being redeclared error
+  }
+
+  scope_that_is_being_analyzed->variables.insert(
+  { var_name->name(),
+    Variable(var_name, resolve_type(var->expression))
+  });
+}
+
+

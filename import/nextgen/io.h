@@ -7,14 +7,18 @@ namespace nextgen { namespace io {
   enum FileID {
     JetSourceCode,
     CSourceCode,
-    Mach_O,
-    ELF,
-    PE
+    DynamicLib_Windows,
+    DynamicLib_Mac,
+    DynamicLib_Linux,
+    StaticLib_Windows,
+    StaticLib_Mac,
+    StaticLib_Linux
   };
+
 
   class FileBuf {
   public:
-    using Files = FileBuf[];
+    using Files = mem::ArenaVec<FileBuf>;
 
     FileBuf(char *buffer, FileID id) : buffer(buffer), id(id) {}
 
@@ -43,8 +47,13 @@ namespace nextgen { namespace io {
     FileID id; // File Type to know how file should be read
   };
 
+  class FileWriter {
+
+  };
+
 
   FileBuf CreateFileBuffer(const char *FILE, FileID id);
+
 
 
 }} // namespace nextgen::io

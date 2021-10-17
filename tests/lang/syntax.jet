@@ -1,13 +1,2 @@
-static {
-  GLOBAL_CONSTANT_VARIABLE = 23;
-}
-
-fib => (n: i32) i32 {
-  return match n {
-    0 -> 0,
-    1 -> 1,
-    n -> fib(n - 1) + fib(n - 2)
-  };
-}
-
+// Language Demo
 

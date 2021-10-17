@@ -152,31 +152,26 @@ namespace nextgen { namespace jet {
       SourceSpan source;
     };
 
-    // We have to very careful here. We do not have access to std::variant<...>
-    // in C++11, so we must use a controlled union to get a Token's value.
-    struct Value {
-      union {
-        decltype(UINTPTR_MAX) integer;
-        bool    boolean;
-        double  float64;
-        char    character;
-      };
-    };
-
   };
 
   class Token {
   private:
-    using TokenValue     = TokenTraits::Value;
     using SourceLocation = TokenTraits::SourceLocation;
 
+    /** @brief The string value representing token */
     str id;
 
+    // TODO: Do I really need this?
+
+    /** @brief Way to categorize the token */
     unsigned       flags = TokenClassification::Literal;
+
+
+    /** @brief Actual location of the token */
     SourceLocation loc   = {};
 
 
-
+    /** @brief The type of token (Used in Parsing) */
     TokenKind kind;
   public:
     Token() = default;
@@ -459,7 +454,6 @@ namespace nextgen { namespace jet {
     }
 
     /// Pretty Print individual token to the screen.
-    /// TODO: May not need this anymore ...
     void PrettyPrint() const {
       if (isKeyword()) {
         Console::Log(Colors::RED);

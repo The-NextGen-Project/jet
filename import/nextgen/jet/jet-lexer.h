@@ -43,7 +43,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
   };
 
   // Lexical analysis has two different modes for two purposes. Depending on
-  // the case, the lexer will either register tokens or it will simply, print
+  // the case, the lexer will either register tokens or it will simply print
   // tokens to the terminal.
   //
   // TokenMode: Specifies the mode in which tokens are lexed and output is

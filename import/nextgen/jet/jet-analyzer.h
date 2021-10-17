@@ -15,7 +15,7 @@ namespace nextgen { namespace jet {
     Map<FuncSig> function_signatures;
 
     Scope *global_scope = new Scope(nullptr);
-    Scope *scope_that_is_being_analyzed = nullptr;
+    Scope *scope_that_is_being_analyzed = global_scope;
   public:
     void analyze(const ParserOutput output_to_analyze);
     void analyze_function(const SyntaxFunction *function);
@@ -24,6 +24,11 @@ namespace nextgen { namespace jet {
     void analyze_syntax_node(const SyntaxNode *node);
 
     void register_function(const SyntaxFunction *function);
+    void register_variable(const SyntaxVariableAssignment *var);
+
+    const Type *validate_binary_expr(const SyntaxBinary *expr);
+    const Type *validate_list_expr(const SyntaxList *list);
+    const Type *validate_unary_expr(const SyntaxUnary *unary);
 
     const Type *resolve_type(const Token *value);
     const Type *resolve_type(const SyntaxType *type);

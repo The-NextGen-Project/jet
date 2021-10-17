@@ -76,7 +76,6 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 
 
     /** @summary Get the memory from the arena and ensure the OS maps it  */
-    // TODO: Setup Linux and macOS  memory allocation
     NG_INLINE uint8_t *give_and_commit(decltype(UINTPTR_MAX) memory) {
       uint8_t *mem = arena::give(memory);
 #ifdef NG_OS_WINDOWS
@@ -90,7 +89,6 @@ namespace nextgen { namespace mem { using namespace nextgen::core;
 #endif
     }
 
-    // TODO: Setup Linux and macOS  memory allocation
     NG_INLINE void commit(uint8_t *arena, decltype(UINTPTR_MAX) memory) {
 #ifdef NG_OS_WINDOWS
       VirtualAlloc(arena, memory, MEM_COMMIT,

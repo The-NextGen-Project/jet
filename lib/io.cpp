@@ -14,8 +14,25 @@ using namespace nextgen::io;
 // Example:
 // FileBuf files[] = ...
 // FileBuf::Output(files, FiledID::LLVM_IR);
-void FileBuf::Output(FileBuf *files, FileID output) {
-
+void FileBuf::Output(nextgen::mem::ArenaVec<FileBuf>, FileID output) {
+  switch (output) {
+    case JetSourceCode:
+      break;
+    case CSourceCode:
+      break;
+    case DynamicLib_Windows:
+      break;
+    case DynamicLib_Mac:
+      break;
+    case DynamicLib_Linux:
+      break;
+    case StaticLib_Windows:
+      break;
+    case StaticLib_Mac:
+      break;
+    case StaticLib_Linux:
+      break;
+  }
 }
 
 FileBuf nextgen::io::CreateFileBuffer(const char *FILE, FileID ID) {
@@ -23,7 +40,7 @@ FileBuf nextgen::io::CreateFileBuffer(const char *FILE, FileID ID) {
   auto buf  = read.rdbuf();
   auto size = read.tellg();
 
-  auto block = static_cast<char*>(nextgen::mem::os::malloc(size));
+  auto block = new char[size];
   buf->sgetn(block, size);
 
   return { block, ID };

@@ -82,7 +82,7 @@ enum Condition {
   LessThanEqual = 0xE,
   GreaterThan   = 0xF,
   GreaterThanEqual = 0xD,
-  };
+};
 
 enum REX {
   REX_PREFIX = 0b01000000,

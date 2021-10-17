@@ -246,7 +246,8 @@ static const struct ReservedIdent Reserved[] {
   {"f64", Typename_f64 },
 };
 
-static const TokenKind MatchIdentToReserved(const char *ident, size_t len) {
+static const TokenKind
+MatchIdentToReserved(const char *ident, size_t len) {
   FOR(i, SizeOfArray(Reserved)) {
     if (::strncmp(Reserved[i].id, ident, len) == 0)
       return Reserved[i].type;
@@ -255,8 +256,8 @@ static const TokenKind MatchIdentToReserved(const char *ident, size_t len) {
 }
 
 
-template<LexMode Mode>
-void Lexer<Mode>::lex_float(int skip, int start) {
+template<LexMode Mode> void
+Lexer<Mode>::lex_float(int skip, int start) {
   // Initialize start of token
   auto token_start = buffer-skip;
   auto token_start_col = column;
@@ -267,6 +268,7 @@ void Lexer<Mode>::lex_float(int skip, int start) {
   double divisor = 1;
   double value   = 0;
 
+  // TODO: This might be really slow ...
   do {
     auto digit = IntegerBits[curr()];
     if (digit < 0) break;
@@ -540,7 +542,8 @@ void Lexer<Mode>::lex_str() {
 }
 
 template<LexMode Mode>
-ArenaVec<Token> Lexer<Mode>::lex() {
+ArenaVec<Token>
+Lexer<Mode>::lex() {
   tokens.begin = (Token *) GLOBAL_OBJECT_ALLOC.current();
 
   TokenKind kind;

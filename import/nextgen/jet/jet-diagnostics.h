@@ -26,6 +26,9 @@ namespace nextgen { namespace jet {
   struct ParseError;
   class Parser;
 
+  // Type Errors
+  struct TypeError;
+
   class Diagnostic {
   private:
     const char *file_buf;

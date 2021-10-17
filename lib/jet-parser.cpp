@@ -28,7 +28,6 @@
 // Offered under the MIT License.
 // Authors:
 //    • Ashish Bailkeri <ashishbailkeri123@gmail.com>
-//
 
 
 
@@ -175,8 +174,13 @@ Parser::match_expr() {
         return parse_function_call(matched_token, C1);
       }
       else if (C1->getKind() == TokenKind::LCurlyBrace) {
-        // We are in a struct instantiation
-        return parse_struct_instantiation(matched_token);
+        // We are maybe in a struct instantiation
+        auto cond1 = peek(2);
+        auto cond2 = peek(3);
+        if (cond1 && cond2 && cond1->getKind() == TokenKind::Identifier &&
+        cond2->getKind() == TokenKind::Colon) {
+          return parse_struct_instantiation(matched_token);
+        }
       }
       else if (C1->getKind() == TokenKind::Path) {
         // We are in a path value (ie: SomeEnum::Value)

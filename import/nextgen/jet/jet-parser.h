@@ -47,8 +47,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
 
       /** @brief Contains specific error information pertaining to the error
        * message. Only a few parser errors have specific items, while most are
-       * invalid or missing tokens
-       * */
+       * invalid or missing tokens */
       union Metadata {
         struct {
           TokenKind expected;
@@ -182,6 +181,8 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
               ParseError::Metadata { loc }
             }
             ));
+
+          // We cannot recover from a mistake in an expression or pair
           this->diagnostics.send_exception();
         }
       }
