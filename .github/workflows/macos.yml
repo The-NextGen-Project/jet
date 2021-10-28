@@ -1,6 +1,6 @@
 name: MacOS
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 env:
   BUILD_TYPE: Release
@@ -22,4 +22,3 @@ jobs:
       - name: Test
         working-directory: ${{github.workspace}}/build
         run: cd tests && ./tests
-      
