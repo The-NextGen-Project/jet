@@ -10,6 +10,8 @@ Outline
 * [Primitives](#primitives)
 * [Operators](#operators)
 * [Modules](#modules)
+* [Loops](#loops)
+* [Control](#control)
 * [Arrays](#arrays)
 * [Variables](#variables)
 * [Functions](#functions)
@@ -186,6 +188,60 @@ func(|x| => {
   return x * x
 })
 ```
+
+Loops
+-------
+
+### For Loop
+```python
+for i in range(1, 2) {
+  // code here ...
+}
+
+```
+For Loops use range-based syntax and are very similar to how Python for loops work. The range function has 3 values (start, end, step). 
+   * **Start:** Start of the loop iteration variable
+   * **End:** End of the loop iteration variable
+   * **Step:** Incrementation of the loop iteration variable (optional default is 1)
+
+Another example with a list:
+```python
+my_list := [1, 2, 3, 4, 5];
+for value in my_list {
+  // code here ...
+}
+
+```
+
+### While Loop
+```python
+variable := 23;
+while variable <= 23 {
+  // do stuff ...
+}
+
+```
+Condition statements do not require `()` around the statement to be valid.
+
+
+
+Control
+--------
+
+### If, Else, Elif
+```python
+variable := 23;
+if variable > 23 {
+  // do stuff ...
+}
+elif variable is 23 {
+  // do stuff ..
+}
+else {
+  // do stuff...
+}
+```
+Condition statements do not require `()` around the statement to be valid. These work as typical if-else-elif conditional branches.
 
 Modules
 --------
