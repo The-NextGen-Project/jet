@@ -4,7 +4,7 @@ using namespace nextgen::jet;
 
 
 void Analyzer::analyze(const ParserOutput output_to_analyze) {
-  
+
 }
 
 void Analyzer::analyze_function(const SyntaxFunction *function) {
