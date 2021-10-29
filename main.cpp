@@ -49,14 +49,22 @@ auto init_jet(int argc, char const **argv) {
   add_args(J);
 }
 
+struct AA {
+  int a;
+  int b;
+};
+
 
 int main(int argc, char const **argv, char **envP) {
   try {
     auto expr = (((((((((((((((((1)))))))))))))))));
-    auto writer = io::File_Writer("nice.txt");
-    writer.write("Hi\n");
+
+    auto writer = io::File_Writer("test.txt");
+    writer.write("Hello Mr. Schiff\n");
 
     writer.close();
+    auto buf = io::create_file_buffer("nice.txt",io::FileID::JetSourceCode);
+
 
   } catch(std::exception&) {
     mem::deinit();

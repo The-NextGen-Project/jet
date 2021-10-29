@@ -26,14 +26,9 @@ void FileBuf::Output(nextgen::mem::ArenaVec<FileBuf>, FileID output) {
 }
 
 FileBuf *nextgen::io::create_file_buffer(const char *FILE, FileID id) {
-  auto read = std::ifstream(FILE, std::ios::binary);
-  auto buf  = read.rdbuf();
-  auto size = read.tellg();
+  std::ifstream in(FILE, std::ios::binary);
+  std::string contents((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
 
-  auto block = new char[size];
-  buf->sgetn(block, size);
-
-  Console::Log("DSD: ", block, "\n");
-
-  return new FileBuf {block, id };
+  return new FileBuf {const_cast<char *>(contents.c_str()), id };
 }
