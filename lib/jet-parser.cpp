@@ -162,13 +162,19 @@ const NG_INLINE SyntaxNode *
 Parser::match_expr() {
   auto matched_token = curr();
   switch (matched_token->getKind()) {
+
+    // We have reached the EOF somehow, build an error for it here
     case EOFToken:
       this->diagnostics.build(ParseError {
         ParseErrorType::UnexpectedEndOfFile,
         matched_token->getSourceLocation()
       });
       break;
-    case Identifier: { // Unresolved variable or Function Call
+
+    // Two Cases:
+    // 1. A Variable  ... = my_ident_which_is_var
+    // 2. A Function Call  ... nice_func(1, 2)
+    case Identifier: {
       auto C1 = peek(1);
       if (C1->getKind() == TokenKind::LParenthesis) {
         return parse_function_call(matched_token, C1);
@@ -190,12 +196,16 @@ Parser::match_expr() {
       E->kind = SyntaxKind::LiteralValue;
       return E;
     }
+
+    // Constant Value.
     case Integer: case String: case Char: case Decimal: case KeywordTrue:
     case KeywordFalse: {
       auto E = (SyntaxNode*) new SyntaxLiteral(matched_token);
       E->kind = SyntaxKind::LiteralValue;
       return E;
     }
+
+    // Parenthesized Expression
     case LParenthesis: {
       skip(1);
       auto E = parse_expr();
@@ -203,6 +213,8 @@ Parser::match_expr() {
       position--;
       return E;
     }
+
+    // List Initializer
     case LBracket: { // ex: [1, 2, 3]
       auto current = next(1);
       auto E  = new SyntaxList;

@@ -18,11 +18,12 @@ add_subdirectory(tests)
 add_executable(jet main.cpp
 
 
-    # Import Support Libraries.
+        # Import Support Libraries.
         lib/panic.cpp
         lib/allocator.cpp
         lib/str.cpp
         lib/io.cpp
+        lib/cl.cpp
 
         # Lexical Analysis
         lib/jet-lexer-v2.cpp

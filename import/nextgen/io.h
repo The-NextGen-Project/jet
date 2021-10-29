@@ -15,44 +15,41 @@ namespace nextgen { namespace io {
     StaticLib_Linux
   };
 
-
-  class FileBuf {
-  public:
+  struct FileBuf {
     using Files = mem::ArenaVec<FileBuf>;
-
-    FileBuf(char *buffer, FileID id) : buffer(buffer), id(id) {}
-
-    FileID getFileID() const {
-      return id;
-    }
-
-    char *getFileBuffer() const {
-      return buffer;
-    }
-
-
-    // Given a list of files, output the type of file given. For example,
-    // given a list of source code for Jet, and set it to output a binary
-    // ELF, it will output an ELF binary for the given source input.
-    //
-    // Example:
-    // FileBuf files[] = ...
-    // FileBuf::Output(files, FileID::CSourceCode);
-    //
-    // NOTE: The types of files need to be able to be linked together to form
-    // the resulting FileID file type.
+  public:
+    char *file_buffer;
+    FileID id;
     static void Output(Files files, FileID output);
-  private:
-    char *buffer; // Buffer pointer to the source text of a file
-    FileID id; // File Type to know how file should be read
-  };
-
-  class FileWriter {
-
   };
 
 
-  FileBuf CreateFileBuffer(const char *FILE, FileID id);
+  struct File_Writer {
+    const char *file_name;
+    std::ofstream file;
+  public:
+    explicit File_Writer(const char *file) : file_name(file) {
+      this->file.open(file_name);
+    }
+
+    template<typename ... Args>
+    void write(Args&& ... args) {
+      write(args...);
+    }
+
+    template<typename T>
+    void write(T value) {
+      file << value;
+    }
+
+    void close() {
+      file.close();
+    }
+
+  };
+
+
+  FileBuf *create_file_buffer(const char *FILE, FileID id);
 
 
 

@@ -3,17 +3,7 @@
 
 using namespace nextgen::io;
 
-// Read a file using the standard library and outputs a FileBuf
-// with the contents. TODO: Can this be more portable??
 
-
-// Given a list of files, output the type of file given. For example,
-// given a list of source code for Jet, and set it to output a binary
-// ELF, it will output an ELF binary for the given source input.
-//
-// Example:
-// FileBuf files[] = ...
-// FileBuf::Output(files, FiledID::LLVM_IR);
 void FileBuf::Output(nextgen::mem::ArenaVec<FileBuf>, FileID output) {
   switch (output) {
     case JetSourceCode:
@@ -35,7 +25,7 @@ void FileBuf::Output(nextgen::mem::ArenaVec<FileBuf>, FileID output) {
   }
 }
 
-FileBuf nextgen::io::CreateFileBuffer(const char *FILE, FileID ID) {
+FileBuf *nextgen::io::create_file_buffer(const char *FILE, FileID id) {
   auto read = std::ifstream(FILE, std::ios::binary);
   auto buf  = read.rdbuf();
   auto size = read.tellg();
@@ -43,5 +33,7 @@ FileBuf nextgen::io::CreateFileBuffer(const char *FILE, FileID ID) {
   auto block = new char[size];
   buf->sgetn(block, size);
 
-  return { block, ID };
+  Console::Log("DSD: ", block, "\n");
+
+  return new FileBuf {block, id };
 }

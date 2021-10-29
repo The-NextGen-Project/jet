@@ -10,9 +10,12 @@ namespace nextgen {
   static constexpr NoneValue None = NoneValue::None;
 
   template<typename T>
-  struct Array {
+  struct ArrayView {
     size_t len;
-    const T arr[];
+    const T *arr;
+
+    ArrayView() = default;
+    ArrayView(size_t len, const T *arr) : len(len), arr(arr) {}
   };
 
   template<typename T, size_t N>
