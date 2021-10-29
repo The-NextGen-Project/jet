@@ -18,7 +18,7 @@ add_subdirectory(tests)
 add_executable(jet main.cpp
 
 
-    # Import Support Libraries.
+        # Import Support Libraries.
         lib/panic.cpp
         lib/allocator.cpp
         lib/str.cpp

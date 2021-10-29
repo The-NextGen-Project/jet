@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 project(tests)
 
 
-
 # Setup Google Test Compilation Cases
 add_executable(tests
 
@@ -31,7 +30,7 @@ add_executable(tests
         lex-test.cpp
         parse-test.cpp
         x64-test.cpp
-)
+        )
 
 #set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)
 

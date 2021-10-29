@@ -2,7 +2,9 @@
 # define NEXTGEN_CONFIG_H
 #   if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__) || defined(__WIN32) && !defined(__CYGWIN__)
 #       define NG_OS_WINDOWS true
+
 #       include <windows.h>
+
 #   elif __APPLE__
 #       define NG_OS_APPLE true
 #       include <TargetConditionals.h>
@@ -20,8 +22,8 @@
 #       define NG_INLINE	inline
 #       define NG_AINLINE	inline __attribute__((always_inline))
 #   elif defined(_MSC_VER)
-#       define NG_INLINE	__inline
-#       define NG_AINLINE	__forceinline
+#       define NG_INLINE    __inline
+#       define NG_AINLINE    __forceinline
 #   endif
 #   if defined(_M_IX86)
 #       define NG_FAST __fastcall
@@ -50,26 +52,29 @@
 /* Older versions of MSVC do not have stdint.h values that are properly defined from C99 */
 #   if defined(_MSC_VER) && (_MSC_VER < 1700)
 typedef __int8 int8_t;
-        typedef __int16 int16_t;
-        typedef __int32 int32_t;
-        typedef __int64 int64_t;
-        typedef unsigned __int8 uint8_t;
-        typedef unsigned __int16 uint16_t;
-        typedef unsigned __int32 uint32_t;
-        typedef unsigned __int64 uint64_t;
+		typedef __int16 int16_t;
+		typedef __int32 int32_t;
+		typedef __int64 int64_t;
+		typedef unsigned __int8 uint8_t;
+		typedef unsigned __int16 uint16_t;
+		typedef unsigned __int32 uint32_t;
+		typedef unsigned __int64 uint64_t;
 #   ifdef _WIN64
 #       define UINTPTR_MAX 0xffffffffffffffff
-        typedef __int64 intptr_t;
-        typedef unsigned __int64 uintptr_t;
+		typedef __int64 intptr_t;
+		typedef unsigned __int64 uintptr_t;
 #   else
 #       define UINTPTR_MAX 0xffffffff
-        typedef __int32 intptr_t;
-        typedef unsigned __int32 uintptr_t;
+		typedef __int32 intptr_t;
+		typedef unsigned __int32 uintptr_t;
 #   endif
 #   else
 #       define HAS_STDINT
+
 #       include <cstdint>
+
 #   endif
+
 #   include <iostream>
 #   include <iomanip>
 #   include <vector>
@@ -82,6 +87,7 @@ typedef __int8 int8_t;
 #   include <unordered_set>
 #   include <memory>
 #   include <array>
+
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32
@@ -97,7 +103,7 @@ typedef __int8 int8_t;
 #   endif
 #   if !defined(BIT32) && !defined(BIT64)
 #     ifdef _WIN64 /* Only windows has this here because MSVC sometimes does not have stdint.h */
-        define BIT64
+define BIT64
 #     else
 #       define BIT32
 #     endif

@@ -19,12 +19,12 @@ void FileBuf::Output(FileBuf *files, FileID output) {
 }
 
 FileBuf nextgen::io::CreateFileBuffer(const char *FILE, FileID ID) {
-  auto read = std::ifstream(FILE, std::ios::binary);
-  auto buf  = read.rdbuf();
-  auto size = read.tellg();
+	auto read = std::ifstream(FILE, std::ios::binary);
+	auto buf = read.rdbuf();
+	auto size = read.tellg();
 
-  auto block = static_cast<char*>(nextgen::mem::os::malloc(size));
-  buf->sgetn(block, size);
+	auto block = static_cast<char *>(nextgen::mem::os::malloc(size));
+	buf->sgetn(block, size);
 
-  return { block, ID };
+	return {block, ID};
 }
