@@ -1,4 +1,4 @@
-#include <nextgen/jet/jet-lexer.h>
+#include "../src/lexer.h"
 
 #ifndef TEST
   #define TEST(suite, name) void suite##_##name##_##test()
@@ -21,8 +21,8 @@ TEST(LexTest, NonFMTNumbers) {
   auto token = lexer.lex()[0];
 
 
-//  ASSERT_EQ(token->getKind(), jet::TokenKind::Integer);
-//  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 1211);
+//  ASSERT_EQ(token.type(), jet::TokenKind::Integer);
+//  ASSERT_EQ(token.getValue<decltype(UINTPTR_MAX)>(), 1211);
 
 }
 
@@ -35,8 +35,8 @@ TEST(LexTest, DecimalNumber) {
   auto lexer = jet::Lexer<TokenMode> ( "23.246", "src/test.jet", 6);
   auto token = lexer.lex()[0];
 
-  ASSERT_EQ(token->template getValue<double>(), 23.246);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::Decimal);
+  ASSERT_EQ(token.template get_value<double>(), 23.246);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Decimal);
 }
 
 
@@ -48,8 +48,8 @@ TEST(LexTest, HexadecimalNumber) {
 
   auto lexer = jet::Lexer<TokenMode>( "0x1111", "src/test.jet", 6);
   auto token = lexer.lex()[0];
-//  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 0x1111);
-//  ASSERT_EQ(token->getKind(), jet::TokenKind::Integer);
+//  ASSERT_EQ(token.getValue<decltype(UINTPTR_MAX)>(), 0x1111);
+//  ASSERT_EQ(token.type(), jet::TokenKind::Integer);
 }
 
 
@@ -61,8 +61,8 @@ TEST(LexTest, BinaryNumber) {
 
   auto lexer = jet::Lexer<TokenMode>( "0b011101110", "src/test.jet", 11);
   auto token = lexer.lex()[0];
-  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 0b011101110);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::Integer);
+  ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 0b011101110);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
 }
 
 TEST(LexTest, OctalNumber) {
@@ -73,8 +73,8 @@ TEST(LexTest, OctalNumber) {
 
   auto lexer = jet::Lexer<TokenMode>( "0112022", "src/test.jet", 7);
   auto token = lexer.lex()[0];
-  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 0112022);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::Integer);
+  ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 0112022);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
 }
 
 TEST(LexTest, Base36Number) {
@@ -86,8 +86,8 @@ TEST(LexTest, Base36Number) {
   auto lexer = jet::Lexer<TokenMode>( "0#helloworld", "src/test.jet", 12);
   auto token = lexer.lex()[0];
 
-  ASSERT_EQ(token->getValue<decltype(UINTPTR_MAX)>(), 1767707668033969);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::Integer);
+  ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 1767707668033969);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
 }
 
 TEST(LexTest, Identifier) {
@@ -99,8 +99,8 @@ TEST(LexTest, Identifier) {
   auto lexer = jet::Lexer<TokenMode>( "ident", "src/test.jet", 5);
   auto token = lexer.lex()[0];
 
-  ASSERT_TRUE(::strncmp(token->name().begin(), "ident", 5) == 0);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::Identifier);
+  ASSERT_TRUE(::strncmp(token.name().data(), "ident", 5) == 0);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Identifier);
 }
 
 TEST(LexTest, Keyword) {
@@ -115,13 +115,13 @@ TEST(LexTest, Keyword) {
   auto tokens = lexer.lex();
   auto token = tokens[0];
 
-  ASSERT_TRUE(::strncmp(token->name().begin(), "while", 5) == 0);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::KeywordWhile);
+  ASSERT_TRUE(::strncmp(token.name().data(), "while", 5) == 0);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Keyword_While);
 
 
   token = tokens[1];
-  ASSERT_TRUE(::strncmp(token->name().begin(), "extern", 6) == 0);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::KeywordExtern);
+  ASSERT_TRUE(::strncmp(token.name().data(), "extern", 6) == 0);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Keyword_Extern);
 }
 
 TEST(LexTest, String) {
@@ -136,20 +136,20 @@ TEST(LexTest, String) {
   auto tokens = lexer.lex();
   auto token = tokens[0];
 
-  ASSERT_TRUE(::strncmp(token->name().begin(), "Hello", token->len()) == 0);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::String);
+  ASSERT_TRUE(::strncmp(token.name().data(), "Hello", token.len()) == 0);
+  ASSERT_EQ(token.type(), jet::Token_Kind::String);
 
 
   token = tokens[1];
 
-  ASSERT_TRUE(::strncmp(token->name().begin(), "ace", token->len()) == 0);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::Identifier);
+  ASSERT_TRUE(::strncmp(token.name().data(), "ace", token.len()) == 0);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Identifier);
 
 
   token = tokens[2];
 
-  ASSERT_TRUE(::strncmp(token->name().begin(), "There", token->len()) == 0);
-  ASSERT_EQ(token->getKind(), jet::TokenKind::String);
+  ASSERT_TRUE(::strncmp(token.name().data(), "There", token.len()) == 0);
+  ASSERT_EQ(token.type(), jet::Token_Kind::String);
 
 }
 
@@ -164,7 +164,7 @@ TEST(LexTest, StringEscape) { // TODO: Add Unicode Escape Later
   auto buf = R"(var every_escape = "I have\x56 every \t thing\n that could \b\v in \r")";
   auto len = strlen(buf);
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
-  ArenaVec<Token> tokens{nullptr, nullptr};
+  std::vector<Token> tokens;
   try {
     tokens = lexer.lex();
   } catch (std::exception &) {
@@ -174,7 +174,7 @@ TEST(LexTest, StringEscape) { // TODO: Add Unicode Escape Later
   auto token = tokens[3];
 
   auto compare = "I have\x56 every \t thing\n that could \b\v in \r";
-  ASSERT_TRUE(::strncmp(token->name().begin(), compare, token->len()) == 0);
+  ASSERT_TRUE(::strncmp(token.name().data(), compare, token.len()) == 0);
 }
 
 TEST(LexTest, AllTokens) {
@@ -192,24 +192,24 @@ TEST(LexTest, AllTokens) {
              auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
 
 
-             ArenaVec<Token> tokens{nullptr, nullptr};
+             std::vector<Token> tokens;
              try {
                tokens = lexer.lex();
              } catch (std::exception &) {
                // Do nothing ...
                return;
              }
-             ASSERT_EQ(tokens.len(), 45);
-             ///*  ASSERT_EQ(tokens[0].getKind(), jet::TokenKind::Plus);
-             //  ASSERT_EQ(tokens[1].getKind(), jet::TokenKind::PlusEquals);
-             //  ASSERT_EQ(tokens[2].getKind(), jet::TokenKind::PlusPlus);
-             //  ASSERT_EQ(tokens[3].getKind(), jet::TokenKind::Minus);
-             //  ASSERT_EQ(tokens[4].getKind(), jet::TokenKind::MinusEquals);
-             //  ASSERT_EQ(tokens[5].getKind(), jet::TokenKind::MinusMinus);
-             //  ASSERT_EQ(tokens[6].getKind(), jet::TokenKind::Star);
-             //  ASSERT_EQ(tokens[7].getKind(), jet::TokenKind::MulEquals);
-             //  ASSERT_EQ(tokens[8].getKind(), jet::TokenKind::Pow);
-             //  ASSERT_EQ(tokens[9].getKind(), jet::TokenKind::Slash);*//*
+             ASSERT_EQ(tokens.size(), 46);
+             ///*  ASSERT_EQ(tokens[0].type(), jet::TokenKind::Plus);
+             //  ASSERT_EQ(tokens[1].type(), jet::TokenKind::PlusEquals);
+             //  ASSERT_EQ(tokens[2].type(), jet::TokenKind::Plus_Plus);
+             //  ASSERT_EQ(tokens[3].type(), jet::TokenKind::Minus);
+             //  ASSERT_EQ(tokens[4].type(), jet::TokenKind::MinusEquals);
+             //  ASSERT_EQ(tokens[5].type(), jet::TokenKind::Minus_Minus);
+             //  ASSERT_EQ(tokens[6].type(), jet::TokenKind::Star);
+             //  ASSERT_EQ(tokens[7].type(), jet::TokenKind::MulEquals);
+             //  ASSERT_EQ(tokens[8].type(), jet::TokenKind::Pow);
+             //  ASSERT_EQ(tokens[9].type(), jet::TokenKind::Slash);*//*
 
 
 }

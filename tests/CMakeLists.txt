@@ -7,30 +7,28 @@ project(tests)
 add_executable(tests
 
         # Link Support
-        ../lib/panic.cpp
-        ../lib/allocator.cpp
-        ../lib/str.cpp
-        ../lib/io.cpp
+        ../src/allocator.cpp
+        ../src/util/str.cpp
 
         # Lexical Analysis
-        #../lib/Lex/Lexer.cpp
-        ../lib/jet-diagnostics.cpp
-        ../lib/jet-lexer-v2.cpp
+        #../src/Lex/Lexer.cpp
+        ../src/diagnostics.cpp
+        ../src/lexer.cpp
 
 
         # Parsing
-        ../lib/jet-parser.cpp
-
-        ../lib/jet-x64-assembler.cpp
-
-        ################################
-
-        ## Tests
+        ../src/parser.cpp
+#
+#        ../src/x64-codegen.cpp
+#
+#        ################################
+#
+#        ## Tests
         test-main.cpp
-
+#
         lex-test.cpp
         parse-test.cpp
-        x64-test.cpp
+#        x64-test.cpp
 )
 
 #set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)

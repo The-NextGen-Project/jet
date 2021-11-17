@@ -8,8 +8,8 @@
   #define TEST_CALL(suite, name) suite##_##name##_##test()
 #endif
 
-#include <nextgen/jet/jet-x64-assembler.h>
-#include <nextgen/panic.h>
+#include "../src/x64-codegen.h"
+#include "util/panic.h"
 
 TEST(x64Test, Add) {
 

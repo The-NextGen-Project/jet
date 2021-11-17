@@ -1,2 +1,51 @@
 // Language Demo
+global_variable := 23;
 
+main => () {
+  // Main Function stuff goes here
+}
+
+MyStruct => struct {
+  value: str
+  another: i32
+  cool: box MyStruct // Smart Pointer
+}
+
+TaggedEnum => enum {
+  Constant,
+  TaggedStruct {
+    a: str
+    b: i32
+  }
+}
+
+// Compile-time checked arguments
+function => (static value: str, some: i32) {
+  print("WOW\n");
+  static {
+    print("%", value);
+  }
+}
+// Hi is printed before WOW
+function("Hi", 23);
+
+another_function => (tuple: (i32, i32)) {
+  mut value := box [1, 2, 3, 4];
+  value << 23; // Dynamic arrays
+  print("$value") // [1, 2, 3, 4, 23]
+
+  print("% + % = %", tuple.1, tuple.2, tuple.1 + tuple.2);
+}
+
+generic_values => ($no_type, with_type: $T) {
+  print("%\n%\n", no_type, with_type)
+}
+generic_values(213, "HI");
+generic_values("HI", 232);
+
+
+// Pointers
+test_func => () {
+  value := 23;
+  mut ptr : *i32 = &value;
+}

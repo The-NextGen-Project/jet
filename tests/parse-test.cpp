@@ -1,4 +1,4 @@
-#include <nextgen/jet/jet-parser.h>
+#include "../src/parser.h"
 
 #ifndef TEST
   #define TEST(suite, name) void suite##_##name##_##test()
@@ -22,14 +22,12 @@ TEST(ParseTest, VariableDeclLiteral) {
 
   auto name = parser.curr(); parser.skip(2);
   auto expr = parser.parse_variable_assignment(name);
-  auto decl = static_cast<const SyntaxVariableAssignment*>(expr);
-  ASSERT_EQ(expr->kind, SyntaxKind::VariableAssignment);
+  auto decl = static_cast<const Syntax_Variable_Assignment*>(expr);
+  ASSERT_EQ(expr->kind, Syntax_Kind::Variable_Assignment);
   //  //ASSERT_EQ(decl->name->name(), "hello"_intern);
-  ASSERT_TRUE(::strncmp(decl->name->name().begin(), "hello", decl->name->len()) == 0);
-  ASSERT_EQ(decl->expression->kind, jet::SyntaxKind::LiteralValue);
-  ASSERT_EQ(CAST(const SyntaxLiteral*, decl->expression)
-  ->literal->getValue<size_t>
-  (), 23);
+  ASSERT_TRUE(::strncmp(decl->name->name().data(), "hello", decl->name->len()) == 0);
+  ASSERT_EQ(decl->expression->kind, jet::Syntax_Kind::Literal_Value);
+  ASSERT_EQ(CAST(const Syntax_Literal*, decl->expression)->literal->get_value<size_t>(), 23);
 }
 
 TEST(ParseTest, VariableArrayDecl) {
@@ -45,19 +43,19 @@ TEST(ParseTest, VariableArrayDecl) {
 
   auto name = parser.curr(); parser.skip(2);
   auto node = parser.parse_variable_assignment(name);
-  auto decl = CAST(SyntaxVariableAssignment*, node);
-  auto list = CAST(SyntaxList*, decl->expression);
+  auto decl = CAST(Syntax_Variable_Assignment*, node);
+  auto list = CAST(Syntax_List*, decl->expression);
 
 
-  ASSERT_EQ(decl->kind, SyntaxKind::VariableAssignment);
-  ASSERT_EQ(CAST(const SyntaxLiteral*, list->values[0])
-  ->literal->getValue<size_t>
-  (), 11);
-  ASSERT_EQ(CAST(const SyntaxLiteral*, list->values[1])
-  ->literal->getValue<size_t>(), 2);
-  ASSERT_EQ(CAST(const SyntaxLiteral*, list->values[2])
-  ->literal->getValue<size_t>
-  (), 55);
+  ASSERT_EQ(decl->kind, Syntax_Kind::Variable_Assignment);
+  ASSERT_EQ(CAST(const Syntax_Literal*, list->values[0])
+  ->literal->get_value<size_t>
+    (), 11);
+  ASSERT_EQ(CAST(const Syntax_Literal*, list->values[1])
+  ->literal->get_value<size_t>(), 2);
+  ASSERT_EQ(CAST(const Syntax_Literal*, list->values[2])
+  ->literal->get_value<size_t>
+    (), 55);
 }
 
 TEST(ParseTest, VariableDeclBinary) {
@@ -73,26 +71,26 @@ TEST(ParseTest, VariableDeclBinary) {
 
   auto name = parser.curr(); parser.skip(2);
   auto expr = parser.parse_variable_assignment(name);
-  auto decl = CAST(SyntaxVariableAssignment*, expr);
+  auto decl = CAST(Syntax_Variable_Assignment*, expr);
 
-  auto binary = CAST(SyntaxBinary*, decl->expression);
+  auto binary = CAST(Syntax_Binary*, decl->expression);
 
-  auto lhs = CAST(SyntaxLiteral*, binary->lhs);
+  auto lhs = CAST(Syntax_Literal*, binary->lhs);
   auto op  = binary->operation;
-  auto rhs = CAST(SyntaxBinary*, binary->rhs);
+  auto rhs = CAST(Syntax_Binary*, binary->rhs);
 
-  auto rhs_lhs = CAST(SyntaxLiteral*, rhs->lhs);
-  auto rhs_rhs = CAST(SyntaxLiteral*, rhs->rhs);
+  auto rhs_lhs = CAST(Syntax_Literal*, rhs->lhs);
+  auto rhs_rhs = CAST(Syntax_Literal*, rhs->rhs);
 
-  ASSERT_EQ(expr->kind, jet::SyntaxKind::VariableAssignment);
+  ASSERT_EQ(expr->kind, jet::Syntax_Kind::Variable_Assignment);
   //ASSERT_EQ(decl->name->name(), "wow"_intern);
-  ASSERT_TRUE(::strncmp(decl->name->name().begin(), "wow", decl->name->len()) == 0);
-  ASSERT_EQ(binary->kind, jet::SyntaxKind::Binary);
+  ASSERT_TRUE(::strncmp(decl->name->name().data(), "wow", decl->name->len()) == 0);
+  ASSERT_EQ(binary->kind, jet::Syntax_Kind::Binary);
 
-  ASSERT_EQ(op, SyntaxBinaryOp::Addition);
-  ASSERT_EQ(lhs->literal->getValue<size_t>(),2);
-  ASSERT_EQ(rhs_lhs->literal->getValue<size_t>(), 3);
-  ASSERT_EQ(rhs_rhs->literal->getValue<size_t>(), 2);
+  ASSERT_EQ(op, Syntax_Binary_Op::Addition);
+  ASSERT_EQ(lhs->literal->get_value<size_t>(), 2);
+  ASSERT_EQ(rhs_lhs->literal->get_value<size_t>(), 3);
+  ASSERT_EQ(rhs_rhs->literal->get_value<size_t>(), 2);
 }
 
 TEST(ParseTest, VariableDeclParenBinary) {
@@ -107,26 +105,26 @@ TEST(ParseTest, VariableDeclParenBinary) {
 
   auto name = parser.curr(); parser.skip(2);
   auto expr = parser.parse_variable_assignment(name);
-  auto decl = CAST(SyntaxVariableAssignment*, expr);
+  auto decl = CAST(Syntax_Variable_Assignment*, expr);
 
-  auto binary = CAST(SyntaxBinary*, decl->expression);
+  auto binary = CAST(Syntax_Binary*, decl->expression);
 
-  auto lhs = CAST(SyntaxBinary*, binary->lhs);
-  auto lhs_lhs = CAST(SyntaxLiteral*, lhs->lhs);
-  auto lhs_rhs = CAST(SyntaxLiteral*, lhs->rhs);
+  auto lhs = CAST(Syntax_Binary*, binary->lhs);
+  auto lhs_lhs = CAST(Syntax_Literal*, lhs->lhs);
+  auto lhs_rhs = CAST(Syntax_Literal*, lhs->rhs);
 
   auto op  = binary->operation;
-  auto rhs = CAST(SyntaxLiteral*, binary->rhs);
+  auto rhs = CAST(Syntax_Literal*, binary->rhs);
 
-  ASSERT_EQ(expr->kind, jet::SyntaxKind::VariableAssignment);
+  ASSERT_EQ(expr->kind, jet::Syntax_Kind::Variable_Assignment);
   //ASSERT_EQ(decl->name->name(), "wow"_intern);
-  ASSERT_TRUE(::strncmp(decl->name->name().begin(), "awesome", decl->name->len()) == 0);
-  ASSERT_EQ(binary->kind, jet::SyntaxKind::Binary);
+  ASSERT_TRUE(::strncmp(decl->name->name().data(), "awesome", decl->name->len()) == 0);
+  ASSERT_EQ(binary->kind, jet::Syntax_Kind::Binary);
 
-  ASSERT_EQ(op, SyntaxBinaryOp::Multiplication);
-  ASSERT_EQ(lhs_lhs->literal->getValue<size_t>(),2);
-  ASSERT_EQ(lhs_rhs->literal->getValue<size_t>(), 3);
-  ASSERT_EQ(rhs->literal->getValue<size_t>(), 2);
+  ASSERT_EQ(op, Syntax_Binary_Op::Multiplication);
+  ASSERT_EQ(lhs_lhs->literal->get_value<size_t>(), 2);
+  ASSERT_EQ(lhs_rhs->literal->get_value<size_t>(), 3);
+  ASSERT_EQ(rhs->literal->get_value<size_t>(), 2);
 }
 
 TEST(ParseTest, VariableValueAssignment) {
@@ -139,11 +137,11 @@ TEST(ParseTest, VariableValueAssignment) {
   auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", buf_len);
   auto parser = jet::Parser(&lexer);
 
-  auto node = (SyntaxVariableValueAssignment*) parser.parse_stmt();
+  auto node = (Syntax_Variable_Value_Assignment*) parser.parse_stmt();
 
-  ASSERT_TRUE(::strncmp(node->name->name().begin(), "weather", node->name->len()) == 0);
-  ASSERT_EQ(node->op, SyntaxAssignmentOp::LShiftAssign);
-  ASSERT_EQ(((SyntaxLiteral*)(node->expression))->literal->getValue<size_t>(),
+  ASSERT_TRUE(::strncmp(node->name->name().data(), "weather", node->name->len()) == 0);
+  ASSERT_EQ(node->op, Syntax_Assignment_Op::LShiftAssign);
+  ASSERT_EQ(((Syntax_Literal * )(node->expression))->literal->get_value<size_t>(),
     2223);
 }
 
@@ -160,20 +158,20 @@ TEST(ParseTest, IfStatement) {
   parser.skip(1);
 
   auto node = parser.parse_if();
-  auto stmt = (SyntaxIf*) node;
+  auto stmt = (Syntax_If*) node;
 
   auto if_cond_node = stmt->condition;
-  auto if_cond      = (SyntaxLiteral*) stmt->condition;
+  auto if_cond      = (Syntax_Literal*) stmt->condition;
 
-  auto variable_decl = (SyntaxVariableAssignment*) stmt->body.statements[0];
+  auto variable_decl = (Syntax_Variable_Assignment*) stmt->body.statements[0];
 
 
-  ASSERT_EQ(if_cond_node->kind, SyntaxKind::LiteralValue);
-  ASSERT_TRUE(::strncmp(if_cond->literal->name().begin(), "value",
+  ASSERT_EQ(if_cond_node->kind, Syntax_Kind::Literal_Value);
+  ASSERT_TRUE(::strncmp(if_cond->literal->name().data(), "value",
                         if_cond->literal->len()) == 0);
 
-  ASSERT_TRUE(::strncmp(variable_decl->name->name().begin(), "nice", variable_decl->name->len()) == 0);
-  ASSERT_EQ(CAST(SyntaxLiteral*, variable_decl->expression)->literal->getValue<size_t>(), 23);
+  ASSERT_TRUE(::strncmp(variable_decl->name->name().data(), "nice", variable_decl->name->len()) == 0);
+  ASSERT_EQ(CAST(Syntax_Literal * , variable_decl->expression)->literal->get_value<size_t>(), 23);
 
 }
 
@@ -190,28 +188,28 @@ TEST(ParseTest, WhileLoop) {
   parser.skip(1);
 
   auto node = parser.parse_while();
-  auto stmt = (SyntaxWhile*) node;
+  auto stmt = (Syntax_While*) node;
 
   auto while_cond_node = stmt->condition;
 
-  auto while_cond      = (SyntaxBinary*) stmt->condition;
-  auto lhs_cond = (SyntaxLiteral*) while_cond->lhs;
+  auto while_cond      = (Syntax_Binary*) stmt->condition;
+  auto lhs_cond = (Syntax_Literal*) while_cond->lhs;
   auto bin_op   = while_cond->operation;
-  auto rhs_cond = (SyntaxLiteral*) while_cond->rhs;
+  auto rhs_cond = (Syntax_Literal*) while_cond->rhs;
 
-  auto variable_decl = (SyntaxVariableAssignment*) stmt->body.statements[0];
+  auto variable_decl = (Syntax_Variable_Assignment*) stmt->body.statements[0];
 
 
-  ASSERT_EQ(while_cond_node->kind, SyntaxKind::Binary);
-  ASSERT_TRUE(::strncmp(lhs_cond->literal->name().begin(), "some_value",
+  ASSERT_EQ(while_cond_node->kind, Syntax_Kind::Binary);
+  ASSERT_TRUE(::strncmp(lhs_cond->literal->name().data(), "some_value",
                         lhs_cond->literal->len()) == 0);
-  ASSERT_EQ(bin_op, SyntaxBinaryOp::Greater);
-  ASSERT_EQ(rhs_cond->literal->getValue<size_t>(), 223);
+  ASSERT_EQ(bin_op, Syntax_Binary_Op::Greater);
+  ASSERT_EQ(rhs_cond->literal->get_value<size_t>(), 223);
 
-  ASSERT_TRUE(::strncmp(variable_decl->name->name().begin(), "another",
+  ASSERT_TRUE(::strncmp(variable_decl->name->name().data(), "another",
                         variable_decl->name->len()) == 0);
-  ASSERT_EQ(CAST(SyntaxLiteral*, variable_decl->expression)
-  ->literal->getValue<size_t>(), 43);
+  ASSERT_EQ(CAST(Syntax_Literal * , variable_decl->expression)
+              ->literal->get_value<size_t>(), 43);
 }
 
 TEST(ParseTest, ForStatement) {
@@ -230,18 +228,18 @@ TEST(ParseTest, ForStatement) {
   parser.skip(1);
 
   auto node = parser.parse_for();
-  auto stmt = (SyntaxForList*) node;
-  auto variable_decl = (SyntaxVariableAssignment*) stmt->body.statements[0];
+  auto stmt = (Syntax_ForList*) node;
+  auto variable_decl = (Syntax_Variable_Assignment*) stmt->body.statements[0];
 
 
-  ASSERT_TRUE(::strncmp(stmt->list_var->name().begin(), "value",
+  ASSERT_TRUE(::strncmp(stmt->list_var->name().data(), "value",
                         stmt->list_var->len()) == 0);
-  ASSERT_TRUE(::strncmp(stmt->list_name->name().begin(), "list_of_values",
+  ASSERT_TRUE(::strncmp(stmt->list_name->name().data(), "list_of_values",
                         stmt->list_name->len()) == 0);
-  ASSERT_TRUE(::strncmp(variable_decl->name->name().begin(), "do_something",
+  ASSERT_TRUE(::strncmp(variable_decl->name->name().data(), "do_something",
                         variable_decl->name->len()) == 0);
-  ASSERT_EQ(CAST(SyntaxLiteral*, variable_decl->expression)
-  ->literal->getValue<double>(), 23.233);
+  ASSERT_EQ(CAST(Syntax_Literal * , variable_decl->expression)
+              ->literal->get_value<double>(), 23.233);
 }
 
 TEST(ParseTest, SyntaxSemiColonError) {

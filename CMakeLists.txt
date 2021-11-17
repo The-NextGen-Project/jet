@@ -2,42 +2,41 @@ cmake_minimum_required(VERSION 3.0)
 project(jet)
 
 # Import
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/import)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 
-# Force C++ 14 Standard
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
+include_directories(third_party/fmt/include)
 add_subdirectory(tests)
+add_subdirectory(third_party/fmt)
 
 
+link_libraries(fmt)
 add_executable(jet main.cpp
 
 
         # Import Support Libraries.
-        lib/panic.cpp
-        lib/allocator.cpp
-        lib/str.cpp
-        lib/io.cpp
-        lib/cl.cpp
+        src/allocator.cpp
+        src/util/str.cpp
 
         # Lexical Analysis
-        lib/jet-lexer-v2.cpp
-        lib/jet-diagnostics.cpp
+        src/lexer.cpp
+        src/diagnostics.cpp
 
         # Parsing
-        lib/jet-parser.cpp
+        src/parser.cpp
 
         # Codegen
-        lib/jet-x64-assembler.cpp
-        lib/jet-cgen.cpp
+        src/x64-codegen.cpp
+        src/c-codegen.cpp
 
         # Semantic Analysis
-        lib/jet-analyzer.cpp
+        src/analyzer.cpp
         )
 
 # Link against LLVM libraries
