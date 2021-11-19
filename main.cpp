@@ -50,10 +50,11 @@ auto init_jet(int argc, char const **argv) {
 
 int main(int argc, char const **argv, char **envP) {
   try {
-    auto value = nextgen::string_buf(10);
+    auto value = nextgen::string_buf("Hi ");
+    value.format_thing("{}", 213.2);
     value.appendf("{}", 213.2);
+    fmt::formatted_size("{}", 213.2);
     std::cout << value << '\n';
-    fmt::print("hi");
 
   } catch(std::exception&) {
     mem::deinit();

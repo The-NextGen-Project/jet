@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.20)
 project(jet)
 
 # Import
@@ -7,8 +7,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+#set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+#set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 include_directories(third_party/fmt/include)
@@ -38,6 +38,3 @@ add_executable(jet main.cpp
         # Semantic Analysis
         src/analyzer.cpp
         )
-
-# Link against LLVM libraries
-target_link_libraries(jet ${llvm_libs})

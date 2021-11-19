@@ -83,10 +83,9 @@ typedef __int8 int8_t;
 #   include <memory>
 #   include <array>
 #   include <unordered_map>
-#   include <format>
-#   include <ranges>
 #   include <algorithm>
 #   include <fmt/os.h>
+#   include <fmt/format.h>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
 #       if UINTPTR_MAX == 0xffffffff
 #           ifndef BIT32

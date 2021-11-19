@@ -115,7 +115,7 @@ true>("Expected value to be true", __FILE__, \
     Console::Log(FILE, ":", LINE, " ", Colors::RED, "error: ", Colors::WHITE, msg);
     Console::Log('\n', Colors::RESET);
 
-    auto whitespace = std::formatted_size("{} | ", LINE);
+    auto whitespace = fmt::formatted_size("{} | ", LINE);
     if (Assert) {
       Console::Log(Colors::RED, LINE, " | ", dup, Colors::WHITE, " <-- ", Colors::RED,
                    "Assert "

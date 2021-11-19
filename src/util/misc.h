@@ -23,6 +23,12 @@ namespace nextgen {
     return N;
   }
 
+
+  template<typename ... Args>
+  constexpr auto tuple(Args&& ... args) {
+    return std::forward_as_tuple(args...);
+  }
+
   namespace core {
 
     template<typename T>

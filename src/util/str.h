@@ -28,24 +28,41 @@ namespace nextgen { using namespace core;
       this->buffer = new char[initial_size];
     }
     template<size_t N>
-    /*implicit*/ string_buf(const char (&s)[N]) : length(1), capacity(N), buffer((char*)s) {}
+    /*implicit*/ string_buf(const char (&s)[N]) : length(N), capacity(N), buffer((char*)s) {}
     /*implicit*/ string_buf(const string_buf &new_buf)
       : buffer(new_buf.buffer), length(new_buf.length), capacity(new_buf.capacity) {}
 
+
+
   public: // Impl
+
+
+    template <typename... T>
+    auto format_thing(fmt::format_string<T...> fmt, T&&... args) -> size_t {
+      auto buf = fmt::detail::counting_buffer<>();
+      fmt::detail::vformat_to(buf, fmt::string_view(fmt), fmt::make_format_args(args...), {});
+      return buf.count();
+    }
+
     template<size_t N>
-    auto appendf(const char (&fmt)[N], auto ... args) {
-      auto fmt_size = std::formatted_size(fmt, args...);
+    void appendf(const char (&fmt)[N], auto && ... args) {
+
+      auto counting_buf = fmt::detail::counting_buffer<>();
+
+      fmt::detail::vformat_to(counting_buf, fmt::string_view(fmt), fmt::make_format_args(args...),
+                              {});
+      auto [fmt_size, fmt_buf] = tuple(counting_buf.count(), counting_buf.data());
       auto new_size = fmt_size + this->length;
       auto apply_buf = this->buffer;
+
       if (new_size >= this->capacity) {
         auto old_buf = this->buffer;
         this->capacity = (new_size) * 2;
         this->buffer = new char[this->capacity];
-        sys::memmove(this->buffer, old_buf, this->length-1);
+        sys::memmove(this->buffer, old_buf, this->length);
         apply_buf = this->buffer+(this->length-1);
       }
-      std::format_to_n(apply_buf, fmt_size, fmt, args...);
+      sys::memmove(apply_buf, fmt_buf, fmt_size);
       this->length+=fmt_size;
     }
 

@@ -8,7 +8,7 @@ C_Codegen::gen_struct() {
 
   auto gen_field = [&](AST::Struct_Member member) {
     this->gen_type(member.type);
-    this->writer.appendf(" {};\n", member.name->name());
+    this->writer.appendf(" {};\n", member.name->name().data());
   };
 
   for (auto const & [name, struct_node] : structs) {
