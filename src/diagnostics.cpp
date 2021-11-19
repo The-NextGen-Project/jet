@@ -58,7 +58,7 @@ GetNthLineOfBuffer(size_t nth, const char *file_buf, size_t buf_len) {
   FOR(i, buf_len) {
     if (*copy == '\n' || *copy == '\r' || *copy == '\0') {
       if (found) {
-        return std::string_view(found_point, copy);
+        return std::string_view(found_point, copy-found_point);
       }
       count++;
     }
