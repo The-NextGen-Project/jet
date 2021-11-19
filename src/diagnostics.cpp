@@ -470,8 +470,13 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
 
   Console::Log(" ", Colors::RED);
 
+#ifndef NG_OS_WINDOWS
   auto size = reported_token->type() == EOFToken ? source_line.size()+2 :
-    source_line.size();
+    source_line.size()+1;
+#else
+  auto size = reported_token->type() == EOFToken ? source_line.size()+2 :
+              source_line.size();
+#endif
 
   size_t nth_column;
   if constexpr (POINT) nth_column = loc.column-1;
