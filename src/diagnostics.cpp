@@ -476,11 +476,16 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
   if constexpr (POINT) nth_column = loc.column-1;
   else nth_column = loc.column;
 
-#ifndef NG_OS_WINDOWS
-  for(size_t column = 0; column <= size; ++column) {
+  size_t start = 1;
 
+#ifndef NG_OS_WINDOWS
+  if constexpr (POINT)
+      start = 1;
+    else
+      start = 0;
+  for(size_t column = start; column <= size; ++column) {
 #else
-  for(size_t column = 1; column <= size; ++column) {
+  for(size_t column = start; column <= size; ++column) {
 #endif
     Console::Log(" ");
     if (column == loc.column-1) {
