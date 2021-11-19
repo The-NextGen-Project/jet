@@ -1,5 +1,4 @@
 #include <allocator.h>
-#include <io.h>
 #include <util/cl.h>
 
 using namespace nextgen::mem;
