@@ -18,7 +18,7 @@ namespace nextgen { namespace jet { using namespace nextgen::core;
   class Lexer {
     using File = char;
 
-    const File  *buffer;
+    const char  *buffer;
     const size_t buf_size;
 
     size_t line    = 1;

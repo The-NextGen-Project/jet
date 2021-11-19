@@ -4,6 +4,7 @@ project(tests)
 
 
 # Setup Google Test Compilation Cases
+
 add_executable(tests
 
         # Link Support
@@ -18,8 +19,8 @@ add_executable(tests
 
         # Parsing
         ../src/parser.cpp
-#
-#        ../src/x64-codegen.cpp
+
+        ../src/x64-codegen.cpp
 #
 #        ################################
 #
@@ -28,20 +29,15 @@ add_executable(tests
 #
         lex-test.cpp
         parse-test.cpp
-#        x64-test.cpp
+        x64-test.cpp
+
+
+        # FMT
+        ../third_party/fmt/src/format.cc
+        ../third_party/fmt/src/os.cc
 )
 
-#set(gtest_force_shared_crt ON CACHE BOOL "MSVC defaulting to CRT" FORCE)
-
-#add_subdirectory(third_party/googletest)
-
-#target_compile_definitions(gtest
-#        PUBLIC
-#        GTEST_LANG_CXX11
-#        GTEST_HASH_TR1_TUPLE=0
-#        )
 
 include_directories(${CMAKE_SOURCE_DIR}/third_party/googletest/googletest/include)
 
 set_target_properties(tests PROPERTIES COMPILE_FLAGS "${cxx_strict}")
-#target_link_libraries(tests gtest gtest_main)

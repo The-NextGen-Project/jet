@@ -44,8 +44,8 @@ namespace nextgen { using namespace core;
       return buf.count();
     }
 
-    template<size_t N>
-    void appendf(const char (&fmt)[N], auto && ... args) {
+    template<size_t N, typename ... Args>
+    void appendf(const char (&fmt)[N], Args ... args) {
 
       auto counting_buf = fmt::detail::counting_buffer<>();
 
