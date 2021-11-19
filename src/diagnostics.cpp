@@ -469,18 +469,19 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
 
   Console::Log(" ", Colors::RED);
 
-#ifndef NG_OS_WINDOWS
-  auto size = reported_token->type() == EOFToken ? source_line.size()+3 :
-    source_line.size()+2;
-#else
   auto size = reported_token->type() == EOFToken ? source_line.size()+2 :
               source_line.size();
-#endif
 
   size_t nth_column;
   if constexpr (POINT) nth_column = loc.column-1;
   else nth_column = loc.column;
+
+#ifndef NG_OS_WINDOWS
+  for(size_t column = 0; column <= size; ++column) {
+
+#else
   for(size_t column = 1; column <= size; ++column) {
+#endif
     Console::Log(" ");
     if (column == loc.column-1) {
       FOR(ch, reported_token->name().size()) {
