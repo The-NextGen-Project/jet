@@ -281,7 +281,7 @@ Lexer<Mode>::lex_float(int skip, int start) {
   decimal = (value / divisor);
 
   auto token_end = buffer;
-  auto literal_token_representation = std::string_view(token_start, token_end);
+  auto literal_token_representation = std::string_view(token_start, token_end-token_start);
 
   if constexpr (OUTPUT_MODE) {
     Console::Log(Colors::BLUE, literal_token_representation, Colors::RESET);
@@ -340,7 +340,7 @@ Lexer<Mode>::lex_int() {
           Lex_Error_Kind::Digit_Out_Of_Range,
           {line, column},
           Token {
-            std::string_view(token_start, buffer),
+            std::string_view(token_start, buffer-token_start),
             {line, token_start_col},
             Token_Kind::Integer
             },
@@ -356,7 +356,7 @@ Lexer<Mode>::lex_int() {
           Lex_Error_Kind::Integer_Overflow,
           {line, column},
           Token {
-            std::string_view(token_start, buffer),
+            std::string_view(token_start, buffer-token_start),
             {line, token_start_col},
             Token_Kind::Integer
           }
@@ -374,7 +374,7 @@ Lexer<Mode>::lex_int() {
 
   const char *token_end = buffer;
   auto literal_token_representation
-          = std::string_view(token_start, token_end);
+          = std::string_view(token_start, token_end-token_start);
 
   if constexpr (OUTPUT_MODE) {
     Console::Log(Colors::BLUE, (literal_token_representation), Colors::RESET);
@@ -397,7 +397,7 @@ void Lexer<Mode>::lex_ident() {
   do {} while(MatchTokenKind[next(1)] == Token_Kind::Identifier);
   const char *token_end   = buffer;
 
-  auto literal_token_representation = std::string_view(token_start, token_end);
+  auto literal_token_representation = std::string_view(token_start, token_end-token_start);
   Token_Kind reserved = MatchIdentToReserved(token_start, token_end - token_start);
 
   if constexpr (OUTPUT_MODE) {
@@ -446,7 +446,7 @@ void Lexer<Mode>::lex_str() {
           Lex_Error_Kind::Missing_Closing_Delim,
           {line, column},
           Token {
-            std::string_view(token_start, buffer),
+            std::string_view(token_start, buffer-token_start),
             {line, token_start_col},
             Token_Kind::String
             },
@@ -470,7 +470,7 @@ void Lexer<Mode>::lex_str() {
                 Lex_Error_Kind::Hex_Escape_Out_Of_Range,
                 {line, column},
                 Token {
-                  std::string_view(token_start, buffer),
+                  std::string_view(token_start, buffer-token_start),
                   {line, token_start_col},
                   Token_Kind::String
                 },
@@ -483,7 +483,7 @@ void Lexer<Mode>::lex_str() {
                 Lex_Error_Kind::Hex_Escape_Out_Of_Range,
                 {line, column},
                 Token {
-                  std::string_view(token_start, buffer),
+                  std::string_view(token_start, buffer-token_start),
                   {line, token_start_col},
                   Token_Kind::String
                   },
@@ -501,7 +501,7 @@ void Lexer<Mode>::lex_str() {
               Lex_Error_Kind::Invalid_String_Escape,
               {line, column},
               Token {
-                std::string_view(token_start, buffer),
+                std::string_view(token_start, buffer-token_start),
                 {line, token_start_col},
                 Token_Kind::String
               }
@@ -583,7 +583,7 @@ Lexer<Mode>::lex() {
               Lex_Error_Kind::Missing_Closing_Delim,
               {line, column}, // 'x[?] <-- Missing Closing!
               Token {
-                std::string_view(token_start, buffer+1),
+                std::string_view(token_start, (buffer+1)-token_start),
                 {line, token_start_col},
                 Token_Kind::String
                 },
