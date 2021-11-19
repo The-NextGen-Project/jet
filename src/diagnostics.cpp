@@ -395,8 +395,7 @@ void Diagnostic::ErrorParseExpectedToken(Parse_Error const &error) {
 
   auto err = error.metadata.begin()->expected_error;
   auto line = std::to_string(error.location.line);
-  ErrorParseSetup(error.location.line, err.message, err.got, err
-    .got->location());
+  ErrorParseSetup(error.location.line, err.message, err.got, err.got->location());
   AddHint(line, Colors::BLUE, "= ", Colors::CYAN, "try: ",
           Colors::GREEN, "Adding ", Colors::YELLOW, "'",
           Token::GetTokenKindName(err.expected), "'\n");
@@ -472,7 +471,8 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
 
 #ifndef NG_OS_WINDOWS
   auto size = reported_token->type() == EOFToken ? source_line.size()+3 :
-    source_line.size()+1;
+    source_line.size()+2;
+  Console::Log("HI\n");
 #else
   auto size = reported_token->type() == EOFToken ? source_line.size()+2 :
               source_line.size();
