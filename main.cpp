@@ -47,6 +47,10 @@ auto init_jet(int argc, char const **argv) {
   return J;
 }
 
+auto thing(auto a, auto b) {
+  return a + b;
+}
+
 int main(int argc, char const **argv, char **envP) {
   try {
     auto value = nextgen::string_buf("Hi ");
