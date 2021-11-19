@@ -472,7 +472,6 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
 #ifndef NG_OS_WINDOWS
   auto size = reported_token->type() == EOFToken ? source_line.size()+3 :
     source_line.size()+2;
-  Console::Log("HI\n");
 #else
   auto size = reported_token->type() == EOFToken ? source_line.size()+2 :
               source_line.size();
