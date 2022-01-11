@@ -20,18 +20,18 @@ namespace nextgen { using namespace core;
   };
 
   class string_buf {
-    char    *buffer;
-    size_t  length;
-    size_t  capacity;
+    char    *buffer = const_cast<char*>("");
+    size_t  length  = 0;
+    size_t  capacity= 1;
   public: // Constructors
+    string_buf() = default;
     explicit string_buf(size_t initial_size) : length(1), capacity(initial_size) {
       this->buffer = new char[initial_size];
     }
     template<size_t N>
-    /*implicit*/ string_buf(const char (&s)[N]) : length(N), capacity(N), buffer((char*)s) {}
+    /*implicit*/ string_buf(const char (&s)[N]) : length(N-1), capacity(N), buffer((char*)s) {}
     /*implicit*/ string_buf(const string_buf &new_buf)
       : buffer(new_buf.buffer), length(new_buf.length), capacity(new_buf.capacity) {}
-
 
 
   public: // Impl
@@ -45,23 +45,30 @@ namespace nextgen { using namespace core;
                               {});
       auto [fmt_size, fmt_buf] = tuple(counting_buf.count(), counting_buf.data());
       auto new_size = fmt_size + this->length;
-      auto apply_buf = this->buffer;
+      auto added_size = fmt_size-1;
+
+      char * apply_buf = this->buffer + this->length;
 
       if (new_size >= this->capacity) {
         auto old_buf = this->buffer;
         this->capacity = (new_size) * 2;
         this->buffer = new char[this->capacity];
         sys::memmove(this->buffer, old_buf, this->length);
-        apply_buf = this->buffer+(this->length-1);
+        apply_buf = this->buffer+(this->length);
       }
+
       sys::memmove(apply_buf, fmt_buf, fmt_size);
-      this->length+=fmt_size-1;
+      this->length = new_size;
     }
 
     [[nodiscard]] NG_AINLINE auto size() const {
       return this->length;
     }
 
+  public: // Global init
+    static auto empty() {
+        return nextgen::string_buf();
+    }
   public: // Operator Overloads
     NG_AINLINE operator std::string() const {
       return std::string(this->buffer, this->length);

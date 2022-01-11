@@ -51,8 +51,9 @@ auto init_jet(int argc, char const **argv) {
 int main(int argc, char const **argv, char **envP) {
   try {
     auto value = nextgen::string_buf("Hi ");
-    value.appendf("{}", 213.2);
-    fmt::formatted_size("{}", 213.2);
+    value.appendf("struct {} {{ value: {} }}", "MyStruct", "i32");
+    value.appendf(";\nvar {} = 23", "integer");
+    value.appendf(";\nYikes dude {}: nice a = {}", 2322,  2.232);
     std::cout << value << '\n';
 
   } catch(std::exception&) {

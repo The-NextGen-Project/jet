@@ -45,7 +45,7 @@ gen_struct(C_Codegen &CG) {
   };
 
   for (auto const & [name, struct_node] : structs) {
-    CG.writer.appendf("struct {} {}", name, "{");
+    CG.writer.appendf("struct {} {", name);
     (void) std::for_each(struct_node.members.begin(), struct_node.members.end(), gen_field);
     CG.writer.appendf("{}\n", "}");
   }

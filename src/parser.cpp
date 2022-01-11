@@ -466,6 +466,7 @@ auto parse(Parser &P) -> Parse_Result {
     // Report up to 2 errors before exiting the program
     if (P.fatal >= 2) {
       P.diagnostics.send_exception();
+      break;
     }
 
     switch (P.curr()->type()) {
