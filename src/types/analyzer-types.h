@@ -1,7 +1,9 @@
+#include <utility>
+
 #ifndef JET_ANALYZER_TYPES_H
 #define JET_ANALYZER_TYPES_H
 
-namespace nextgen { namespace jet {
+namespace nextgen::jet {
 
   struct AST_Node;
   using Statements = std::vector<AST_Node>;
@@ -57,7 +59,7 @@ namespace nextgen { namespace jet {
 
     Type() = default;
     Type(Type_Tag tag, Type *ref) : tag(tag), ref(ref) {}
-    Type(const Type& other) : tag(other.tag), ref(other.ref) {}
+    /*implicit*/ Type(const Type& other) : tag(other.tag), ref(other.ref) {}
   public: // Operator Overloads
 
     bool operator==(const Type &other) const {
@@ -116,7 +118,7 @@ namespace nextgen { namespace jet {
     bool        is_mutable = false;
   public: // Constructors
     Variable() = default;
-    Variable(const Type *type) : type(type) {}
+    explicit Variable(const Type *type) : type(type) {}
   };
 
   struct Scope {
@@ -124,7 +126,7 @@ namespace nextgen { namespace jet {
     Scope         *parent;
   public: // Constructor
     Scope() = default;
-    Scope(Scope *parent) : parent(parent) {}
+    explicit Scope(Scope *parent) : parent(parent) {}
   };
 
 
@@ -190,20 +192,20 @@ namespace nextgen { namespace jet {
       Statements statements;
       Node              cond;
     public: // Constructors
-      While(const Statements &statements, const AST_Node *cond) : statements(statements),
+      While(Statements statements, const AST_Node *cond) : statements(std::move(statements)),
                                                                   cond(cond) {}
     };
 
     struct Else : public AST_Node {
       Statements statements;
     public: // Constructors
-      explicit Else(const Statements &statements) : statements(statements) {}
+      explicit Else(Statements statements) : statements(std::move(statements)) {}
     };
 
     struct Elif : public AST_Node {
       Statements statements;
     public: // Constructors
-      explicit Elif(const Statements &statements) : statements(statements) {}
+      explicit Elif(Statements statements) : statements(std::move(statements)) {}
     };
 
     struct If : public AST_Node {
@@ -221,13 +223,13 @@ namespace nextgen { namespace jet {
     };
 
     struct Func {
+      Statements statements;
       const Token *name = nullptr;
       std::vector<Func_Param> parameters;
-      Statements statements;
     public: // Constructors
-      Func(const Token *name, const std::vector <Func_Param> &parameters,
-           const Statements &statements) : name(name), parameters(parameters),
-                                           statements(statements) {}
+      Func(const Token *name, std::vector <Func_Param> parameters,
+           Statements statements) : name(name), parameters(std::move(parameters)),
+                                           statements(std::move(statements)) {}
     };
 
     struct Func_Sig {
@@ -249,7 +251,7 @@ namespace nextgen { namespace jet {
     };
   };
 
-}}
+}
 
 
 

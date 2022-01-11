@@ -62,29 +62,27 @@ namespace nextgen {
 
     // A little guessing trick that has the compiler infer which function gets
     // called. It chooses default template unless we use a color.
-    static NG_INLINE void Write(Colors color) {
+    static void Write(Colors color) {
+
+      // TODO: Global Program State will check whether colors have been enabled before writing to
+      //  the terminal
       static HANDLE GenericConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-      SetConsoleTextAttribute(GenericConsole, color);
+      (void) SetConsoleTextAttribute(GenericConsole, color);
     }
 
     // Wrapper around std::cout to mask terminal color settings
     // in the other `Write` function.
     template <typename Arg>
-    static NG_INLINE void Write(Arg value) {
+    [[maybe_unused]] static void Write(Arg value) {
       std::cout << value;
     }
 # endif
     template<typename ... Args>
     static void Log(Args ... args) {
-      using fold = int[];
 # if defined(NG_OS_LINUX) || defined(NG_OS_APPLE)
-      fold {
-        (std::cout << args, 0)...
-      };
+      ((std::cout << args), ...);
 # elif defined(NG_OS_WINDOWS)
-      fold {
-        ((Write(args)), 0)...
-      };
+      ((Write(args)), ...);
 # endif
     }
   };
@@ -96,7 +94,7 @@ namespace nextgen {
 # define ASSERT(cond, msg) if (!(cond)) nextgen::PanicAt<sizeof(msg), sizeof \
 (__FILE__), sizeof("ASSERT("#cond", "#msg");"), __LINE__, true>(msg, __FILE__, \
 "ASSERT("#cond", "#msg");")
-# define ASSERT_EQ(cond, value) if (!(cond == value)) nextgen::PanicAt<sizeof \
+# define ASSERT_EQ(cond, value) if (!((cond) == (value))) nextgen::PanicAt<sizeof \
 ("Expected equality"), sizeof (__FILE__), sizeof("ASSERT("#cond", "#value");"), __LINE__, \
 true>("Expected equality", __FILE__, \
 "ASSERT("#cond", "#value");")
@@ -106,10 +104,7 @@ nextgen::PanicAt<sizeof \
 true>("Expected value to be true", __FILE__, \
 "ASSERT_TRUE("#cond");")
 
-  // Panic at a specific point in the code. This is simulated as an exception
-  // throw caught by main and returns a failure as to avoid misuse of
-  // "std::exit". It prints out the line number,and text of the panic message
-  // to have the user locate the failed point in the code.
+
   template<std::size_t N1, std::size_t N2, std::size_t N3, int LINE, bool Assert>
   static void PanicAt(const char (&msg)[N1], const char (&FILE)[N2], const char (&dup)[N3]) {
     Console::Log(FILE, ":", LINE, " ", Colors::RED, "error: ", Colors::WHITE, msg);

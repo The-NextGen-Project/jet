@@ -12,7 +12,7 @@
 DEF_ALL_TESTS
 int main(int argc, char **argv) {
   TEST(LexTest);
-  TEST(ParseTest);
+//  TEST(ParseTest);
 //  TEST(x64Test);
   nextgen::mem::deinit();
 }

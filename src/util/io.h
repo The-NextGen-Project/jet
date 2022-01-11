@@ -2,7 +2,7 @@
 # define NEXTGEN_IO_H
 # include "allocator.h"
 
-namespace nextgen { namespace io {
+namespace nextgen::io {
 
   enum FileID {
     Jet_Source,
@@ -24,12 +24,12 @@ namespace nextgen { namespace io {
   static auto read_file(const char *FILE, FileID id) {
     std::ifstream in(FILE, std::ios::binary);
 
-    in.seekg(0, std::ios::end);
+    (void) in.seekg(0, std::ios::end);
     auto len = in.tellg();
-    in.seekg(0, std::ios::beg);
+    (void) in.seekg(0, std::ios::beg);
 
-    char *buffer = new char[len];
-    in.rdbuf()->sgetn(buffer, len);
+    char *buffer = new char[static_cast<size_type>(len)];
+    (void) in.rdbuf()->sgetn(buffer, len);
     buffer[len] = '\0';
 
 
@@ -45,7 +45,7 @@ namespace nextgen { namespace io {
   }
 
 
-}} // namespace nextgen::io
+} // namespace nextgen::io
 
 
 

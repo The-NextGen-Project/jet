@@ -18,9 +18,9 @@ add_executable(tests
 
 
         # Parsing
-        ../src/parser.cpp
-
-        ../src/x64-codegen.cpp
+#        ../src/parser.cpp
+#
+#        ../src/x64-codegen.cpp
 #
 #        ################################
 #
@@ -28,8 +28,8 @@ add_executable(tests
         test-main.cpp
 #
         lex-test.cpp
-        parse-test.cpp
-        x64-test.cpp
+#        parse-test.cpp
+#        x64-test.cpp
 
 
         # FMT

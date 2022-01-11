@@ -36,14 +36,6 @@ namespace nextgen { using namespace core;
 
   public: // Impl
 
-
-    template <typename... T>
-    auto format_thing(fmt::format_string<T...> fmt, T&&... args) -> size_t {
-      auto buf = fmt::detail::counting_buffer<>();
-      fmt::detail::vformat_to(buf, fmt::string_view(fmt), fmt::make_format_args(args...), {});
-      return buf.count();
-    }
-
     template<size_t N, typename ... Args>
     void appendf(const char (&fmt)[N], Args ... args) {
 
@@ -63,10 +55,10 @@ namespace nextgen { using namespace core;
         apply_buf = this->buffer+(this->length-1);
       }
       sys::memmove(apply_buf, fmt_buf, fmt_size);
-      this->length+=fmt_size;
+      this->length+=fmt_size-1;
     }
 
-    NG_AINLINE auto size() const {
+    [[nodiscard]] NG_AINLINE auto size() const {
       return this->length;
     }
 

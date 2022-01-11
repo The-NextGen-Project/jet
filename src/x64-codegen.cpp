@@ -915,5 +915,5 @@ void Assembler::movss(const MemoryAddress &dest, Register src) {
 }
 
 void Assembler::ret() {
-  write(0xC3);
+  write(0xC3U);
 }

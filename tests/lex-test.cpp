@@ -17,13 +17,11 @@ TEST(LexTest, NonFMTNumbers) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode> ( "1211", "src/test.jet", 4);
-  auto token = lexer.lex()[0];
+  auto tokens = jet::lex<TokenMode> ( "1211", "src/test.jet", 4);
+  auto token = tokens[0];
 
-
-//  ASSERT_EQ(token.type(), jet::TokenKind::Integer);
-//  ASSERT_EQ(token.getValue<decltype(UINTPTR_MAX)>(), 1211);
-
+  ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
+  ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 1211);
 }
 
 TEST(LexTest, DecimalNumber) {
@@ -32,8 +30,8 @@ TEST(LexTest, DecimalNumber) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode> ( "23.246", "src/test.jet", 6);
-  auto token = lexer.lex()[0];
+  auto tokens = jet::lex<TokenMode> ( "23.246", "src/test.jet", 6);
+  auto token = tokens[0];
 
   ASSERT_EQ(token.template get_value<double>(), 23.246);
   ASSERT_EQ(token.type(), jet::Token_Kind::Decimal);
@@ -46,10 +44,10 @@ TEST(LexTest, HexadecimalNumber) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( "0x1111", "src/test.jet", 6);
-  auto token = lexer.lex()[0];
-//  ASSERT_EQ(token.getValue<decltype(UINTPTR_MAX)>(), 0x1111);
-//  ASSERT_EQ(token.type(), jet::TokenKind::Integer);
+  auto tokens = jet::lex<TokenMode>( "0x1111", "src/test.jet", 6);
+  auto token = tokens[0];
+  ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 0x1111);
+  ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
 }
 
 
@@ -59,8 +57,8 @@ TEST(LexTest, BinaryNumber) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( "0b011101110", "src/test.jet", 11);
-  auto token = lexer.lex()[0];
+  auto tokens = jet::lex<TokenMode>( "0b011101110", "src/test.jet", 11);
+  auto token = tokens[0];
   ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 0b011101110);
   ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
 }
@@ -71,8 +69,8 @@ TEST(LexTest, OctalNumber) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( "0112022", "src/test.jet", 7);
-  auto token = lexer.lex()[0];
+  auto tokens = jet::lex<TokenMode>( "0112022", "src/test.jet", 7);
+  auto token = tokens[0];
   ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 0112022);
   ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
 }
@@ -83,8 +81,8 @@ TEST(LexTest, Base36Number) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( "0#helloworld", "src/test.jet", 12);
-  auto token = lexer.lex()[0];
+  auto tokens = jet::lex<TokenMode>( "0#helloworld", "src/test.jet", 12);
+  auto token = tokens[0];
 
   ASSERT_EQ(token.get_value<decltype(UINTPTR_MAX)>(), 1767707668033969);
   ASSERT_EQ(token.type(), jet::Token_Kind::Integer);
@@ -96,8 +94,8 @@ TEST(LexTest, Identifier) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( "ident", "src/test.jet", 5);
-  auto token = lexer.lex()[0];
+  auto tokens = jet::lex<TokenMode>( "ident", "src/test.jet", 5);
+  auto token = tokens[0];
 
   ASSERT_TRUE(::strncmp(token.name().data(), "ident", 5) == 0);
   ASSERT_EQ(token.type(), jet::Token_Kind::Identifier);
@@ -109,10 +107,10 @@ TEST(LexTest, Keyword) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( "while extern", "src/test.jet",
+  auto tokens = jet::lex<TokenMode>( "while extern", "src/test.jet",
                                       12);
 
-  auto tokens = lexer.lex();
+  
   auto token = tokens[0];
 
   ASSERT_TRUE(::strncmp(token.name().data(), "while", 5) == 0);
@@ -130,10 +128,10 @@ TEST(LexTest, String) {
   using namespace nextgen::jet;
 
 
-  auto lexer = jet::Lexer<TokenMode>( R"("Hello" ace "There")",
+  auto tokens = jet::lex<TokenMode>( R"("Hello" ace "There")",
                                       "src/test.jet", 19);
 
-  auto tokens = lexer.lex();
+  
   auto token = tokens[0];
 
   ASSERT_TRUE(::strncmp(token.name().data(), "Hello", token.len()) == 0);
@@ -163,10 +161,9 @@ TEST(LexTest, StringEscape) { // TODO: Add Unicode Escape Later
 
   auto buf = R"(var every_escape = "I have\x56 every \t thing\n that could \b\v in \r")";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   std::vector<Token> tokens;
   try {
-    tokens = lexer.lex();
+    tokens = jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch (std::exception &) {
     // Do nothing ...
     return;
@@ -189,12 +186,11 @@ TEST(LexTest, AllTokens) {
              "[] ~ ^ ^= "
              "| |= & &= = == : ; @ ! ? . .. ..."; // 43 tokens
              auto len = strlen(buf);
-             auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
 
 
              std::vector<Token> tokens;
              try {
-               tokens = lexer.lex();
+               tokens = jet::lex<TokenMode>( buf, "src/test.jet", len);
              } catch (std::exception &) {
                // Do nothing ...
                return;
@@ -223,9 +219,8 @@ TEST(LexTest, ErrorOverflow) {
 
   auto buf = "test := 0xffffffffffffffffffaaaaaaa test";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   try {
-    lexer.lex();
+    jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch (std::exception &) {
     // Do nothing ...
     return;
@@ -240,10 +235,9 @@ TEST(LexTest, DigitOutOfRange) {
 
   auto buf = "invalid := 0xfffzz";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
 
   try {
-    lexer.lex();
+    jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch(std::exception&) {
     return;
   }
@@ -260,9 +254,8 @@ TEST(LexTest, HexEscapeOutOfRange) {
 
   auto buf = R"(failed_string := "Hello\x2z")";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   try {
-    lexer.lex();
+    jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch (std::exception &) {
     // Do nothing ...
     return;
@@ -278,9 +271,8 @@ TEST(LexTest, InvalidStringEscape) {
 
   auto buf = R"(export fail_again := "Hello Test\q")";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   try {
-    lexer.lex();
+    jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch (std::exception &) {
     // Do nothing ...
     return;
@@ -296,9 +288,8 @@ TEST(LexTest, MissingClosingDelimString) {
 
   auto buf = R"(export fail_again := "Hello Test\n)";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   try {
-    lexer.lex();
+    jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch (std::exception &) {
     // Do nothing ...
     return;
@@ -313,9 +304,8 @@ TEST(LexTest, MissingClosingDelimChar) {
 
   auto buf = R"(test := 'a)";
   auto len = strlen(buf);
-  auto lexer = jet::Lexer<TokenMode>( buf, "src/test.jet", len);
   try {
-    lexer.lex();
+    jet::lex<TokenMode>( buf, "src/test.jet", len);
   } catch (std::exception &) {
     // Do nothing ...
     return;

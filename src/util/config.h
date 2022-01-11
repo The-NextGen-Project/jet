@@ -84,6 +84,7 @@ typedef __int8 int8_t;
 #   include <array>
 #   include <unordered_map>
 #   include <algorithm>
+#   include <cstdio>
 #   include <fmt/os.h>
 #   include <fmt/format.h>
 #   ifdef HAS_STDINT /* This is non-specific compiler detection */
@@ -101,7 +102,7 @@ typedef __int8 int8_t;
 #   endif
 #   if !defined(BIT32) && !defined(BIT64)
 #     ifdef _WIN64 /* Only windows has this here because MSVC sometimes does not have stdint.h */
-        define BIT64
+define BIT64
 #     else
 #       define BIT32
 #     endif
@@ -121,7 +122,9 @@ typedef __int8 int8_t;
 (__VA_ARGS__)\
 >>::value>::type
 # define FOR(var, range) for (auto var = 0; var < range; ++var)
-# define CAST(ty, value) ((ty)(value))
+# define CAST(ty, value) static_cast<ty>((value))
+# define is ==
+typedef decltype(UINTPTR_MAX) size_type;
 
 
 #endif //NEXTGEN_CONFIG_H

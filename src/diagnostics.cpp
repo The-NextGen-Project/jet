@@ -31,7 +31,7 @@ static Range<const char *>
   FOR(ch, buf_len) {
     if (*copy == '\n' || *copy == '\r') {
       if (found) {
-        return Range<const char *>(file_buf, copy);
+        return {file_buf, copy};
       }
       count++;
     }
@@ -58,7 +58,7 @@ GetNthLineOfBuffer(size_t nth, const char *file_buf, size_t buf_len) {
   FOR(i, buf_len) {
     if (*copy == '\n' || *copy == '\r' || *copy == '\0') {
       if (found) {
-        return std::string_view(found_point, copy-found_point);
+        return {found_point, static_cast<size_type>(copy-found_point)};
       }
       count++;
     }
@@ -408,10 +408,9 @@ void Diagnostic::ErrorParseExpectedToken(Parse_Error const &error) {
 
 void Diagnostic::ErrorLexSetup(std::string& line, const char *message, Lex_Error &error) {
 
-  auto printer = Lexer<PrintingMode>(this->source_line.data(), file_name, source_line.size());
   // Log error line
   Console::Log(Colors::RESET, line, " |\t ");
-  printer.lex(); // Print Failed Token
+  jet::lex<PrintingMode>(this->source_line.data(), file_name, source_line.size()); // Print Failed Token
 
   Console::Log("\n");
 
@@ -453,14 +452,14 @@ void Diagnostic::ErrorParseSetup(size_t const ln,
       new_line = GetNthLineOfBuffer(ln - 1, file_buf, buf_len);
     }
 
-    Lexer<PrintingMode>(new_line.data(), file_name, new_line.size()).lex();
+    jet::lex<PrintingMode>(new_line.data(), file_name, new_line.size());
     Console::Log("\n");
   }
 
-  auto printer = Lexer<PrintingMode>(source_line.data(), file_name, source_line.size());
   // Log error line
   Console::Log(Colors::RESET, line, " | ");
-  printer.lex(); // Print Failed Token
+  jet::lex<PrintingMode>(source_line.data(), file_name, source_line.size());
+  // Print Failed Token
 
   Console::Log("\n");
 
