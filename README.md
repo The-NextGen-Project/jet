@@ -5,6 +5,7 @@
 [![Windows](https://img.shields.io/github/workflow/status/The-NextGen-Project/jet/Windows?label=Windows&style=for-the-badge&logo=github)]()
 #### Fast Language for Developing Consistent Native, Mobile App, and Web Applications.
 > **NOTE:** The language is in its early development stages. Don't expect syntax to be fixed until v1.0. If you want to see the development branch, you can view it [here](https://github.com/The-NextGen-Project/jet/tree/dev). The main branch is the most stable with all tests passing on every platform.
+
 > **UPDATE:** In order for faster development as well as for faster prototyping, parts of the language are being designed in Rust. Currently, the backend has been developed in Rust and is able to generate C code and executables.
 
 Resources
